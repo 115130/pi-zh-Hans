@@ -249,11 +249,11 @@ export const streamGoogle: StreamFunction<"google-generative-ai", GoogleOptions>
 			}
 
 			if (options?.signal?.aborted) {
-				throw new Error("Request was aborted");
+				throw new Error("请求已被中止");
 			}
 
 			if (output.stopReason === "aborted" || output.stopReason === "error") {
-				throw new Error("An unknown error occurred");
+				throw new Error("发生未知错误");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason, message: output });
@@ -282,7 +282,7 @@ export const streamSimpleGoogle: StreamFunction<"google-generative-ai", SimpleSt
 ): AssistantMessageEventStream => {
 	const apiKey = options?.apiKey || getEnvApiKey(model.provider);
 	if (!apiKey) {
-		throw new Error(`No API key for provider: ${model.provider}`);
+		throw new Error(`没有提供程序 ${model.provider} 的 API 密钥`);
 	}
 
 	const base = buildBaseOptions(model, options, apiKey);
@@ -379,7 +379,7 @@ function buildParams(
 
 	if (options.signal) {
 		if (options.signal.aborted) {
-			throw new Error("Request aborted");
+			throw new Error("请求已被中止");
 		}
 		config.abortSignal = options.signal;
 	}

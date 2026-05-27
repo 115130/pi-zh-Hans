@@ -32,9 +32,9 @@ type EditRenderState = {
 const replaceEditSchema = Type.Object(
 	{
 		oldText: Type.String({
-			description: "一个目标替换的精确文本。它必须在原文件中唯一，并且不能与同一次调用中其他 edits[].oldText 重叠。",
+			description: "要替换的精确文本。它在原文件中必须唯一，并且不能与同一次调用中的其他 edits[].oldText 重叠。",
 		}),
-		newText: Type.String({ description: "此目标替换的替换文本。" }),
+		newText: Type.String({ description: "此目标的替换文本。" }),
 	},
 	{ additionalProperties: false },
 );
@@ -44,7 +44,7 @@ const editSchema = Type.Object(
 		path: Type.String({ description: "要编辑的文件路径（相对或绝对）" }),
 		edits: Type.Array(replaceEditSchema, {
 			description:
-				"一个或多个目标替换。每个替换都基于原文件匹配，而非增量匹配。不要包含重叠或嵌套的编辑。如果两次更改影响同一块或附近的代码行，请将它们合并为一次编辑。",
+				"一个或多个替换。每个替换都基于原文件匹配，而非增量匹配。请不要包含重叠或嵌套的编辑。如果两次更改影响同一块或附近的代码行，请将它们合并为一次编辑。",
 		}),
 	},
 	{ additionalProperties: false },
@@ -117,7 +117,7 @@ function prepareEditArguments(input: unknown): EditToolInput {
 
 function validateEditInput(input: EditToolInput): { path: string; edits: Edit[] } {
 	if (!Array.isArray(input.edits) || input.edits.length === 0) {
-		throw new Error("Edit tool input is invalid. edits must contain at least one replacement.");
+		throw new Error("编辑工具输入无效：edits 必须至少包含一个替换。");
 	}
 	return { path: input.path, edits: input.edits };
 }
@@ -198,7 +198,7 @@ function formatEditCall(
 	const rawPath = str(args?.file_path ?? args?.path);
 	const path = rawPath !== null ? shortenPath(rawPath) : null;
 	const pathDisplay = path === null ? invalidArg : path ? theme.fg("accent", path) : theme.fg("toolOutput", "...");
-	return `${theme.fg("toolTitle", theme.bold("edit"))} ${pathDisplay}`;
+	return `${theme.fg("toolTitle", theme.bold("编辑"))} ${pathDisplay}`;
 }
 
 function formatEditResult(
@@ -294,15 +294,15 @@ export function createEditToolDefinition(
 	const ops = options?.operations ?? defaultEditOperations;
 	return {
 		name: "edit",
-		label: "edit",
+		label: "编辑",
 		description:
 			"使用精确文本替换编辑单个文件。每个 edits[].oldText 必须匹配原文件中唯一且不重叠的区域。如果两次更改影响同一块或附近的代码行，请将它们合并为一次编辑，而不是发出重叠的编辑。不要包含大量未改动的区域来连接两个不相邻的更改。",
 		promptSnippet: "使用精确文本替换进行精确定位编辑，支持在一次调用中进行多个不连续的编辑",
 		promptGuidelines: [
-			"Use edit for precise changes (edits[].oldText must match exactly)",
-			"When changing multiple separate locations in one file, use one edit call with multiple entries in edits[] instead of multiple edit calls",
-			"Each edits[].oldText is matched against the original file, not after earlier edits are applied. Do not emit overlapping or nested edits. Merge nearby changes into one edit.",
-			"Keep edits[].oldText as small as possible while still being unique in the file. Do not pad with large unchanged regions.",
+			"使用 edit 进行精确更改（edits[].oldText 必须精确匹配）",
+			"当在一个文件中更改多个独立位置时，使用一次 edit 调用并包含多个 edits[] 条目，而不是多次调用 edit",
+			"每个 edits[].oldText 是基于原文件匹配的，而非在先前编辑应用之后。不要发出重叠或嵌套的编辑。将相近的更改合并为一个编辑。",
+			"保持 edits[].oldText 尽可能短小，同时确保它在文件中唯一。不要用大量未更改的区域填充。",
 		],
 		parameters: editSchema,
 		renderShell: "self",
@@ -328,8 +328,8 @@ export function createEditToolDefinition(
 				} catch (error: unknown) {
 					throwIfAborted();
 					const errorMessage =
-						error instanceof Error && "code" in error ? `Error code: ${error.code}` : String(error);
-					throw new Error(`Could not edit file: ${path}. ${errorMessage}.`);
+						error instanceof Error && "code" in error ? `错误代码：${error.code}` : String(error);
+					throw new Error(`无法编辑文件：${path}。${errorMessage}。`);
 				}
 				throwIfAborted();
 
@@ -355,7 +355,7 @@ export function createEditToolDefinition(
 					content: [
 						{
 							type: "text",
-							text: `Successfully replaced ${edits.length} block(s) in ${path}.`,
+							text: `成功替换了 ${path} 中的 ${edits.length} 个块。`,
 						},
 					],
 					details: { diff: diffResult.diff, patch, firstChangedLine: diffResult.firstChangedLine },

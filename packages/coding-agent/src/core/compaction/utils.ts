@@ -95,7 +95,7 @@ const TOOL_RESULT_MAX_CHARS = 2000;
 function truncateForSummary(text: string, maxChars: number): string {
 	if (text.length <= maxChars) return text;
 	const truncatedChars = text.length - maxChars;
-	return `${text.slice(0, maxChars)}\n\n[... ${truncatedChars} more characters truncated]`;
+	return `${text.slice(0, maxChars)}\n\n[... 另截断 ${truncatedChars} 个字符]`;
 }
 
 /**
@@ -118,7 +118,7 @@ export function serializeConversation(messages: Message[]): string {
 							.filter((c): c is { type: "text"; text: string } => c.type === "text")
 							.map((c) => c.text)
 							.join("");
-			if (content) parts.push(`[User]: ${content}`);
+			if (content) parts.push(`[用户]: ${content}`);
 		} else if (msg.role === "assistant") {
 			const textParts: string[] = [];
 			const thinkingParts: string[] = [];
@@ -139,13 +139,13 @@ export function serializeConversation(messages: Message[]): string {
 			}
 
 			if (thinkingParts.length > 0) {
-				parts.push(`[Assistant thinking]: ${thinkingParts.join("\n")}`);
+				parts.push(`[助手思考]: ${thinkingParts.join("\n")}`);
 			}
 			if (textParts.length > 0) {
-				parts.push(`[Assistant]: ${textParts.join("\n")}`);
+				parts.push(`[助手]: ${textParts.join("\n")}`);
 			}
 			if (toolCalls.length > 0) {
-				parts.push(`[Assistant tool calls]: ${toolCalls.join("; ")}`);
+				parts.push(`[助手工具调用]: ${toolCalls.join("; ")}`);
 			}
 		} else if (msg.role === "toolResult") {
 			const content = msg.content
@@ -153,7 +153,7 @@ export function serializeConversation(messages: Message[]): string {
 				.map((c) => c.text)
 				.join("");
 			if (content) {
-				parts.push(`[Tool result]: ${truncateForSummary(content, TOOL_RESULT_MAX_CHARS)}`);
+				parts.push(`[工具结果]: ${truncateForSummary(content, TOOL_RESULT_MAX_CHARS)}`);
 			}
 		}
 	}
@@ -165,6 +165,6 @@ export function serializeConversation(messages: Message[]): string {
 // Summarization System Prompt
 // ============================================================================
 
-export const SUMMARIZATION_SYSTEM_PROMPT = `You are a context summarization assistant. Your task is to read a conversation between a user and an AI coding assistant, then produce a structured summary following the exact format specified.
+export const SUMMARIZATION_SYSTEM_PROMPT = `你是一个上下文摘要助手。你的任务是阅读用户与AI编程助手之间的对话，然后按照指定的格式生成结构化摘要。
 
-Do NOT continue the conversation. Do NOT respond to any questions in the conversation. ONLY output the structured summary.`;
+不要继续对话。不要回答对话中的任何问题。只输出结构化摘要。`;

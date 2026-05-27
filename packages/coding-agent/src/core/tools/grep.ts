@@ -74,9 +74,9 @@ function formatGrepCall(
 		theme.fg("toolTitle", theme.bold("grep")) +
 		" " +
 		(pattern === null ? invalidArg : theme.fg("accent", `/${pattern || ""}/`)) +
-		theme.fg("toolOutput", ` in ${path === null ? invalidArg : path}`);
+		theme.fg("toolOutput", ` 在 ${path === null ? invalidArg : path}`);
 	if (glob) text += theme.fg("toolOutput", ` (${glob})`);
-	if (limit !== undefined) text += theme.fg("toolOutput", ` limit ${limit}`);
+	if (limit !== undefined) text += theme.fg("toolOutput", ` 限制 ${limit}`);
 	return text;
 }
 
@@ -98,7 +98,7 @@ function formatGrepResult(
 		const remaining = lines.length - maxLines;
 		text += `\n${displayLines.map((line) => theme.fg("toolOutput", line)).join("\n")}`;
 		if (remaining > 0) {
-			text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${keyHint("app.tools.expand", "to expand")})`;
+			text += `${theme.fg("muted", `\n... (${remaining} 更多行,`)} ${keyHint("app.tools.expand", "展开")})`;
 		}
 	}
 
@@ -107,10 +107,10 @@ function formatGrepResult(
 	const linesTruncated = result.details?.linesTruncated;
 	if (matchLimit || truncation?.truncated || linesTruncated) {
 		const warnings: string[] = [];
-		if (matchLimit) warnings.push(`${matchLimit} matches limit`);
-		if (truncation?.truncated) warnings.push(`${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} limit`);
-		if (linesTruncated) warnings.push("some lines truncated");
-		text += `\n${theme.fg("warning", `[Truncated: ${warnings.join(", ")}]`)}`;
+		if (matchLimit) warnings.push(`${matchLimit} 匹配限制`);
+		if (truncation?.truncated) warnings.push(`${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} 限制`);
+		if (linesTruncated) warnings.push("某些行已截断");
+		text += `\n${theme.fg("warning", `[已截断：${warnings.join(", ")}]`)}`;
 	}
 	return text;
 }
@@ -166,7 +166,7 @@ export function createGrepToolDefinition(
 					try {
 						const rgPath = await ensureTool("rg", true);
 						if (!rgPath) {
-							settle(() => reject(new Error("ripgrep (rg) is not available and could not be downloaded")));
+							settle(() => reject(new Error("ripgrep (rg) 不可用且无法下载")));
 							return;
 						}
 
@@ -176,7 +176,7 @@ export function createGrepToolDefinition(
 						try {
 							isDirectory = await ops.isDirectory(searchPath);
 						} catch {
-							settle(() => reject(new Error(`Path not found: ${searchPath}`)));
+							settle(() => reject(new Error(`找不到路径：${searchPath}`)));
 							return;
 						}
 
@@ -245,7 +245,7 @@ export function createGrepToolDefinition(
 						const formatBlock = async (filePath: string, lineNumber: number): Promise<string[]> => {
 							const relativePath = formatPath(filePath);
 							const lines = await getFileLines(filePath);
-							if (!lines.length) return [`${relativePath}:${lineNumber}: (unable to read file)`];
+							if (!lines.length) return [`${relativePath}:${lineNumber}: (无法读取文件)`];
 							const block: string[] = [];
 							const start = contextValue > 0 ? Math.max(1, lineNumber - contextValue) : lineNumber;
 							const end = contextValue > 0 ? Math.min(lines.length, lineNumber + contextValue) : lineNumber;
@@ -288,7 +288,7 @@ export function createGrepToolDefinition(
 
 						child.on("error", (error) => {
 							cleanup();
-							settle(() => reject(new Error(`Failed to run ripgrep: ${error.message}`)));
+							settle(() => reject(new Error(`运行 ripgrep 失败：${error.message}`)));
 						});
 						child.on("close", async (code) => {
 							cleanup();
@@ -297,14 +297,12 @@ export function createGrepToolDefinition(
 								return;
 							}
 							if (!killedDueToLimit && code !== 0 && code !== 1) {
-								const errorMsg = stderr.trim() || `ripgrep exited with code ${code}`;
+								const errorMsg = stderr.trim() || `ripgrep 退出，状态码 ${code}`;
 								settle(() => reject(new Error(errorMsg)));
 								return;
 							}
 							if (matchCount === 0) {
-								settle(() =>
-									resolve({ content: [{ type: "text", text: "No matches found" }], details: undefined }),
-								);
+								settle(() => resolve({ content: [{ type: "text", text: "未找到匹配" }], details: undefined }));
 								return;
 							}
 
@@ -334,18 +332,16 @@ export function createGrepToolDefinition(
 							const notices: string[] = [];
 							if (matchLimitReached) {
 								notices.push(
-									`${effectiveLimit} matches limit reached. Use limit=${effectiveLimit * 2} for more, or refine pattern`,
+									`达到 ${effectiveLimit} 匹配限制。如需更多结果，请使用 limit=${effectiveLimit * 2} 或优化搜索模式`,
 								);
 								details.matchLimitReached = effectiveLimit;
 							}
 							if (truncation.truncated) {
-								notices.push(`${formatSize(DEFAULT_MAX_BYTES)} limit reached`);
+								notices.push(`达到 ${formatSize(DEFAULT_MAX_BYTES)} 限制`);
 								details.truncation = truncation;
 							}
 							if (linesTruncated) {
-								notices.push(
-									`Some lines truncated to ${GREP_MAX_LINE_LENGTH} chars. Use read tool to see full lines`,
-								);
+								notices.push(`某些行已被截断为 ${GREP_MAX_LINE_LENGTH} 字符。请使用读取工具查看完整行`);
 								details.linesTruncated = true;
 							}
 							if (notices.length > 0) output += `\n\n[${notices.join(". ")}]`;

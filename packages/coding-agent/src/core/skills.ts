@@ -93,19 +93,19 @@ function validateName(name: string): string[] {
 	const errors: string[] = [];
 
 	if (name.length > MAX_NAME_LENGTH) {
-		errors.push(`name exceeds ${MAX_NAME_LENGTH} characters (${name.length})`);
+		errors.push(`名称超过 ${MAX_NAME_LENGTH} 个字符（当前为 ${name.length}）`);
 	}
 
 	if (!/^[a-z0-9-]+$/.test(name)) {
-		errors.push(`name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)`);
+		errors.push(`名称包含非法字符（必须为小写字母 a-z、数字 0-9、连字符）`);
 	}
 
 	if (name.startsWith("-") || name.endsWith("-")) {
-		errors.push(`name must not start or end with a hyphen`);
+		errors.push(`名称不能以连字符开头或结尾`);
 	}
 
 	if (name.includes("--")) {
-		errors.push(`name must not contain consecutive hyphens`);
+		errors.push(`名称不能包含连续连字符`);
 	}
 
 	return errors;
@@ -118,9 +118,9 @@ function validateDescription(description: string | undefined): string[] {
 	const errors: string[] = [];
 
 	if (!description || description.trim() === "") {
-		errors.push("description is required");
+		errors.push("描述是必填项");
 	} else if (description.length > MAX_DESCRIPTION_LENGTH) {
-		errors.push(`description exceeds ${MAX_DESCRIPTION_LENGTH} characters (${description.length})`);
+		errors.push(`描述超过 ${MAX_DESCRIPTION_LENGTH} 个字符（当前为 ${description.length}）`);
 	}
 
 	return errors;
@@ -318,7 +318,7 @@ function loadSkillFromFile(
 			diagnostics,
 		};
 	} catch (error) {
-		const message = error instanceof Error ? error.message : "failed to parse skill file";
+		const message = error instanceof Error ? error.message : "解析技能文件失败";
 		diagnostics.push({ type: "warning", message, path: filePath });
 		return { skill: null, diagnostics };
 	}
@@ -340,7 +340,7 @@ export function formatSkillsForPrompt(skills: Skill[]): string {
 	}
 
 	const lines = [
-		"\n\nThe following skills provide specialized instructions for specific tasks.",
+		"\n\n以下技能为特定任务提供专门指令。",
 		"使用 read 工具加载匹配任务的技能文件。",
 		"当技能文件引用相对路径时，基于技能目录（SKILL.md 的父目录/路径的 dirname）解析并使用该绝对路径执行工具命令。",
 		"",
@@ -411,7 +411,7 @@ export function loadSkills(options: LoadSkillsOptions): LoadSkillsResult {
 			if (existing) {
 				collisionDiagnostics.push({
 					type: "collision",
-					message: `name "${skill.name}" collision`,
+					message: `名称 "${skill.name}" 冲突`,
 					path: skill.filePath,
 					collision: {
 						resourceType: "skill",
@@ -472,10 +472,10 @@ export function loadSkills(options: LoadSkillsOptions): LoadSkillsResult {
 					allDiagnostics.push(...result.diagnostics);
 				}
 			} else {
-				allDiagnostics.push({ type: "warning", message: "skill path is not a markdown file", path: resolvedPath });
+				allDiagnostics.push({ type: "warning", message: "技能路径不是 Markdown 文件", path: resolvedPath });
 			}
 		} catch (error) {
-			const message = error instanceof Error ? error.message : "failed to read skill path";
+			const message = error instanceof Error ? error.message : "读取技能路径失败";
 			allDiagnostics.push({ type: "warning", message, path: resolvedPath });
 		}
 	}

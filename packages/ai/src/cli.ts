@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 import { createInterface } from "node:readline";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { getOAuthProvider, getOAuthProviders } from "./utils/oauth/index.ts";
@@ -28,7 +27,7 @@ function saveAuth(auth: Record<string, { type: "oauth" } & OAuthCredentials>): v
 async function login(providerId: OAuthProviderId): Promise<void> {
 	const provider = getOAuthProvider(providerId);
 	if (!provider) {
-		console.error(`Unknown provider: ${providerId}`);
+		console.error(`未知的提供者: ${providerId}`);
 		process.exit(1);
 	}
 
@@ -38,13 +37,13 @@ async function login(providerId: OAuthProviderId): Promise<void> {
 	try {
 		const credentials = await provider.login({
 			onAuth: (info) => {
-				console.log(`\nOpen this URL in your browser:\n${info.url}`);
+				console.log(`\n请在你的浏览器中打开此 URL:\n${info.url}`);
 				if (info.instructions) console.log(info.instructions);
 				console.log();
 			},
 			onDeviceCode: (info) => {
-				console.log(`\nOpen this URL in your browser:\n${info.verificationUri}`);
-				console.log(`Enter code: ${info.userCode}`);
+				console.log(`\n请在你的浏览器中打开此 URL:\n${info.verificationUri}`);
+				console.log(`输入代码: ${info.userCode}`);
 				console.log();
 			},
 			onPrompt: async (p) => {
@@ -55,7 +54,7 @@ async function login(providerId: OAuthProviderId): Promise<void> {
 				for (let i = 0; i < p.options.length; i++) {
 					console.log(`  ${i + 1}. ${p.options[i].label}`);
 				}
-				const choice = await promptFn(`Enter number (1-${p.options.length}):`);
+				const choice = await promptFn(`输入数字 (1-${p.options.length}):`);
 				const index = parseInt(choice, 10) - 1;
 				return p.options[index]?.id;
 			},
@@ -66,7 +65,7 @@ async function login(providerId: OAuthProviderId): Promise<void> {
 		auth[providerId] = { type: "oauth", ...credentials };
 		saveAuth(auth);
 
-		console.log(`\nCredentials saved to ${AUTH_FILE}`);
+		console.log(`\n凭据已保存到 ${AUTH_FILE}`);
 	} finally {
 		rl.close();
 	}
@@ -78,25 +77,25 @@ async function main(): Promise<void> {
 
 	if (!command || command === "help" || command === "--help" || command === "-h") {
 		const providerList = PROVIDERS.map((p) => `  ${p.id.padEnd(20)} ${p.name}`).join("\n");
-		console.log(`Usage: npx @earendil-works/pi-ai <command> [provider]
+		console.log(`用法: npx @earendil-works/pi-ai <command> [provider]
 
-Commands:
-  login [provider]  Login to an OAuth provider
-  list              List available providers
+命令:
+  login [provider]  登录到 OAuth 提供者
+  list              列出可用的提供者
 
-Providers:
+提供者:
 ${providerList}
 
-Examples:
-  npx @earendil-works/pi-ai login              # interactive provider selection
-  npx @earendil-works/pi-ai login anthropic    # login to specific provider
-  npx @earendil-works/pi-ai list               # list providers
+示例:
+  npx @earendil-works/pi-ai login              # 交互式选择提供者
+  npx @earendil-works/pi-ai login anthropic    # 登录到特定提供者
+  npx @earendil-works/pi-ai list               # 列出提供者
 `);
 		return;
 	}
 
 	if (command === "list") {
-		console.log("Available OAuth providers:\n");
+		console.log("可用的 OAuth 提供者:\n");
 		for (const p of PROVIDERS) {
 			console.log(`  ${p.id.padEnd(20)} ${p.name}`);
 		}
@@ -108,40 +107,40 @@ Examples:
 
 		if (!provider) {
 			const rl = createInterface({ input: process.stdin, output: process.stdout });
-			console.log("Select a provider:\n");
+			console.log("选择一个提供者:\n");
 			for (let i = 0; i < PROVIDERS.length; i++) {
 				console.log(`  ${i + 1}. ${PROVIDERS[i].name}`);
 			}
 			console.log();
 
-			const choice = await prompt(rl, `Enter number (1-${PROVIDERS.length}): `);
+			const choice = await prompt(rl, `输入数字 (1-${PROVIDERS.length}): `);
 			rl.close();
 
 			const index = parseInt(choice, 10) - 1;
 			if (index < 0 || index >= PROVIDERS.length) {
-				console.error("Invalid selection");
+				console.error("无效的选择");
 				process.exit(1);
 			}
 			provider = PROVIDERS[index].id;
 		}
 
 		if (!PROVIDERS.some((p) => p.id === provider)) {
-			console.error(`Unknown provider: ${provider}`);
-			console.error(`Use 'npx @earendil-works/pi-ai list' to see available providers`);
+			console.error(`未知的提供者: ${provider}`);
+			console.error(`使用 'npx @earendil-works/pi-ai list' 查看可用的提供者`);
 			process.exit(1);
 		}
 
-		console.log(`Logging in to ${provider}...`);
+		console.log(`正在登录到 ${provider}...`);
 		await login(provider);
 		return;
 	}
 
-	console.error(`Unknown command: ${command}`);
-	console.error(`Use 'npx @earendil-works/pi-ai --help' for usage`);
+	console.error(`未知命令: ${command}`);
+	console.error(`使用 'npx @earendil-works/pi-ai --help' 查看用法`);
 	process.exit(1);
 }
 
 main().catch((err) => {
-	console.error("Error:", err.message);
+	console.error("错误:", err.message);
 	process.exit(1);
 });

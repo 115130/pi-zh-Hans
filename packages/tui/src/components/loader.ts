@@ -23,13 +23,13 @@ export class Loader extends Text {
 	private renderIndicatorVerbatim = false;
 	private spinnerColorFn: (str: string) => string;
 	private messageColorFn: (str: string) => string;
-	private message: string = "Loading...";
+	private message: string = "加载中...";
 
 	constructor(
 		ui: TUI,
 		spinnerColorFn: (str: string) => string,
 		messageColorFn: (str: string) => string,
-		message: string = "Loading...",
+		message: string = "加载中...",
 		indicator?: LoaderIndicatorOptions,
 	) {
 		super("", 1, 0);

@@ -65,7 +65,7 @@ export function parseChangelog(changelogPath: string): ChangelogEntry[] {
 
 		return entries;
 	} catch (error) {
-		console.error(`Warning: Could not parse changelog: ${error}`);
+		console.error(`警告：无法解析变更日志：${error}`);
 		return [];
 	}
 }

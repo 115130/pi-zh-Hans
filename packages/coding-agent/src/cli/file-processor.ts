@@ -34,7 +34,7 @@ export async function processFileArguments(fileArgs: string[], options?: Process
 		try {
 			await access(absolutePath);
 		} catch {
-			console.error(chalk.red(`Error: File not found: ${absolutePath}`));
+			console.error(chalk.red(`错误: 找不到文件 ${absolutePath}`));
 			process.exit(1);
 		}
 
@@ -57,7 +57,7 @@ export async function processFileArguments(fileArgs: string[], options?: Process
 			if (autoResizeImages) {
 				const resized = await resizeImage(content, mimeType);
 				if (!resized) {
-					text += `<file name="${absolutePath}">[Image omitted: could not be resized below the inline image size limit.]</file>\n`;
+					text += `<file name="${absolutePath}">[图片已省略: 无法调整大小至内联图片尺寸限制以下。]</file>\n`;
 					continue;
 				}
 				dimensionNote = formatDimensionNote(resized);
@@ -89,7 +89,7 @@ export async function processFileArguments(fileArgs: string[], options?: Process
 				text += `<file name="${absolutePath}">\n${content}\n</file>\n`;
 			} catch (error: unknown) {
 				const message = error instanceof Error ? error.message : String(error);
-				console.error(chalk.red(`Error: Could not read file ${absolutePath}: ${message}`));
+				console.error(chalk.red(`错误: 无法读取文件 ${absolutePath}: ${message}`));
 				process.exit(1);
 			}
 		}

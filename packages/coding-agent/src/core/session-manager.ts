@@ -612,7 +612,7 @@ async function buildSessionInfo(filePath: string): Promise<SessionInfo | null> {
 			created: new Date((header as SessionHeader).timestamp),
 			modified,
 			messageCount,
-			firstMessage: firstMessage || "(no messages)",
+			firstMessage: firstMessage || "（无消息）",
 			allMessagesText: allMessages.join(" "),
 		};
 	} catch {
@@ -1047,7 +1047,7 @@ export class SessionManager {
 	 */
 	appendLabelChange(targetId: string, label: string | undefined): string {
 		if (!this.byId.has(targetId)) {
-			throw new Error(`Entry ${targetId} not found`);
+			throw new Error(`未找到条目 ${targetId}`);
 		}
 		const entry: LabelEntry = {
 			type: "label",
@@ -1166,7 +1166,7 @@ export class SessionManager {
 	 */
 	branch(branchFromId: string): void {
 		if (!this.byId.has(branchFromId)) {
-			throw new Error(`Entry ${branchFromId} not found`);
+			throw new Error(`未找到条目 ${branchFromId}`);
 		}
 		this.leafId = branchFromId;
 	}
@@ -1187,7 +1187,7 @@ export class SessionManager {
 	 */
 	branchWithSummary(branchFromId: string | null, summary: string, details?: unknown, fromHook?: boolean): string {
 		if (branchFromId !== null && !this.byId.has(branchFromId)) {
-			throw new Error(`Entry ${branchFromId} not found`);
+			throw new Error(`未找到条目 ${branchFromId}`);
 		}
 		this.leafId = branchFromId;
 		const entry: BranchSummaryEntry = {
@@ -1213,7 +1213,7 @@ export class SessionManager {
 		const previousSessionFile = this.sessionFile;
 		const path = this.getBranch(leafId);
 		if (path.length === 0) {
-			throw new Error(`Entry ${leafId} not found`);
+			throw new Error(`未找到条目 ${leafId}`);
 		}
 
 		// Filter out LabelEntry from path - we'll recreate them from the resolved map
@@ -1361,12 +1361,12 @@ export class SessionManager {
 		const resolvedTargetCwd = resolvePath(targetCwd);
 		const sourceEntries = loadEntriesFromFile(resolvedSourcePath);
 		if (sourceEntries.length === 0) {
-			throw new Error(`Cannot fork: source session file is empty or invalid: ${resolvedSourcePath}`);
+			throw new Error(`无法分叉：源会话文件为空或无效：${resolvedSourcePath}`);
 		}
 
 		const sourceHeader = sourceEntries.find((e) => e.type === "session") as SessionHeader | undefined;
 		if (!sourceHeader) {
-			throw new Error(`Cannot fork: source session has no header: ${resolvedSourcePath}`);
+			throw new Error(`无法分叉：源会话没有头部：${resolvedSourcePath}`);
 		}
 
 		const dir = sessionDir ? normalizePath(sessionDir) : getDefaultSessionDir(resolvedTargetCwd);

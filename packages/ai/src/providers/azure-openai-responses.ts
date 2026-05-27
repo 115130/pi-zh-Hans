@@ -46,7 +46,7 @@ function formatAzureOpenAIError(error: unknown): string {
 		const status = (error as Error & { status?: unknown }).status;
 		const statusCode = typeof status === "number" ? status : undefined;
 		if (statusCode !== undefined) {
-			return `Azure OpenAI API error (${statusCode}): ${error.message}`;
+			return `Azure OpenAI API 错误 (${statusCode}): ${error.message}`;
 		}
 		return error.message;
 	}
@@ -120,11 +120,11 @@ export const streamAzureOpenAIResponses: StreamFunction<"azure-openai-responses"
 			await processResponsesStream(openaiStream, output, stream, model);
 
 			if (options?.signal?.aborted) {
-				throw new Error("Request was aborted");
+				throw new Error("请求被中止");
 			}
 
 			if (output.stopReason === "aborted" || output.stopReason === "error") {
-				throw new Error("An unknown error occurred");
+				throw new Error("发生未知错误");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason, message: output });
@@ -152,7 +152,7 @@ export const streamSimpleAzureOpenAIResponses: StreamFunction<"azure-openai-resp
 ): AssistantMessageEventStream => {
 	const apiKey = options?.apiKey || getEnvApiKey(model.provider);
 	if (!apiKey) {
-		throw new Error(`No API key for provider: ${model.provider}`);
+		throw new Error(`提供者 ${model.provider} 没有 API 密钥`);
 	}
 
 	const base = buildBaseOptions(model, options, apiKey);
@@ -171,7 +171,7 @@ function normalizeAzureBaseUrl(baseUrl: string): string {
 	try {
 		url = new URL(trimmed);
 	} catch {
-		throw new Error(`Invalid Azure OpenAI base URL: ${baseUrl}`);
+		throw new Error(`Azure OpenAI 基础 URL 无效: ${baseUrl}`);
 	}
 
 	const isAzureHost =
@@ -213,7 +213,7 @@ function resolveAzureConfig(
 
 	if (!resolvedBaseUrl) {
 		throw new Error(
-			"Azure OpenAI base URL is required. Set AZURE_OPENAI_BASE_URL or AZURE_OPENAI_RESOURCE_NAME, or pass azureBaseUrl, azureResourceName, or model.baseUrl.",
+			"需要 Azure OpenAI 基础 URL。请设置 AZURE_OPENAI_BASE_URL 或 AZURE_OPENAI_RESOURCE_NAME，或传递 azureBaseUrl、azureResourceName 或 model.baseUrl。",
 		);
 	}
 
@@ -226,9 +226,7 @@ function resolveAzureConfig(
 function createClient(model: Model<"azure-openai-responses">, apiKey: string, options?: AzureOpenAIResponsesOptions) {
 	if (!apiKey) {
 		if (!process.env.AZURE_OPENAI_API_KEY) {
-			throw new Error(
-				"Azure OpenAI API key is required. Set AZURE_OPENAI_API_KEY environment variable or pass it as an argument.",
-			);
+			throw new Error("需要 Azure OpenAI API 密钥。请设置 AZURE_OPENAI_API_KEY 环境变量或将其作为参数传递。");
 		}
 		apiKey = process.env.AZURE_OPENAI_API_KEY;
 	}

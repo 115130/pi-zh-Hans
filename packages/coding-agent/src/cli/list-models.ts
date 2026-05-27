@@ -29,7 +29,7 @@ function formatTokenCount(count: number): string {
 export async function listModels(modelRegistry: ModelRegistry, searchPattern?: string): Promise<void> {
 	const loadError = modelRegistry.getError();
 	if (loadError) {
-		console.error(chalk.yellow(`Warning: errors loading models.json:\n${loadError}`));
+		console.error(chalk.yellow(`警告：加载 models.json 出错：\n${loadError}`));
 	}
 
 	const models = modelRegistry.getAvailable();
@@ -46,7 +46,7 @@ export async function listModels(modelRegistry: ModelRegistry, searchPattern?: s
 	}
 
 	if (filteredModels.length === 0) {
-		console.log(`No models matching "${searchPattern}"`);
+		console.log(`没有匹配 "${searchPattern}" 的模型`);
 		return;
 	}
 
@@ -68,12 +68,12 @@ export async function listModels(modelRegistry: ModelRegistry, searchPattern?: s
 	}));
 
 	const headers = {
-		provider: "provider",
-		model: "model",
-		context: "context",
-		maxOut: "max-out",
-		thinking: "thinking",
-		images: "images",
+		provider: "提供商",
+		model: "模型",
+		context: "上下文",
+		maxOut: "最大输出",
+		thinking: "推理",
+		images: "图片",
 	};
 
 	const widths = {

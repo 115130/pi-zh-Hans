@@ -594,7 +594,7 @@ class TreeList implements Component {
 				break;
 		}
 		if (this.showLabelTimestamps) {
-			labels += " [+label time]";
+			labels += " [+标签时间]";
 		}
 		return labels;
 	}
@@ -603,7 +603,7 @@ class TreeList implements Component {
 		const lines: string[] = [];
 
 		if (this.filteredNodes.length === 0) {
-			lines.push(truncateToWidth(theme.fg("muted", "  No entries found"), width));
+			lines.push(truncateToWidth(theme.fg("muted", "  未找到条目"), width));
 			lines.push(truncateToWidth(theme.fg("muted", `  (0/0)${this.getStatusLabels()}`), width));
 			return lines;
 		}
@@ -711,19 +711,19 @@ class TreeList implements Component {
 				if (role === "user") {
 					const msgWithContent = msg as { content?: unknown };
 					const content = normalize(this.extractContent(msgWithContent.content));
-					result = theme.fg("accent", "user: ") + content;
+					result = theme.fg("accent", "用户: ") + content;
 				} else if (role === "assistant") {
 					const msgWithContent = msg as { content?: unknown; stopReason?: string; errorMessage?: string };
 					const textContent = normalize(this.extractContent(msgWithContent.content));
 					if (textContent) {
-						result = theme.fg("success", "assistant: ") + textContent;
+						result = theme.fg("success", "助手: ") + textContent;
 					} else if (msgWithContent.stopReason === "aborted") {
-						result = theme.fg("success", "assistant: ") + theme.fg("muted", "(aborted)");
+						result = theme.fg("success", "助手: ") + theme.fg("muted", "(已中止)");
 					} else if (msgWithContent.errorMessage) {
 						const errMsg = normalize(msgWithContent.errorMessage).slice(0, 80);
-						result = theme.fg("success", "assistant: ") + theme.fg("error", errMsg);
+						result = theme.fg("success", "助手: ") + theme.fg("error", errMsg);
 					} else {
-						result = theme.fg("success", "assistant: ") + theme.fg("muted", "(no content)");
+						result = theme.fg("success", "助手: ") + theme.fg("muted", "(无内容)");
 					}
 				} else if (role === "toolResult") {
 					const toolMsg = msg as { toolCallId?: string; toolName?: string };
@@ -731,7 +731,7 @@ class TreeList implements Component {
 					if (toolCall) {
 						result = theme.fg("muted", this.formatToolCall(toolCall.name, toolCall.arguments));
 					} else {
-						result = theme.fg("muted", `[${toolMsg.toolName ?? "tool"}]`);
+						result = theme.fg("muted", `[${toolMsg.toolName ?? "工具"}]`);
 					}
 				} else if (role === "bashExecution") {
 					const bashMsg = msg as { command?: string };
@@ -754,28 +754,28 @@ class TreeList implements Component {
 			}
 			case "compaction": {
 				const tokens = Math.round(entry.tokensBefore / 1000);
-				result = theme.fg("borderAccent", `[compaction: ${tokens}k tokens]`);
+				result = theme.fg("borderAccent", `[压缩: ${tokens}k tokens]`);
 				break;
 			}
 			case "branch_summary":
-				result = theme.fg("warning", `[branch summary]: `) + normalize(entry.summary);
+				result = theme.fg("warning", `[分支摘要]: `) + normalize(entry.summary);
 				break;
 			case "model_change":
-				result = theme.fg("dim", `[model: ${entry.modelId}]`);
+				result = theme.fg("dim", `[模型: ${entry.modelId}]`);
 				break;
 			case "thinking_level_change":
-				result = theme.fg("dim", `[thinking: ${entry.thinkingLevel}]`);
+				result = theme.fg("dim", `[思考级别: ${entry.thinkingLevel}]`);
 				break;
 			case "custom":
-				result = theme.fg("dim", `[custom: ${entry.customType}]`);
+				result = theme.fg("dim", `[自定义: ${entry.customType}]`);
 				break;
 			case "label":
-				result = theme.fg("dim", `[label: ${entry.label ?? "(cleared)"}]`);
+				result = theme.fg("dim", `[标签: ${entry.label ?? "(已清除)"}]`);
 				break;
 			case "session_info":
 				result = entry.name
-					? [theme.fg("dim", "[title: "), theme.fg("dim", entry.name), theme.fg("dim", "]")].join("")
-					: [theme.fg("dim", "[title: "), theme.italic(theme.fg("dim", "empty")), theme.fg("dim", "]")].join("");
+					? [theme.fg("dim", "[标题: "), theme.fg("dim", entry.name), theme.fg("dim", "]")].join("")
+					: [theme.fg("dim", "[标题: "), theme.italic(theme.fg("dim", "空")), theme.fg("dim", "]")].join("");
 				break;
 			default:
 				result = "";
@@ -856,15 +856,15 @@ class TreeList implements Component {
 					const end = limit !== undefined ? start + limit - 1 : "";
 					display += `:${start}${end ? `-${end}` : ""}`;
 				}
-				return `[read: ${display}]`;
+				return `[读取: ${display}]`;
 			}
 			case "write": {
 				const path = shortenPath(String(args.path || args.file_path || ""));
-				return `[write: ${path}]`;
+				return `[写入: ${path}]`;
 			}
 			case "edit": {
 				const path = shortenPath(String(args.path || args.file_path || ""));
-				return `[edit: ${path}]`;
+				return `[编辑: ${path}]`;
 			}
 			case "bash": {
 				const rawCmd = String(args.command || "");
@@ -877,12 +877,12 @@ class TreeList implements Component {
 			case "grep": {
 				const pattern = String(args.pattern || "");
 				const path = shortenPath(String(args.path || "."));
-				return `[grep: /${pattern}/ in ${path}]`;
+				return `[grep: /${pattern}/ 在 ${path}]`;
 			}
 			case "find": {
 				const pattern = String(args.pattern || "");
 				const path = shortenPath(String(args.path || "."));
-				return `[find: ${pattern} in ${path}]`;
+				return `[find: ${pattern} 在 ${path}]`;
 			}
 			case "ls": {
 				const path = shortenPath(String(args.path || "."));
@@ -1110,7 +1110,7 @@ class LabelInput implements Component, Focusable {
 		lines.push(...this.input.render(availableWidth).map((line) => truncateToWidth(`${indent}${line}`, width)));
 		lines.push(
 			truncateToWidth(
-				`${indent}${keyHint("tui.select.confirm", "save")}  ${keyHint("tui.select.cancel", "cancel")}`,
+				`${indent}${keyHint("tui.select.confirm", "保存")}  ${keyHint("tui.select.cancel", "取消")}`,
 				width,
 			),
 		);
@@ -1180,7 +1180,7 @@ export class TreeSelectorComponent extends Container implements Focusable {
 
 		this.addChild(new Spacer(1));
 		this.addChild(new DynamicBorder());
-		this.addChild(new Text(theme.bold("  Session Tree"), 1, 0));
+		this.addChild(new Text(theme.bold("  会话树"), 1, 0));
 		const filterKeys = [
 			keyText("app.tree.filter.default"),
 			keyText("app.tree.filter.noTools"),
@@ -1194,7 +1194,7 @@ export class TreeSelectorComponent extends Container implements Focusable {
 			new TruncatedText(
 				theme.fg(
 					"muted",
-					`  ↑/↓: move. ←/→: page. ${branchKeys}: fold/branch. ${keyText("app.tree.editLabel")}: label. ${filterKeys}: filters (${cycleKeys} cycle). ${keyText("app.tree.toggleLabelTimestamp")}: label time`,
+					`  ↑/↓: 移动. ←/→: 翻页. ${branchKeys}: 折叠/分支. ${keyText("app.tree.editLabel")}: 标签. ${filterKeys}: 过滤器 (${cycleKeys} 循环). ${keyText("app.tree.toggleLabelTimestamp")}: 标签时间`,
 				),
 				0,
 				0,

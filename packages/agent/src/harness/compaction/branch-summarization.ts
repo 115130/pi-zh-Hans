@@ -88,7 +88,7 @@ export async function collectEntriesForBranchSummary(
 
 	while (current && current !== commonAncestorId) {
 		const entry = await session.getEntry(current);
-		if (!entry) throw new SessionError("invalid_session", `Entry ${current} not found`);
+		if (!entry) throw new SessionError("invalid_session", `条目 ${current} 未找到`);
 		entries.push(entry as SessionTreeEntry);
 		current = entry.parentId;
 	}
@@ -162,39 +162,39 @@ export function prepareBranchEntries(entries: SessionTreeEntry[], tokenBudget: n
 	return { messages, fileOps, totalTokens };
 }
 
-const BRANCH_SUMMARY_PREAMBLE = `The user explored a different conversation branch before returning here.
-Summary of that exploration:
+const BRANCH_SUMMARY_PREAMBLE = `用户在返回此处之前探索了一个不同的对话分支。
+该探索的总结：
 
 `;
 
-const BRANCH_SUMMARY_PROMPT = `Create a structured summary of this conversation branch for context when returning later.
+const BRANCH_SUMMARY_PROMPT = `创建一个此对话分支的结构化总结，以便稍后返回时提供上下文。
 
-Use this EXACT format:
+使用以下精确格式：
 
-## Goal
-[What was the user trying to accomplish in this branch?]
+## 目标
+[用户在此分支中试图完成什么？]
 
-## Constraints & Preferences
-- [Any constraints, preferences, or requirements mentioned]
-- [Or "(none)" if none were mentioned]
+## 约束与偏好
+- [提到的任何约束、偏好或要求]
+- [如果没有提到，使用"(无)"]
 
-## Progress
-### Done
-- [x] [Completed tasks/changes]
+## 进度
+### 已完成
+- [x] [已完成的任务/更改]
 
-### In Progress
-- [ ] [Work that was started but not finished]
+### 进行中
+- [ ] [已开始但未完成的工作]
 
-### Blocked
-- [Issues preventing progress, if any]
+### 受阻
+- [阻止进度的问题（如果有）]
 
-## Key Decisions
-- **[Decision]**: [Brief rationale]
+## 关键决策
+- **[决策]**：[简要理由]
 
-## Next Steps
-1. [What should happen next to continue this work]
+## 下一步
+1. [接下来应该做什么以继续此工作]
 
-Keep each section concise. Preserve exact file paths, function names, and error messages.`;
+保持每个部分简洁。保留精确的文件路径、函数名和错误消息。`;
 
 /** Generate a summary for abandoned branch entries. */
 export async function generateBranchSummary(
@@ -208,7 +208,7 @@ export async function generateBranchSummary(
 	const { messages, fileOps } = prepareBranchEntries(entries, tokenBudget);
 
 	if (messages.length === 0) {
-		return ok({ summary: "No content to summarize", readFiles: [], modifiedFiles: [] });
+		return ok({ summary: "无内容可总结", readFiles: [], modifiedFiles: [] });
 	}
 	const llmMessages = convertToLlm(messages);
 	const conversationText = serializeConversation(llmMessages);
@@ -216,7 +216,7 @@ export async function generateBranchSummary(
 	if (replaceInstructions && customInstructions) {
 		instructions = customInstructions;
 	} else if (customInstructions) {
-		instructions = `${BRANCH_SUMMARY_PROMPT}\n\nAdditional focus: ${customInstructions}`;
+		instructions = `${BRANCH_SUMMARY_PROMPT}\n\n额外关注：${customInstructions}`;
 	} else {
 		instructions = BRANCH_SUMMARY_PROMPT;
 	}
@@ -235,14 +235,11 @@ export async function generateBranchSummary(
 		{ apiKey, headers, signal, maxTokens: 2048 },
 	);
 	if (response.stopReason === "aborted") {
-		return err(new BranchSummaryError("aborted", response.errorMessage || "Branch summary aborted"));
+		return err(new BranchSummaryError("aborted", response.errorMessage || "分支总结已中止"));
 	}
 	if (response.stopReason === "error") {
 		return err(
-			new BranchSummaryError(
-				"summarization_failed",
-				`Branch summary failed: ${response.errorMessage || "Unknown error"}`,
-			),
+			new BranchSummaryError("summarization_failed", `分支总结失败：${response.errorMessage || "未知错误"}`),
 		);
 	}
 
@@ -255,7 +252,7 @@ export async function generateBranchSummary(
 	summary += formatFileOperations(readFiles, modifiedFiles);
 
 	return ok({
-		summary: summary || "No summary generated",
+		summary: summary || "未生成总结",
 		readFiles,
 		modifiedFiles,
 	});

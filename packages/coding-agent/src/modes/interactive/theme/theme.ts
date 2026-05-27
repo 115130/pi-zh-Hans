@@ -167,13 +167,13 @@ type ColorMode = "truecolor" | "256color";
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
 	const cleaned = hex.replace("#", "");
 	if (cleaned.length !== 6) {
-		throw new Error(`Invalid hex color: ${hex}`);
+		throw new Error(`无效的十六进制颜色: ${hex}`);
 	}
 	const r = parseInt(cleaned.substring(0, 2), 16);
 	const g = parseInt(cleaned.substring(2, 4), 16);
 	const b = parseInt(cleaned.substring(4, 6), 16);
 	if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) {
-		throw new Error(`Invalid hex color: ${hex}`);
+		throw new Error(`无效的十六进制颜色: ${hex}`);
 	}
 	return { r, g, b };
 }
@@ -268,7 +268,7 @@ function fgAnsi(color: string | number, mode: ColorMode): string {
 			return `\x1b[38;5;${index}m`;
 		}
 	}
-	throw new Error(`Invalid color value: ${color}`);
+	throw new Error(`无效的颜色值: ${color}`);
 }
 
 function bgAnsi(color: string | number, mode: ColorMode): string {
@@ -283,7 +283,7 @@ function bgAnsi(color: string | number, mode: ColorMode): string {
 			return `\x1b[48;5;${index}m`;
 		}
 	}
-	throw new Error(`Invalid color value: ${color}`);
+	throw new Error(`无效的颜色值: ${color}`);
 }
 
 function resolveVarRefs(
@@ -295,10 +295,10 @@ function resolveVarRefs(
 		return value;
 	}
 	if (visited.has(value)) {
-		throw new Error(`Circular variable reference detected: ${value}`);
+		throw new Error(`检测到循环变量引用: ${value}`);
 	}
 	if (!(value in vars)) {
-		throw new Error(`Variable reference not found: ${value}`);
+		throw new Error(`未找到变量引用: ${value}`);
 	}
 	visited.add(value);
 	return resolveVarRefs(vars[value], vars, visited);
@@ -349,13 +349,13 @@ export class Theme {
 
 	fg(color: ThemeColor, text: string): string {
 		const ansi = this.fgColors.get(color);
-		if (!ansi) throw new Error(`Unknown theme color: ${color}`);
+		if (!ansi) throw new Error(`未知主题颜色: ${color}`);
 		return `${ansi}${text}\x1b[39m`; // Reset only foreground color
 	}
 
 	bg(color: ThemeBg, text: string): string {
 		const ansi = this.bgColors.get(color);
-		if (!ansi) throw new Error(`Unknown theme background color: ${color}`);
+		if (!ansi) throw new Error(`未知主题背景颜色: ${color}`);
 		return `${ansi}${text}\x1b[49m`; // Reset only background color
 	}
 
@@ -381,13 +381,13 @@ export class Theme {
 
 	getFgAnsi(color: ThemeColor): string {
 		const ansi = this.fgColors.get(color);
-		if (!ansi) throw new Error(`Unknown theme color: ${color}`);
+		if (!ansi) throw new Error(`未知主题颜色: ${color}`);
 		return ansi;
 	}
 
 	getBgAnsi(color: ThemeBg): string {
 		const ansi = this.bgColors.get(color);
-		if (!ansi) throw new Error(`Unknown theme background color: ${color}`);
+		if (!ansi) throw new Error(`未知主题背景颜色: ${color}`);
 		return ansi;
 	}
 
@@ -525,18 +525,18 @@ function parseThemeJson(label: string, json: unknown): ThemeJson {
 			otherErrors.push(`  - ${path}: ${error.message}`);
 		}
 
-		let errorMessage = `Invalid theme "${label}":\n`;
+		let errorMessage = `无效主题 "${label}":\n`;
 		if (missingColors.size > 0) {
-			errorMessage += "\nMissing required color tokens:\n";
+			errorMessage += "\n缺少必需的颜色标记:\n";
 			errorMessage += Array.from(missingColors)
 				.sort()
 				.map((color) => `  - ${color}`)
 				.join("\n");
-			errorMessage += '\n\nPlease add these colors to your theme\'s "colors" object.';
-			errorMessage += "\nSee the built-in themes (dark.json, light.json) for reference values.";
+			errorMessage += '\n\n请将这些颜色添加到主题的 "colors" 对象中。';
+			errorMessage += "\n请参考内置主题 (dark.json, light.json) 获取参考值。";
 		}
 		if (otherErrors.length > 0) {
-			errorMessage += `\n\nOther errors:\n${otherErrors.join("\n")}`;
+			errorMessage += `\n\n其他错误:\n${otherErrors.join("\n")}`;
 		}
 
 		throw new Error(errorMessage);
@@ -566,12 +566,12 @@ function loadThemeJson(name: string): ThemeJson {
 		return parseThemeJsonContent(registeredTheme.sourcePath, content);
 	}
 	if (registeredTheme) {
-		throw new Error(`Theme "${name}" does not have a source path for export`);
+		throw new Error(`主题 "${name}" 没有用于导出的源路径`);
 	}
 	const customThemesDir = getCustomThemesDir();
 	const themePath = path.join(customThemesDir, `${name}.json`);
 	if (!fs.existsSync(themePath)) {
-		throw new Error(`Theme not found: ${name}`);
+		throw new Error(`主题未找到: ${name}`);
 	}
 	const content = fs.readFileSync(themePath, "utf-8");
 	return parseThemeJsonContent(name, content);
@@ -723,7 +723,7 @@ export function detectTerminalBackground(options: TerminalThemeDetectionOptions 
 		return {
 			theme: getAnsiColorLuminance(bg) >= 0.5 ? "light" : "dark",
 			source: "COLORFGBG",
-			detail: `background color index ${bg}`,
+			detail: `背景颜色索引 ${bg}`,
 			confidence: "high",
 		};
 	}
@@ -731,7 +731,7 @@ export function detectTerminalBackground(options: TerminalThemeDetectionOptions 
 	return {
 		theme: "dark",
 		source: "fallback",
-		detail: "no terminal background hint found",
+		detail: "未找到终端背景提示",
 		confidence: "low",
 	};
 }

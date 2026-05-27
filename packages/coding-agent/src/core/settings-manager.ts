@@ -728,14 +728,14 @@ export class SettingsManager {
 			return timeoutMs;
 		}
 		if (value !== undefined) {
-			throw new Error(`Invalid httpIdleTimeoutMs setting: ${String(value)}`);
+			throw new Error(`无效的 httpIdleTimeoutMs 设置: ${String(value)}`);
 		}
 		return DEFAULT_HTTP_IDLE_TIMEOUT_MS;
 	}
 
 	setHttpIdleTimeoutMs(timeoutMs: number): void {
 		if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
-			throw new Error(`Invalid httpIdleTimeoutMs setting: ${String(timeoutMs)}`);
+			throw new Error(`无效的 httpIdleTimeoutMs 设置: ${String(timeoutMs)}`);
 		}
 		this.globalSettings.httpIdleTimeoutMs = Math.floor(timeoutMs);
 		this.markModified("httpIdleTimeoutMs");

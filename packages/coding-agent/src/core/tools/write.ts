@@ -138,10 +138,10 @@ function formatWriteCall(
 	const fileContent = str(args?.content);
 	const path = rawPath !== null ? shortenPath(rawPath) : null;
 	const invalidArg = invalidArgText(theme);
-	let text = `${theme.fg("toolTitle", theme.bold("write"))} ${path === null ? invalidArg : path ? theme.fg("accent", path) : theme.fg("toolOutput", "...")}`;
+	let text = `${theme.fg("toolTitle", theme.bold("写入"))} ${path === null ? invalidArg : path ? theme.fg("accent", path) : theme.fg("toolOutput", "...")}`;
 
 	if (fileContent === null) {
-		text += `\n\n${theme.fg("error", "[invalid content arg - expected string]")}`;
+		text += `\n\n${theme.fg("error", "[无效的 content 参数 - 应为字符串]")}`;
 	} else if (fileContent) {
 		const lang = rawPath ? getLanguageFromPath(rawPath) : undefined;
 		const renderedLines = lang
@@ -154,7 +154,7 @@ function formatWriteCall(
 		const remaining = lines.length - maxLines;
 		text += `\n\n${displayLines.map((line) => (lang ? line : theme.fg("toolOutput", replaceTabs(line)))).join("\n")}`;
 		if (remaining > 0) {
-			text += `${theme.fg("muted", `\n... (${remaining} more lines, ${totalLines} total,`)} ${keyHint("app.tools.expand", "to expand")})`;
+			text += `${theme.fg("muted", `\n... (剩余 ${remaining} 行，共 ${totalLines} 行，`)} ${keyHint("app.tools.expand", "展开")})`;
 		}
 	}
 
@@ -185,10 +185,10 @@ export function createWriteToolDefinition(
 	const ops = options?.operations ?? defaultWriteOperations;
 	return {
 		name: "write",
-		label: "write",
+		label: "写入",
 		description: "将内容写入文件。如果文件不存在则创建，如果存在则覆盖。自动创建父目录。",
 		promptSnippet: "创建或覆盖文件",
-		promptGuidelines: ["仅对新文件或完整重写使用 write。"],
+		promptGuidelines: ["仅对新文件或完整重写使用“写入”。"],
 		parameters: writeSchema,
 		async execute(
 			_toolCallId,
@@ -218,7 +218,7 @@ export function createWriteToolDefinition(
 				throwIfAborted();
 
 				return {
-					content: [{ type: "text", text: `Successfully wrote ${content.length} bytes to ${path}` }],
+					content: [{ type: "text", text: `成功写入 ${content.length} 字节到 ${path}` }],
 					details: undefined,
 				};
 			});

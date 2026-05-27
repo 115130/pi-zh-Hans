@@ -48,7 +48,7 @@ function fileInfoFromStats(
 	stats: { isFile(): boolean; isDirectory(): boolean; isSymbolicLink(): boolean; size: number; mtimeMs: number },
 ): Result<FileInfo, FileError> {
 	const kind = fileKindFromStats(stats);
-	if (!kind) return err(new FileError("invalid", "Unsupported file type", path));
+	if (!kind) return err(new FileError("invalid", "不支持的文件类型", path));
 	return ok({
 		name: path.replace(/\/+$/, "").split("/").pop() ?? path,
 		path,
@@ -87,7 +87,7 @@ function toFileError(error: unknown, path?: string): FileError {
 }
 
 function abortResult<TValue>(signal: AbortSignal | undefined, path?: string): Result<TValue, FileError> | undefined {
-	return signal?.aborted ? err(new FileError("aborted", "aborted", path)) : undefined;
+	return signal?.aborted ? err(new FileError("aborted", "已中止", path)) : undefined;
 }
 
 async function pathExists(path: string): Promise<boolean> {
@@ -151,7 +151,7 @@ async function getShellConfig(
 		if (await pathExists(customShellPath)) {
 			return ok({ shell: customShellPath, args: ["-c"] });
 		}
-		return err(new ExecutionError("shell_unavailable", `Custom shell path not found: ${customShellPath}`));
+		return err(new ExecutionError("shell_unavailable", `未找到自定义 shell 路径：${customShellPath}`));
 	}
 	if (process.platform === "win32") {
 		const candidates: string[] = [];
@@ -168,7 +168,7 @@ async function getShellConfig(
 		if (bashOnPath) {
 			return ok({ shell: bashOnPath, args: ["-c"] });
 		}
-		return err(new ExecutionError("shell_unavailable", "No bash shell found"));
+		return err(new ExecutionError("shell_unavailable", "未找到 bash shell"));
 	}
 
 	if (await pathExists("/bin/bash")) {
@@ -244,7 +244,7 @@ export class NodeExecutionEnv implements ExecutionEnv {
 			onStderr?: (chunk: string) => void;
 		},
 	): Promise<Result<{ stdout: string; stderr: string; exitCode: number }, ExecutionError>> {
-		if (options?.abortSignal?.aborted) return err(new ExecutionError("aborted", "aborted"));
+		if (options?.abortSignal?.aborted) return err(new ExecutionError("aborted", "已中止"));
 
 		const cwd = options?.cwd ? resolvePath(this.cwd, options.cwd) : this.cwd;
 		const shellConfig = await getShellConfig(this.shellPath);
@@ -338,11 +338,11 @@ export class NodeExecutionEnv implements ExecutionEnv {
 					return;
 				}
 				if (timedOut) {
-					settle(err(new ExecutionError("timeout", `timeout:${options?.timeout}`)));
+					settle(err(new ExecutionError("timeout", `超时：${options?.timeout}`)));
 					return;
 				}
 				if (options?.abortSignal?.aborted) {
-					settle(err(new ExecutionError("aborted", "aborted")));
+					settle(err(new ExecutionError("aborted", "已中止")));
 					return;
 				}
 				settle(ok({ stdout, stderr, exitCode: code ?? 0 }));

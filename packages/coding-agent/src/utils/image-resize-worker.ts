@@ -20,14 +20,14 @@ function isResizeImageWorkerRequest(value: unknown): value is ResizeImageWorkerR
 
 const port = parentPort;
 if (!port) {
-	throw new Error("image resize worker requires parentPort");
+	throw new Error("图片缩放工作线程需要 parentPort");
 }
 
 port.once("message", (message: unknown) => {
 	void (async () => {
 		try {
 			if (!isResizeImageWorkerRequest(message)) {
-				throw new Error("Invalid image resize worker request");
+				throw new Error("无效的图片缩放工作线程请求");
 			}
 			const result = await resizeImageInProcess(message.inputBytes, message.mimeType, message.options);
 			const response: ResizeImageWorkerResponse = { result };

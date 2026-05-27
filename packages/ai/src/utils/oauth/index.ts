@@ -1,8 +1,7 @@
 /**
- * OAuth credential management for AI providers.
+ * AI 提供商 OAuth 凭据管理。
  *
- * This module handles login, token refresh, and credential storage
- * for OAuth-based providers:
+ * 该模块处理基于 OAuth 的提供商的登录、令牌刷新和凭据存储：
  * - Anthropic (Claude Pro/Max)
  * - GitHub Copilot
  */
@@ -24,7 +23,7 @@ export { loginOpenAICodex, openaiCodexOAuthProvider, refreshOpenAICodexToken } f
 export * from "./types.ts";
 
 // ============================================================================
-// Provider Registry
+// 提供商注册表
 // ============================================================================
 
 import { anthropicOAuthProvider } from "./anthropic.ts";
@@ -43,24 +42,24 @@ const oauthProviderRegistry = new Map<string, OAuthProviderInterface>(
 );
 
 /**
- * Get an OAuth provider by ID
+ * 根据 ID 获取 OAuth 提供商
  */
 export function getOAuthProvider(id: OAuthProviderId): OAuthProviderInterface | undefined {
 	return oauthProviderRegistry.get(id);
 }
 
 /**
- * Register a custom OAuth provider
+ * 注册自定义 OAuth 提供商
  */
 export function registerOAuthProvider(provider: OAuthProviderInterface): void {
 	oauthProviderRegistry.set(provider.id, provider);
 }
 
 /**
- * Unregister an OAuth provider.
+ * 取消注册 OAuth 提供商。
  *
- * If the provider is built-in, restores the built-in implementation.
- * Custom providers are removed completely.
+ * 如果该提供商是内置的，则恢复内置实现。
+ * 自定义提供商将被完全移除。
  */
 export function unregisterOAuthProvider(id: string): void {
 	const builtInProvider = BUILT_IN_OAUTH_PROVIDERS.find((provider) => provider.id === id);
@@ -72,7 +71,7 @@ export function unregisterOAuthProvider(id: string): void {
 }
 
 /**
- * Reset OAuth providers to built-ins.
+ * 将 OAuth 提供商重置为内置提供商。
  */
 export function resetOAuthProviders(): void {
 	oauthProviderRegistry.clear();
@@ -82,14 +81,14 @@ export function resetOAuthProviders(): void {
 }
 
 /**
- * Get all registered OAuth providers
+ * 获取所有已注册的 OAuth 提供商
  */
 export function getOAuthProviders(): OAuthProviderInterface[] {
 	return Array.from(oauthProviderRegistry.values());
 }
 
 /**
- * @deprecated Use getOAuthProviders() which returns OAuthProviderInterface[]
+ * @deprecated 请使用 getOAuthProviders()，它返回 OAuthProviderInterface[]
  */
 export function getOAuthProviderInfoList(): OAuthProviderInfo[] {
 	return getOAuthProviders().map((p) => ({
@@ -100,12 +99,12 @@ export function getOAuthProviderInfoList(): OAuthProviderInfo[] {
 }
 
 // ============================================================================
-// High-level API (uses provider registry)
+// 高级 API（使用提供商注册表）
 // ============================================================================
 
 /**
- * Refresh token for any OAuth provider.
- * @deprecated Use getOAuthProvider(id).refreshToken() instead
+ * 刷新任意 OAuth 提供商的令牌。
+ * @deprecated 请改用 getOAuthProvider(id).refreshToken()
  */
 export async function refreshOAuthToken(
 	providerId: OAuthProviderId,
@@ -113,17 +112,17 @@ export async function refreshOAuthToken(
 ): Promise<OAuthCredentials> {
 	const provider = getOAuthProvider(providerId);
 	if (!provider) {
-		throw new Error(`Unknown OAuth provider: ${providerId}`);
+		throw new Error(`未知的 OAuth 提供商：${providerId}`);
 	}
 	return provider.refreshToken(credentials);
 }
 
 /**
- * Get API key for a provider from OAuth credentials.
- * Automatically refreshes expired tokens.
+ * 从 OAuth 凭据中获取提供商的 API 密钥。
+ * 自动刷新已过期的令牌。
  *
- * @returns API key string and updated credentials, or null if no credentials
- * @throws Error if refresh fails
+ * @returns API 密钥字符串和更新后的凭据，如果没有凭据则返回 null
+ * @throws 刷新失败时抛出错误
  */
 export async function getOAuthApiKey(
 	providerId: OAuthProviderId,
@@ -131,7 +130,7 @@ export async function getOAuthApiKey(
 ): Promise<{ newCredentials: OAuthCredentials; apiKey: string } | null> {
 	const provider = getOAuthProvider(providerId);
 	if (!provider) {
-		throw new Error(`Unknown OAuth provider: ${providerId}`);
+		throw new Error(`未知的 OAuth 提供商：${providerId}`);
 	}
 
 	let creds = credentials[providerId];
@@ -139,12 +138,12 @@ export async function getOAuthApiKey(
 		return null;
 	}
 
-	// Refresh if expired
+	// 如果过期则刷新
 	if (Date.now() >= creds.expires) {
 		try {
 			creds = await provider.refreshToken(creds);
 		} catch (_error) {
-			throw new Error(`Failed to refresh OAuth token for ${providerId}`);
+			throw new Error(`刷新 ${providerId} 的 OAuth 令牌失败`);
 		}
 	}
 

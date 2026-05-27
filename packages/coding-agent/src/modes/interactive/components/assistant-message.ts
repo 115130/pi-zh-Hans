@@ -138,7 +138,7 @@ export class AssistantMessageComponent extends Container {
 			} else if (message.stopReason === "error") {
 				const errorMsg = message.errorMessage || "未知错误";
 				this.contentContainer.addChild(new Spacer(1));
-				this.contentContainer.addChild(new Text(theme.fg("error", `Error: ${errorMsg}`), 1, 0));
+				this.contentContainer.addChild(new Text(theme.fg("error", `错误：${errorMsg}`), 1, 0));
 			}
 		}
 	}

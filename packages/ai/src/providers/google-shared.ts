@@ -190,7 +190,7 @@ export function convertMessages<T extends GoogleApiType>(model: Model<T>, contex
 			const modelSupportsMultimodalFunctionResponse = supportsMultimodalFunctionResponse(model.id);
 
 			// Use "output" key for success, "error" key for errors as per SDK documentation
-			const responseValue = hasText ? sanitizeSurrogates(textResult) : hasImages ? "(see attached image)" : "";
+			const responseValue = hasText ? sanitizeSurrogates(textResult) : hasImages ? "（查看附件图片）" : "";
 
 			const imageParts: Part[] = imageContent.map((imageBlock) => ({
 				inlineData: {
@@ -225,7 +225,7 @@ export function convertMessages<T extends GoogleApiType>(model: Model<T>, contex
 			if (hasImages && !modelSupportsMultimodalFunctionResponse) {
 				contents.push({
 					role: "user",
-					parts: [{ text: "Tool result image:" }, ...imageParts],
+					parts: [{ text: "工具结果图片：" }, ...imageParts],
 				});
 			}
 		}
@@ -330,7 +330,7 @@ export function mapStopReason(reason: FinishReason): StopReason {
 			return "error";
 		default: {
 			const _exhaustive: never = reason;
-			throw new Error(`Unhandled stop reason: ${_exhaustive}`);
+			throw new Error(`未处理的停止原因：${_exhaustive}`);
 		}
 	}
 }

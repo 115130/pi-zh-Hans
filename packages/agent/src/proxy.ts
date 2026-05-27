@@ -24,7 +24,7 @@ class ProxyMessageEventStream extends EventStream<AssistantMessageEvent, Assista
 			(event) => {
 				if (event.type === "done") return event.message;
 				if (event.type === "error") return event.error;
-				throw new Error("Unexpected event type");
+				throw new Error("意外的事件类型");
 			},
 		);
 	}
@@ -140,7 +140,7 @@ export function streamProxy(model: Model<any>, context: Context, options: ProxyS
 
 		const abortHandler = () => {
 			if (reader) {
-				reader.cancel("Request aborted by user").catch(() => {});
+				reader.cancel("用户取消了请求").catch(() => {});
 			}
 		};
 
@@ -164,11 +164,11 @@ export function streamProxy(model: Model<any>, context: Context, options: ProxyS
 			});
 
 			if (!response.ok) {
-				let errorMessage = `Proxy error: ${response.status} ${response.statusText}`;
+				let errorMessage = `代理错误：${response.status} ${response.statusText}`;
 				try {
 					const errorData = (await response.json()) as { error?: string };
 					if (errorData.error) {
-						errorMessage = `Proxy error: ${errorData.error}`;
+						errorMessage = `代理错误：${errorData.error}`;
 					}
 				} catch {
 					// Couldn't parse error response
@@ -185,7 +185,7 @@ export function streamProxy(model: Model<any>, context: Context, options: ProxyS
 				if (done) break;
 
 				if (options.signal?.aborted) {
-					throw new Error("Request aborted by user");
+					throw new Error("用户取消了请求");
 				}
 
 				buffer += decoder.decode(value, { stream: true });
@@ -207,7 +207,7 @@ export function streamProxy(model: Model<any>, context: Context, options: ProxyS
 			}
 
 			if (options.signal?.aborted) {
-				throw new Error("Request aborted by user");
+				throw new Error("用户取消了请求");
 			}
 
 			stream.end();
@@ -258,7 +258,7 @@ function processProxyEvent(
 					partial,
 				};
 			}
-			throw new Error("Received text_delta for non-text content");
+			throw new Error("收到非文本内容的 text_delta");
 		}
 
 		case "text_end": {
@@ -272,7 +272,7 @@ function processProxyEvent(
 					partial,
 				};
 			}
-			throw new Error("Received text_end for non-text content");
+			throw new Error("收到非文本内容的 text_end");
 		}
 
 		case "thinking_start":
@@ -290,7 +290,7 @@ function processProxyEvent(
 					partial,
 				};
 			}
-			throw new Error("Received thinking_delta for non-thinking content");
+			throw new Error("收到非思考内容的 thinking_delta");
 		}
 
 		case "thinking_end": {
@@ -304,7 +304,7 @@ function processProxyEvent(
 					partial,
 				};
 			}
-			throw new Error("Received thinking_end for non-thinking content");
+			throw new Error("收到非思考内容的 thinking_end");
 		}
 
 		case "toolcall_start":
@@ -330,7 +330,7 @@ function processProxyEvent(
 					partial,
 				};
 			}
-			throw new Error("Received toolcall_delta for non-toolCall content");
+			throw new Error("收到非工具调用内容的 toolcall_delta");
 		}
 
 		case "toolcall_end": {
@@ -360,7 +360,7 @@ function processProxyEvent(
 
 		default: {
 			const _exhaustiveCheck: never = proxyEvent;
-			console.warn(`Unhandled proxy event type: ${(proxyEvent as any).type}`);
+			console.warn(`未处理的代理事件类型：${(proxyEvent as any).type}`);
 			return undefined;
 		}
 	}

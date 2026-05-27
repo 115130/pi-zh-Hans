@@ -68,9 +68,9 @@ function formatFindCall(
 		theme.fg("toolTitle", theme.bold("find")) +
 		" " +
 		(pattern === null ? invalidArg : theme.fg("accent", pattern || "")) +
-		theme.fg("toolOutput", ` in ${path === null ? invalidArg : path}`);
+		theme.fg("toolOutput", ` 在 ${path === null ? invalidArg : path}`);
 	if (limit !== undefined) {
-		text += theme.fg("toolOutput", ` (limit ${limit})`);
+		text += theme.fg("toolOutput", ` (限制 ${limit})`);
 	}
 	return text;
 }
@@ -93,7 +93,7 @@ function formatFindResult(
 		const remaining = lines.length - maxLines;
 		text += `\n${displayLines.map((line) => theme.fg("toolOutput", line)).join("\n")}`;
 		if (remaining > 0) {
-			text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${keyHint("app.tools.expand", "to expand")})`;
+			text += `${theme.fg("muted", `\n... (还有 ${remaining} 行，`)} ${keyHint("app.tools.expand", "展开")})`;
 		}
 	}
 
@@ -101,9 +101,9 @@ function formatFindResult(
 	const truncation = result.details?.truncation;
 	if (resultLimit || truncation?.truncated) {
 		const warnings: string[] = [];
-		if (resultLimit) warnings.push(`${resultLimit} results limit`);
-		if (truncation?.truncated) warnings.push(`${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} limit`);
-		text += `\n${theme.fg("warning", `[Truncated: ${warnings.join(", ")}]`)}`;
+		if (resultLimit) warnings.push(`${resultLimit} 结果限制`);
+		if (truncation?.truncated) warnings.push(`${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} 限制`);
+		text += `\n${theme.fg("warning", `[已截断：${warnings.join(", ")}]`)}`;
 	}
 	return text;
 }
@@ -156,7 +156,7 @@ export function createFindToolDefinition(
 						// If custom operations provide glob(), use that instead of fd.
 						if (customOps?.glob) {
 							if (!(await ops.exists(searchPath))) {
-								settle(() => reject(new Error(`Path not found: ${searchPath}`)));
+								settle(() => reject(new Error(`路径未找到：${searchPath}`)));
 								return;
 							}
 							if (signal?.aborted) {
@@ -174,7 +174,7 @@ export function createFindToolDefinition(
 							if (results.length === 0) {
 								settle(() =>
 									resolve({
-										content: [{ type: "text", text: "No files found matching pattern" }],
+										content: [{ type: "text", text: "未找到匹配模式的文件" }],
 										details: undefined,
 									}),
 								);
@@ -193,15 +193,15 @@ export function createFindToolDefinition(
 							const details: FindToolDetails = {};
 							const notices: string[] = [];
 							if (resultLimitReached) {
-								notices.push(`${effectiveLimit} results limit reached`);
+								notices.push(`达到 ${effectiveLimit} 个结果限制`);
 								details.resultLimitReached = effectiveLimit;
 							}
 							if (truncation.truncated) {
-								notices.push(`${formatSize(DEFAULT_MAX_BYTES)} limit reached`);
+								notices.push(`达到 ${formatSize(DEFAULT_MAX_BYTES)} 限制`);
 								details.truncation = truncation;
 							}
 							if (notices.length > 0) {
-								resultOutput += `\n\n[${notices.join(". ")}]`;
+								resultOutput += `\n\n[${notices.join("，")}]`;
 							}
 							settle(() =>
 								resolve({
@@ -219,7 +219,7 @@ export function createFindToolDefinition(
 							return;
 						}
 						if (!fdPath) {
-							settle(() => reject(new Error("fd is not available and could not be downloaded")));
+							settle(() => reject(new Error("fd 不可用且无法下载")));
 							return;
 						}
 
@@ -272,7 +272,7 @@ export function createFindToolDefinition(
 
 						child.on("error", (error) => {
 							cleanup();
-							settle(() => reject(new Error(`Failed to run fd: ${error.message}`)));
+							settle(() => reject(new Error(`运行 fd 失败：${error.message}`)));
 						});
 
 						child.on("close", (code) => {
@@ -283,7 +283,7 @@ export function createFindToolDefinition(
 							}
 							const output = lines.join("\n");
 							if (code !== 0) {
-								const errorMsg = stderr.trim() || `fd exited with code ${code}`;
+								const errorMsg = stderr.trim() || `fd 以代码 ${code} 退出`;
 								if (!output) {
 									settle(() => reject(new Error(errorMsg)));
 									return;
@@ -292,7 +292,7 @@ export function createFindToolDefinition(
 							if (!output) {
 								settle(() =>
 									resolve({
-										content: [{ type: "text", text: "No files found matching pattern" }],
+										content: [{ type: "text", text: "未找到匹配模式的文件" }],
 										details: undefined,
 									}),
 								);
@@ -322,16 +322,16 @@ export function createFindToolDefinition(
 							const notices: string[] = [];
 							if (resultLimitReached) {
 								notices.push(
-									`${effectiveLimit} results limit reached. Use limit=${effectiveLimit * 2} for more, or refine pattern`,
+									`达到 ${effectiveLimit} 个结果限制。使用 limit=${effectiveLimit * 2} 获取更多结果，或优化模式`,
 								);
 								details.resultLimitReached = effectiveLimit;
 							}
 							if (truncation.truncated) {
-								notices.push(`${formatSize(DEFAULT_MAX_BYTES)} limit reached`);
+								notices.push(`达到 ${formatSize(DEFAULT_MAX_BYTES)} 限制`);
 								details.truncation = truncation;
 							}
 							if (notices.length > 0) {
-								resultOutput += `\n\n[${notices.join(". ")}]`;
+								resultOutput += `\n\n[${notices.join("，")}]`;
 							}
 							settle(() =>
 								resolve({

@@ -81,7 +81,7 @@ function formatLsResult(
 		const remaining = lines.length - maxLines;
 		text += `\n${displayLines.map((line) => theme.fg("toolOutput", line)).join("\n")}`;
 		if (remaining > 0) {
-			text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${keyHint("app.tools.expand", "to expand")})`;
+			text += `${theme.fg("muted", `\n... (还有${remaining}行，`)}${keyHint("app.tools.expand", "展开")})`;
 		}
 	}
 
@@ -89,9 +89,9 @@ function formatLsResult(
 	const truncation = result.details?.truncation;
 	if (entryLimit || truncation?.truncated) {
 		const warnings: string[] = [];
-		if (entryLimit) warnings.push(`${entryLimit} entries limit`);
-		if (truncation?.truncated) warnings.push(`${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} limit`);
-		text += `\n${theme.fg("warning", `[Truncated: ${warnings.join(", ")}]`)}`;
+		if (entryLimit) warnings.push(`上限${entryLimit}个条目`);
+		if (truncation?.truncated) warnings.push(`上限${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)}`);
+		text += `\n${theme.fg("warning", `[截断：${warnings.join(", ")}]`)}`;
 	}
 	return text;
 }
@@ -104,7 +104,7 @@ export function createLsToolDefinition(
 	return {
 		name: "ls",
 		label: "ls",
-		description: `列出目录内容。返回按字母顺序排序的条目，目录以 '/' 结尾。包含点文件。输出会被截断到 ${DEFAULT_LIMIT} 个条目或 ${DEFAULT_MAX_BYTES / 1024}KB（以先达到者为准）。`,
+		description: `列出目录内容。返回按字母顺序排序的条目，目录以'/'结尾。包含点文件。输出会被截断到${DEFAULT_LIMIT}个条目或${DEFAULT_MAX_BYTES / 1024}KB（以先达到者为准）。`,
 		promptSnippet: "列出目录内容",
 		parameters: lsSchema,
 		async execute(
@@ -130,14 +130,14 @@ export function createLsToolDefinition(
 
 						// Check if path exists.
 						if (!(await ops.exists(dirPath))) {
-							reject(new Error(`Path not found: ${dirPath}`));
+							reject(new Error(`路径不存在：${dirPath}`));
 							return;
 						}
 
 						// Check if path is a directory.
 						const stat = await ops.stat(dirPath);
 						if (!stat.isDirectory()) {
-							reject(new Error(`Not a directory: ${dirPath}`));
+							reject(new Error(`不是目录：${dirPath}`));
 							return;
 						}
 
@@ -146,7 +146,7 @@ export function createLsToolDefinition(
 						try {
 							entries = await ops.readdir(dirPath);
 						} catch (e: any) {
-							reject(new Error(`Cannot read directory: ${e.message}`));
+							reject(new Error(`无法读取目录：${e.message}`));
 							return;
 						}
 
@@ -177,7 +177,7 @@ export function createLsToolDefinition(
 						signal?.removeEventListener("abort", onAbort);
 
 						if (results.length === 0) {
-							resolve({ content: [{ type: "text", text: "(empty directory)" }], details: undefined });
+							resolve({ content: [{ type: "text", text: "(空目录)" }], details: undefined });
 							return;
 						}
 
@@ -189,11 +189,11 @@ export function createLsToolDefinition(
 						// Build actionable notices for truncation and entry limits.
 						const notices: string[] = [];
 						if (entryLimitReached) {
-							notices.push(`${effectiveLimit} entries limit reached. Use limit=${effectiveLimit * 2} for more`);
+							notices.push(`已达到${effectiveLimit}个条目的上限。使用limit=${effectiveLimit * 2}获取更多`);
 							details.entryLimitReached = effectiveLimit;
 						}
 						if (truncation.truncated) {
-							notices.push(`${formatSize(DEFAULT_MAX_BYTES)} limit reached`);
+							notices.push(`已达到${formatSize(DEFAULT_MAX_BYTES)}的上限`);
 							details.truncation = truncation;
 						}
 						if (notices.length > 0) {

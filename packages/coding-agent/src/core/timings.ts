@@ -22,10 +22,10 @@ export function time(label: string): void {
 
 export function printTimings(): void {
 	if (!ENABLED || timings.length === 0) return;
-	console.error("\n--- Startup Timings ---");
+	console.error("\n--- 启动时间统计 ---");
 	for (const t of timings) {
 		console.error(`  ${t.label}: ${t.ms}ms`);
 	}
-	console.error(`  TOTAL: ${timings.reduce((a, b) => a + b.ms, 0)}ms`);
+	console.error(`  总计: ${timings.reduce((a, b) => a + b.ms, 0)}ms`);
 	console.error("------------------------\n");
 }

@@ -111,7 +111,7 @@ async function getLatestVersion(repo: string): Promise<string> {
 	});
 
 	if (!response.ok) {
-		throw new Error(`GitHub API error: ${response.status}`);
+		throw new Error(`GitHub API 错误：${response.status}`);
 	}
 
 	const data = (await response.json()) as { tag_name: string };
@@ -125,11 +125,11 @@ async function downloadFile(url: string, dest: string): Promise<void> {
 	});
 
 	if (!response.ok) {
-		throw new Error(`Failed to download: ${response.status}`);
+		throw new Error(`下载失败：${response.status}`);
 	}
 
 	if (!response.body) {
-		throw new Error("No response body");
+		throw new Error("无响应体");
 	}
 
 	const fileStream = createWriteStream(dest);
@@ -170,7 +170,7 @@ function formatSpawnFailure(result: SpawnSyncReturns<Buffer>): string {
 	if (stdout) {
 		return stdout;
 	}
-	return `exit status ${result.status ?? "unknown"}`;
+	return `退出状态 ${result.status ?? "未知"}`;
 }
 
 function runExtractionCommand(command: string, args: string[]): string | null {
@@ -184,7 +184,7 @@ function runExtractionCommand(command: string, args: string[]): string | null {
 function extractTarGzArchive(archivePath: string, extractDir: string, assetName: string): void {
 	const failure = runExtractionCommand("tar", ["xzf", archivePath, "-C", extractDir]);
 	if (failure) {
-		throw new Error(`Failed to extract ${assetName}: ${failure}`);
+		throw new Error(`解压 ${assetName} 失败：${failure}`);
 	}
 }
 
@@ -234,13 +234,13 @@ function extractZipArchive(archivePath: string, extractDir: string, assetName: s
 		failures.push(tarFailure);
 	}
 
-	throw new Error(`Failed to extract ${assetName}: ${failures.join("; ")}`);
+	throw new Error(`解压 ${assetName} 失败：${failures.join("; ")}`);
 }
 
 // Download and install a tool
 async function downloadTool(tool: "fd" | "rg"): Promise<string> {
 	const config = TOOLS[tool];
-	if (!config) throw new Error(`Unknown tool: ${tool}`);
+	if (!config) throw new Error(`未知工具：${tool}`);
 
 	const plat = platform();
 	const architecture = arch();
@@ -254,7 +254,7 @@ async function downloadTool(tool: "fd" | "rg"): Promise<string> {
 	// Get asset name for this platform
 	const assetName = config.getAssetName(version, plat, architecture);
 	if (!assetName) {
-		throw new Error(`Unsupported platform: ${plat}/${architecture}`);
+		throw new Error(`不支持的平台：${plat}/${architecture}`);
 	}
 
 	// Create tools directory
@@ -282,7 +282,7 @@ async function downloadTool(tool: "fd" | "rg"): Promise<string> {
 		} else if (assetName.endsWith(".zip")) {
 			extractZipArchive(archivePath, extractDir, assetName);
 		} else {
-			throw new Error(`Unsupported archive format: ${assetName}`);
+			throw new Error(`不支持的归档格式：${assetName}`);
 		}
 
 		// Find the binary in extracted files. Some archives contain files directly
@@ -299,7 +299,7 @@ async function downloadTool(tool: "fd" | "rg"): Promise<string> {
 		if (extractedBinary) {
 			renameSync(extractedBinary, binaryPath);
 		} else {
-			throw new Error(`Binary not found in archive: expected ${binaryFileName} under ${extractDir}`);
+			throw new Error(`归档中未找到二进制文件：预期 ${binaryFileName} 在 ${extractDir} 下`);
 		}
 
 		// Make executable (Unix only)
@@ -334,7 +334,7 @@ export async function ensureTool(tool: "fd" | "rg", silent: boolean = false): Pr
 
 	if (isOfflineModeEnabled()) {
 		if (!silent) {
-			console.log(chalk.yellow(`${config.name} not found. Offline mode enabled, skipping download.`));
+			console.log(chalk.yellow(`${config.name} 未找到。离线模式已启用，跳过下载。`));
 		}
 		return undefined;
 	}
@@ -344,25 +344,25 @@ export async function ensureTool(tool: "fd" | "rg", silent: boolean = false): Pr
 	if (platform() === "android") {
 		const pkgName = TERMUX_PACKAGES[tool] ?? tool;
 		if (!silent) {
-			console.log(chalk.yellow(`${config.name} not found. Install with: pkg install ${pkgName}`));
+			console.log(chalk.yellow(`${config.name} 未找到。使用以下命令安装：pkg install ${pkgName}`));
 		}
 		return undefined;
 	}
 
 	// Tool not found - download it
 	if (!silent) {
-		console.log(chalk.dim(`${config.name} not found. Downloading...`));
+		console.log(chalk.dim(`${config.name} 未找到。正在下载...`));
 	}
 
 	try {
 		const path = await downloadTool(tool);
 		if (!silent) {
-			console.log(chalk.dim(`${config.name} installed to ${path}`));
+			console.log(chalk.dim(`${config.name} 已安装至 ${path}`));
 		}
 		return path;
 	} catch (e) {
 		if (!silent) {
-			console.log(chalk.yellow(`Failed to download ${config.name}: ${e instanceof Error ? e.message : e}`));
+			console.log(chalk.yellow(`下载 ${config.name} 失败：${e instanceof Error ? e.message : e}`));
 		}
 		return undefined;
 	}

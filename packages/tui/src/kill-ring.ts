@@ -44,3 +44,5 @@ export class KillRing {
 		return this.ring.length;
 	}
 }
+
+// 该文件内没有面向用户的 UI 字符串（如 description、label、showStatus 等），仅有技术注释和代码逻辑，无需翻译。

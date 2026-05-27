@@ -19,7 +19,7 @@ export class InMemorySessionRepo implements SessionRepo<SessionMetadata, { id?: 
 	async open(metadata: SessionMetadata): Promise<Session<SessionMetadata>> {
 		const session = this.sessions.get(metadata.id);
 		if (!session) {
-			throw new SessionError("not_found", `Session not found: ${metadata.id}`);
+			throw new SessionError("not_found", `会话未找到: ${metadata.id}`);
 		}
 		return session;
 	}

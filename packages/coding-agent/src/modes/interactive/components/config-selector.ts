@@ -81,8 +81,8 @@ function getGroupLabel(metadata: PathMetadata): string {
 	if (metadata.source === "auto") {
 		if (metadata.baseDir) {
 			return metadata.scope === "user"
-				? `User (${formatBaseDir(metadata.baseDir)})`
-				: `Project (${formatBaseDir(metadata.baseDir)})`;
+				? `用户 (${formatBaseDir(metadata.baseDir)})`
+				: `项目 (${formatBaseDir(metadata.baseDir)})`;
 		}
 		return metadata.scope === "user" ? "用户 (~/.pi/agent/)" : "项目 (.pi/)";
 	}
@@ -181,9 +181,9 @@ class ConfigSelectorHeader implements Component {
 	invalidate(): void {}
 
 	render(width: number): string[] {
-		const title = theme.bold("Resource Configuration");
+		const title = theme.bold("资源配置");
 		const sep = theme.fg("muted", " · ");
-		const hint = rawKeyHint("space", "toggle") + sep + rawKeyHint("esc", "close");
+		const hint = rawKeyHint("space", "切换") + sep + rawKeyHint("esc", "关闭");
 		const hintWidth = visibleWidth(hint);
 		const titleWidth = visibleWidth(title);
 		const spacing = Math.max(1, width - titleWidth - hintWidth);

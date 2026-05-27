@@ -47,7 +47,7 @@ function resolvePromptInput(input: string | undefined, description: string): str
 		try {
 			return readFileSync(input, "utf-8");
 		} catch (error) {
-			console.error(chalk.yellow(`Warning: Could not read ${description} file ${input}: ${error}`));
+			console.error(chalk.yellow(`警告：无法读取 ${description} 文件 ${input}: ${error}`));
 			return input;
 		}
 	}
@@ -66,7 +66,7 @@ function loadContextFileFromDir(dir: string): { path: string; content: string } 
 					content: readFileSync(filePath, "utf-8"),
 				};
 			} catch (error) {
-				console.error(chalk.yellow(`Warning: Could not read ${filePath}: ${error}`));
+				console.error(chalk.yellow(`警告：无法读取 ${filePath}: ${error}`));
 			}
 		}
 	}
@@ -717,10 +717,10 @@ export class DefaultResourceLoader implements ResourceLoader {
 				} else if (stats.isFile() && resolved.endsWith(".json")) {
 					this.loadThemeFromFile(resolved, themes, diagnostics);
 				} else {
-					diagnostics.push({ type: "warning", message: "theme path is not a json file", path: resolved });
+					diagnostics.push({ type: "warning", message: "主题路径不是 JSON 文件", path: resolved });
 				}
 			} catch (error) {
-				const message = error instanceof Error ? error.message : "failed to read theme path";
+				const message = error instanceof Error ? error.message : "读取主题路径失败";
 				diagnostics.push({ type: "warning", message, path: resolved });
 			}
 		}
@@ -753,7 +753,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 				this.loadThemeFromFile(join(dir, entry.name), themes, diagnostics);
 			}
 		} catch (error) {
-			const message = error instanceof Error ? error.message : "failed to read theme directory";
+			const message = error instanceof Error ? error.message : "读取主题目录失败";
 			diagnostics.push({ type: "warning", message, path: dir });
 		}
 	}
@@ -762,7 +762,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 		try {
 			themes.push(loadThemeFromPath(filePath));
 		} catch (error) {
-			const message = error instanceof Error ? error.message : "failed to load theme";
+			const message = error instanceof Error ? error.message : "加载主题失败";
 			diagnostics.push({ type: "warning", message, path: filePath });
 		}
 	}
@@ -780,7 +780,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 				const extension = await loadExtensionFromFactory(factory, this.cwd, this.eventBus, runtime, extensionPath);
 				extensions.push(extension);
 			} catch (error) {
-				const message = error instanceof Error ? error.message : "failed to load extension";
+				const message = error instanceof Error ? error.message : "加载扩展失败";
 				errors.push({ path: extensionPath, error: message });
 			}
 		}
@@ -797,7 +797,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 			if (existing) {
 				diagnostics.push({
 					type: "collision",
-					message: `name "/${prompt.name}" collision`,
+					message: `名称 "/${prompt.name}" 冲突`,
 					path: prompt.filePath,
 					collision: {
 						resourceType: "prompt",
@@ -824,7 +824,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 			if (existing) {
 				diagnostics.push({
 					type: "collision",
-					message: `name "${name}" collision`,
+					message: `名称 "${name}" 冲突`,
 					path: t.sourcePath,
 					collision: {
 						resourceType: "theme",
@@ -892,7 +892,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 				if (existingOwner && existingOwner !== ext.path) {
 					conflicts.push({
 						path: ext.path,
-						message: `Tool "${toolName}" conflicts with ${existingOwner}`,
+						message: `工具 "${toolName}" 与 ${existingOwner} 冲突`,
 					});
 				} else {
 					toolOwners.set(toolName, ext.path);
@@ -905,7 +905,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 				if (existingOwner && existingOwner !== ext.path) {
 					conflicts.push({
 						path: ext.path,
-						message: `Flag "--${flagName}" conflicts with ${existingOwner}`,
+						message: `标志 "--${flagName}" 与 ${existingOwner} 冲突`,
 					});
 				} else {
 					flagOwners.set(flagName, ext.path);

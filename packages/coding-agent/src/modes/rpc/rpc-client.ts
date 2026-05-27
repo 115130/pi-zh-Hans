@@ -71,7 +71,7 @@ export class RpcClient {
 	 */
 	async start(): Promise<void> {
 		if (this.process) {
-			throw new Error("Client already started");
+			throw new Error("客户端已经启动");
 		}
 
 		this.exitError = null;
@@ -110,14 +110,14 @@ export class RpcClient {
 		});
 		childProcess.once("error", (error) => {
 			if (this.process !== childProcess) return;
-			const processError = new Error(`Agent process error: ${error.message}. Stderr: ${this.stderr}`);
+			const processError = new Error(`Agent 进程错误: ${error.message}。stderr: ${this.stderr}`);
 			this.exitError = processError;
 			this.rejectPendingRequests(processError);
 		});
 		childProcess.stdin?.on("error", (error) => {
 			if (this.process !== childProcess) return;
 			const stdinError =
-				this.exitError ?? new Error(`Agent process stdin error: ${error.message}. Stderr: ${this.stderr}`);
+				this.exitError ?? new Error(`Agent 进程 stdin 错误: ${error.message}。stderr: ${this.stderr}`);
 			this.exitError = stdinError;
 			this.rejectPendingRequests(stdinError);
 		});
@@ -431,7 +431,7 @@ export class RpcClient {
 		return new Promise((resolve, reject) => {
 			const timer = setTimeout(() => {
 				unsubscribe();
-				reject(new Error(`Timeout waiting for agent to become idle. Stderr: ${this.stderr}`));
+				reject(new Error(`等待 Agent 变为空闲超时。stderr: ${this.stderr}`));
 			}, timeout);
 
 			const unsubscribe = this.onEvent((event) => {
@@ -452,7 +452,7 @@ export class RpcClient {
 			const events: AgentEvent[] = [];
 			const timer = setTimeout(() => {
 				unsubscribe();
-				reject(new Error(`Timeout collecting events. Stderr: ${this.stderr}`));
+				reject(new Error(`收集事件超时。stderr: ${this.stderr}`));
 			}, timeout);
 
 			const unsubscribe = this.onEvent((event) => {
@@ -501,7 +501,7 @@ export class RpcClient {
 	}
 
 	private createProcessExitError(code: number | null, signal: NodeJS.Signals | null): Error {
-		return new Error(`Agent process exited (code=${code} signal=${signal}). Stderr: ${this.stderr}`);
+		return new Error(`Agent 进程已退出（code=${code} signal=${signal}）。stderr: ${this.stderr}`);
 	}
 
 	private rejectPendingRequests(error: Error): void {
@@ -515,7 +515,7 @@ export class RpcClient {
 		const childProcess = this.process;
 		const stdin = childProcess?.stdin;
 		if (!childProcess || !stdin) {
-			throw new Error("Client not started");
+			throw new Error("客户端尚未启动");
 		}
 		if (this.exitError) {
 			throw this.exitError;
@@ -526,7 +526,7 @@ export class RpcClient {
 			throw error;
 		}
 		if (stdin.destroyed || !stdin.writable) {
-			const error = new Error(`Agent process stdin is not writable. Stderr: ${this.stderr}`);
+			const error = new Error(`Agent 进程 stdin 不可写入。stderr: ${this.stderr}`);
 			this.exitError = error;
 			throw error;
 		}
@@ -537,7 +537,7 @@ export class RpcClient {
 		return new Promise((resolve, reject) => {
 			const timeout = setTimeout(() => {
 				this.pendingRequests.delete(id);
-				reject(new Error(`Timeout waiting for response to ${command.type}. Stderr: ${this.stderr}`));
+				reject(new Error(`等待 ${command.type} 的响应超时。stderr: ${this.stderr}`));
 			}, 30000);
 
 			this.pendingRequests.set(id, {

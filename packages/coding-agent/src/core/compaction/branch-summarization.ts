@@ -1,8 +1,7 @@
 /**
- * Branch summarization for tree navigation.
+ * 分支摘要，用于树导航。
  *
- * When navigating to a different point in the session tree, this generates
- * a summary of the branch being left so context isn't lost.
+ * 当导航到会话树中的不同点时，生成离开分支的摘要，以便上下文不会丢失。
  */
 
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
@@ -27,7 +26,7 @@ import {
 } from "./utils.ts";
 
 // ============================================================================
-// Types
+// 类型
 // ============================================================================
 
 export interface BranchSummaryResult {
@@ -38,7 +37,7 @@ export interface BranchSummaryResult {
 	error?: string;
 }
 
-/** Details stored in BranchSummaryEntry.details for file tracking */
+/** 存储在 BranchSummaryEntry.details 中用于文件跟踪的详细信息 */
 export interface BranchSummaryDetails {
 	readFiles: string[];
 	modifiedFiles: string[];
@@ -47,69 +46,68 @@ export interface BranchSummaryDetails {
 export type { FileOperations } from "./utils.ts";
 
 export interface BranchPreparation {
-	/** Messages extracted for summarization, in chronological order */
+	/** 提取用于摘要的消息（按时间顺序） */
 	messages: AgentMessage[];
-	/** File operations extracted from tool calls */
+	/** 从工具调用中提取的文件操作 */
 	fileOps: FileOperations;
-	/** Total estimated tokens in messages */
+	/** 消息中的估计总 token 数 */
 	totalTokens: number;
 }
 
 export interface CollectEntriesResult {
-	/** Entries to summarize, in chronological order */
+	/** 要摘要的条目（按时间顺序） */
 	entries: SessionEntry[];
-	/** Common ancestor between old and new position, if any */
+	/** 新旧位置之间的共同祖先（如果有） */
 	commonAncestorId: string | null;
 }
 
 export interface GenerateBranchSummaryOptions {
-	/** Model to use for summarization */
+	/** 用于摘要的模型 */
 	model: Model<any>;
-	/** API key for the model */
+	/** 模型的 API 密钥 */
 	apiKey: string;
-	/** Request headers for the model */
+	/** 模型的请求头 */
 	headers?: Record<string, string>;
-	/** Abort signal for cancellation */
+	/** 用于取消的中止信号 */
 	signal: AbortSignal;
-	/** Optional custom instructions for summarization */
+	/** 摘要的自定义指令（可选） */
 	customInstructions?: string;
-	/** If true, customInstructions replaces the default prompt instead of being appended */
+	/** 如果为 true，customInstructions 替换默认提示而非附加 */
 	replaceInstructions?: boolean;
-	/** Tokens reserved for prompt + LLM response (default 16384) */
+	/** 为提示和 LLM 响应保留的 token 数（默认 16384） */
 	reserveTokens?: number;
 }
 
 // ============================================================================
-// Entry Collection
+// 条目收集
 // ============================================================================
 
 /**
- * Collect entries that should be summarized when navigating from one position to another.
+ * 当从一个位置导航到另一个位置时收集需要摘要的条目。
  *
- * Walks from oldLeafId back to the common ancestor with targetId, collecting entries
- * along the way. Does NOT stop at compaction boundaries - those are included and their
- * summaries become context.
+ * 从 oldLeafId 开始往回走，直到与 targetId 的共同祖先，沿途收集条目。
+ * 不会在压缩边界停止 - 这些边界会被包含，其摘要成为上下文。
  *
- * @param session - Session manager (read-only access)
- * @param oldLeafId - Current position (where we're navigating from)
- * @param targetId - Target position (where we're navigating to)
- * @returns Entries to summarize and the common ancestor
+ * @param session - 会话管理器（只读访问）
+ * @param oldLeafId - 当前位置（从哪导航）
+ * @param targetId - 目标位置（导航到哪）
+ * @returns 要摘要的条目和共同祖先
  */
 export function collectEntriesForBranchSummary(
 	session: ReadonlySessionManager,
 	oldLeafId: string | null,
 	targetId: string,
 ): CollectEntriesResult {
-	// If no old position, nothing to summarize
+	// 如果没有旧位置，则无需摘要
 	if (!oldLeafId) {
 		return { entries: [], commonAncestorId: null };
 	}
 
-	// Find common ancestor (deepest node that's on both paths)
+	// 找到共同祖先（两条路径上最深的节点）
 	const oldPath = new Set(session.getBranch(oldLeafId).map((e) => e.id));
 	const targetPath = session.getBranch(targetId);
 
-	// targetPath is root-first, so iterate backwards to find deepest common ancestor
+	// targetPath 是根优先的，所以反向迭代以找到最深的共同祖先
 	let commonAncestorId: string | null = null;
 	for (let i = targetPath.length - 1; i >= 0; i--) {
 		if (oldPath.has(targetPath[i].id)) {
@@ -118,7 +116,7 @@ export function collectEntriesForBranchSummary(
 		}
 	}
 
-	// Collect entries from old leaf back to common ancestor
+	// 从旧叶子节点往回收集条目直到共同祖先
 	const entries: SessionEntry[] = [];
 	let current: string | null = oldLeafId;
 
@@ -129,24 +127,24 @@ export function collectEntriesForBranchSummary(
 		current = entry.parentId;
 	}
 
-	// Reverse to get chronological order
+	// 反转以得到时间顺序
 	entries.reverse();
 
 	return { entries, commonAncestorId };
 }
 
 // ============================================================================
-// Entry to Message Conversion
+// 条目到消息转换
 // ============================================================================
 
 /**
- * Extract AgentMessage from a session entry.
- * Similar to getMessageFromEntry in compaction.ts but also handles compaction entries.
+ * 从会话条目中提取 AgentMessage。
+ * 类似于 compaction.ts 中的 getMessageFromEntry，但也处理压缩条目。
  */
 function getMessageFromEntry(entry: SessionEntry): AgentMessage | undefined {
 	switch (entry.type) {
 		case "message":
-			// Skip tool results - context is in assistant's tool call
+			// 跳过工具结果 - 上下文在助手的工具调用中
 			if (entry.message.role === "toolResult") return undefined;
 			return entry.message;
 
@@ -159,7 +157,7 @@ function getMessageFromEntry(entry: SessionEntry): AgentMessage | undefined {
 		case "compaction":
 			return createCompactionSummaryMessage(entry.summary, entry.tokensBefore, entry.timestamp);
 
-		// These don't contribute to conversation content
+		// 这些不会对会话内容有贡献
 		case "thinking_level_change":
 		case "model_change":
 		case "custom":
@@ -170,26 +168,26 @@ function getMessageFromEntry(entry: SessionEntry): AgentMessage | undefined {
 }
 
 /**
- * Prepare entries for summarization with token budget.
+ * 准备用于摘要的条目，并考虑 token 预算。
  *
- * Walks entries from NEWEST to OLDEST, adding messages until we hit the token budget.
- * This ensures we keep the most recent context when the branch is too long.
+ * 从 NEWEST 到 OLDEST 遍历条目，添加消息直到达到 token 预算。
+ * 这确保当分支太长时，我们保留最近的上下文。
  *
- * Also collects file operations from:
- * - Tool calls in assistant messages
- * - Existing branch_summary entries' details (for cumulative tracking)
+ * 同时还从以下来源收集文件操作：
+ * - 助手消息中的工具调用
+ * - 现有 branch_summary 条目的 details（用于累积跟踪）
  *
- * @param entries - Entries in chronological order
- * @param tokenBudget - Maximum tokens to include (0 = no limit)
+ * @param entries - 按时间顺序的条目
+ * @param tokenBudget - 包含的最大 token 数（0 = 无限制）
  */
 export function prepareBranchEntries(entries: SessionEntry[], tokenBudget: number = 0): BranchPreparation {
 	const messages: AgentMessage[] = [];
 	const fileOps = createFileOps();
 	let totalTokens = 0;
 
-	// First pass: collect file ops from ALL entries (even if they don't fit in token budget)
-	// This ensures we capture cumulative file tracking from nested branch summaries
-	// Only extract from pi-generated summaries (fromHook !== true), not extension-generated ones
+	// 第一遍：从所有条目中收集文件操作（即使它们不适合 token 预算）
+	// 这确保我们从嵌套分支摘要中捕获累积的文件跟踪
+	// 仅从 pi 生成的摘要（fromHook !== true）中提取，而不是扩展生成的
 	for (const entry of entries) {
 		if (entry.type === "branch_summary" && !entry.fromHook && entry.details) {
 			const details = entry.details as BranchSummaryDetails;
@@ -197,7 +195,7 @@ export function prepareBranchEntries(entries: SessionEntry[], tokenBudget: numbe
 				for (const f of details.readFiles) fileOps.read.add(f);
 			}
 			if (Array.isArray(details.modifiedFiles)) {
-				// Modified files go into both edited and written for proper deduplication
+				// 修改过的文件同时添加到 edited 和 written 中，以便正确去重
 				for (const f of details.modifiedFiles) {
 					fileOps.edited.add(f);
 				}
@@ -205,27 +203,27 @@ export function prepareBranchEntries(entries: SessionEntry[], tokenBudget: numbe
 		}
 	}
 
-	// Second pass: walk from newest to oldest, adding messages until token budget
+	// 第二遍：从最新到最旧遍历，添加消息直到 token 预算
 	for (let i = entries.length - 1; i >= 0; i--) {
 		const entry = entries[i];
 		const message = getMessageFromEntry(entry);
 		if (!message) continue;
 
-		// Extract file ops from assistant messages (tool calls)
+		// 从助手消息（工具调用）中提取文件操作
 		extractFileOpsFromMessage(message, fileOps);
 
 		const tokens = estimateTokens(message);
 
-		// Check budget before adding
+		// 在添加之前检查预算
 		if (tokenBudget > 0 && totalTokens + tokens > tokenBudget) {
-			// If this is a summary entry, try to fit it anyway as it's important context
+			// 如果这是摘要条目，则尝试无论如何将其放入，因为它是重要的上下文
 			if (entry.type === "compaction" || entry.type === "branch_summary") {
 				if (totalTokens < tokenBudget * 0.9) {
 					messages.unshift(message);
 					totalTokens += tokens;
 				}
 			}
-			// Stop - we've hit the budget
+			// 停止 - 已达到预算
 			break;
 		}
 
@@ -237,48 +235,48 @@ export function prepareBranchEntries(entries: SessionEntry[], tokenBudget: numbe
 }
 
 // ============================================================================
-// Summary Generation
+// 摘要生成
 // ============================================================================
 
-const BRANCH_SUMMARY_PREAMBLE = `The user explored a different conversation branch before returning here.
-Summary of that exploration:
+const BRANCH_SUMMARY_PREAMBLE = `用户之前探索了另一个对话分支，然后返回了这里。
+该探索的摘要：
 
 `;
 
-const BRANCH_SUMMARY_PROMPT = `Create a structured summary of this conversation branch for context when returning later.
+const BRANCH_SUMMARY_PROMPT = `为此对话分支创建一个结构化的摘要，以便以后返回时提供上下文。
 
-Use this EXACT format:
+请使用以下精确格式：
 
-## Goal
-[What was the user trying to accomplish in this branch?]
+## 目标
+[用户在此分支中试图完成什么？]
 
-## Constraints & Preferences
-- [Any constraints, preferences, or requirements mentioned]
-- [Or "(none)" if none were mentioned]
+## 约束与偏好
+- [提到的任何约束、偏好或要求]
+- [如果没有提到，则写"(无)"]
 
-## Progress
-### Done
-- [x] [Completed tasks/changes]
+## 进展
+### 已完成
+- [x] [已完成的任务/更改]
 
-### In Progress
-- [ ] [Work that was started but not finished]
+### 进行中
+- [ ] [已开始但未完成的工作]
 
-### Blocked
-- [Issues preventing progress, if any]
+### 受阻
+- [阻碍进展的问题，如果有的话]
 
-## Key Decisions
-- **[Decision]**: [Brief rationale]
+## 关键决策
+- **[决策]**：[简要理由]
 
-## Next Steps
-1. [What should happen next to continue this work]
+## 下一步
+1. [接下来应该做什么才能继续这项工作]
 
-Keep each section concise. Preserve exact file paths, function names, and error messages.`;
+保持每个部分简洁。保留确切的文件路径、函数名和错误消息。`;
 
 /**
- * Generate a summary of abandoned branch entries.
+ * 生成废弃分支条目的摘要。
  *
- * @param entries - Session entries to summarize (chronological order)
- * @param options - Generation options
+ * @param entries - 要摘要的会话条目（时间顺序）
+ * @param options - 生成选项
  */
 export async function generateBranchSummary(
 	entries: SessionEntry[],
@@ -286,27 +284,27 @@ export async function generateBranchSummary(
 ): Promise<BranchSummaryResult> {
 	const { model, apiKey, headers, signal, customInstructions, replaceInstructions, reserveTokens = 16384 } = options;
 
-	// Token budget = context window minus reserved space for prompt + response
+	// token 预算 = 上下文窗口减去为提示和响应保留的空间
 	const contextWindow = model.contextWindow || 128000;
 	const tokenBudget = contextWindow - reserveTokens;
 
 	const { messages, fileOps } = prepareBranchEntries(entries, tokenBudget);
 
 	if (messages.length === 0) {
-		return { summary: "No content to summarize" };
+		return { summary: "没有需要摘要的内容" };
 	}
 
-	// Transform to LLM-compatible messages, then serialize to text
-	// Serialization prevents the model from treating it as a conversation to continue
+	// 转换为 LLM 兼容的消息，然后序列化为文本
+	// 序列化防止模型将其视为要继续的对话
 	const llmMessages = convertToLlm(messages);
 	const conversationText = serializeConversation(llmMessages);
 
-	// Build prompt
+	// 构建提示
 	let instructions: string;
 	if (replaceInstructions && customInstructions) {
 		instructions = customInstructions;
 	} else if (customInstructions) {
-		instructions = `${BRANCH_SUMMARY_PROMPT}\n\nAdditional focus: ${customInstructions}`;
+		instructions = `${BRANCH_SUMMARY_PROMPT}\n\n额外关注：${customInstructions}`;
 	} else {
 		instructions = BRANCH_SUMMARY_PROMPT;
 	}
@@ -320,19 +318,19 @@ export async function generateBranchSummary(
 		},
 	];
 
-	// Call LLM for summarization
+	// 调用 LLM 进行摘要
 	const response = await completeSimple(
 		model,
 		{ systemPrompt: SUMMARIZATION_SYSTEM_PROMPT, messages: summarizationMessages },
 		{ apiKey, headers, signal, maxTokens: 2048 },
 	);
 
-	// Check if aborted or errored
+	// 检查是否中止或出错
 	if (response.stopReason === "aborted") {
 		return { aborted: true };
 	}
 	if (response.stopReason === "error") {
-		return { error: response.errorMessage || "Summarization failed" };
+		return { error: response.errorMessage || "摘要失败" };
 	}
 
 	let summary = response.content
@@ -340,15 +338,15 @@ export async function generateBranchSummary(
 		.map((c) => c.text)
 		.join("\n");
 
-	// Prepend preamble to provide context about the branch summary
+	// 添加前言以为分支摘要提供上下文
 	summary = BRANCH_SUMMARY_PREAMBLE + summary;
 
-	// Compute file lists and append to summary
+	// 计算文件列表并附加到摘要
 	const { readFiles, modifiedFiles } = computeFileLists(fileOps);
 	summary += formatFileOperations(readFiles, modifiedFiles);
 
 	return {
-		summary: summary || "No summary generated",
+		summary: summary || "未生成摘要",
 		readFiles,
 		modifiedFiles,
 	};

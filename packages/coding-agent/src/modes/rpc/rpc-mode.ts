@@ -296,7 +296,7 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 
 		setTheme(_theme: string | Theme) {
 			// Theme switching not supported in RPC mode
-			return { success: false, error: "Theme switching not supported in RPC mode" };
+			return { success: false, error: "RPC 模式下不支持主题切换" };
 		},
 
 		getToolsExpanded() {
@@ -464,7 +464,7 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 				const models = await session.modelRegistry.getAvailable();
 				const model = models.find((m) => m.provider === command.provider && m.id === command.modelId);
 				if (!model) {
-					return error(id, "set_model", `Model not found: ${command.provider}/${command.modelId}`);
+					return error(id, "set_model", `模型未找到: ${command.provider}/${command.modelId}`);
 				}
 				await session.setModel(model);
 				return success(id, "set_model", model);
@@ -589,7 +589,7 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 			case "clone": {
 				const leafId = session.sessionManager.getLeafId();
 				if (!leafId) {
-					return error(id, "clone", "Cannot clone session: no current entry selected");
+					return error(id, "clone", "无法克隆会话: 未选择当前条目");
 				}
 				const result = await runtimeHost.fork(leafId, { position: "at" });
 				if (!result.cancelled) {
@@ -611,7 +611,7 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 			case "set_session_name": {
 				const name = command.name.trim();
 				if (!name) {
-					return error(id, "set_session_name", "Session name cannot be empty");
+					return error(id, "set_session_name", "会话名称不能为空");
 				}
 				session.setSessionName(name);
 				return success(id, "set_session_name");
@@ -664,7 +664,7 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 
 			default: {
 				const unknownCommand = command as { type: string };
-				return error(undefined, unknownCommand.type, `Unknown command: ${unknownCommand.type}`);
+				return error(undefined, unknownCommand.type, `未知命令: ${unknownCommand.type}`);
 			}
 		}
 	};

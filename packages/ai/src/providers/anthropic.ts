@@ -356,7 +356,7 @@ async function* iterateSseMessages(
 	try {
 		while (true) {
 			if (signal?.aborted) {
-				throw new Error("Request was aborted");
+				throw new Error("请求已被中止");
 			}
 
 			const { value, done } = await reader.read();
@@ -408,7 +408,7 @@ async function* iterateAnthropicEvents(
 	signal?: AbortSignal,
 ): AsyncGenerator<RawMessageStreamEvent> {
 	if (!response.body) {
-		throw new Error("Attempted to iterate over an Anthropic response with no body");
+		throw new Error("尝试遍历无响应体的 Anthropic 响应");
 	}
 
 	let sawMessageStart = false;
@@ -434,13 +434,13 @@ async function* iterateAnthropicEvents(
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
 			throw new Error(
-				`Could not parse Anthropic SSE event ${sse.event}: ${message}; data=${sse.data}; raw=${sse.raw.join("\\n")}`,
+				`无法解析 Anthropic SSE 事件 ${sse.event}: ${message}; data=${sse.data}; raw=${sse.raw.join("\\n")}`,
 			);
 		}
 	}
 
 	if (sawMessageStart && !sawMessageEnd) {
-		throw new Error("Anthropic stream ended before message_stop");
+		throw new Error("Anthropic 数据流在收到 message_stop 前结束");
 	}
 }
 
@@ -680,11 +680,11 @@ export const streamAnthropic: StreamFunction<"anthropic-messages", AnthropicOpti
 			}
 
 			if (options?.signal?.aborted) {
-				throw new Error("Request was aborted");
+				throw new Error("请求已被中止");
 			}
 
 			if (output.stopReason === "aborted" || output.stopReason === "error") {
-				throw new Error("An unknown error occurred");
+				throw new Error("发生未知错误");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason, message: output });
@@ -736,7 +736,7 @@ export const streamSimpleAnthropic: StreamFunction<"anthropic-messages", SimpleS
 ): AssistantMessageEventStream => {
 	const apiKey = options?.apiKey || getEnvApiKey(model.provider);
 	if (!apiKey) {
-		throw new Error(`No API key for provider: ${model.provider}`);
+		throw new Error(`没有提供商 ${model.provider} 的 API 密钥`);
 	}
 
 	const base = buildBaseOptions(model, options, apiKey);
@@ -905,7 +905,7 @@ function buildParams(
 		params.system = [
 			{
 				type: "text",
-				text: "You are Claude Code, Anthropic's official CLI for Claude.",
+				text: "你是 Claude Code，Anthropic 官方 Claude 命令行工具。",
 				...(cacheControl ? { cache_control: cacheControl } : {}),
 			},
 		];
@@ -1207,6 +1207,6 @@ function mapStopReason(reason: Anthropic.Messages.StopReason | string): StopReas
 			return "error";
 		default:
 			// Handle unknown stop reasons gracefully (API may add new values)
-			throw new Error(`Unhandled stop reason: ${reason}`);
+			throw new Error(`未处理的停止原因: ${reason}`);
 	}
 }

@@ -19,6 +19,6 @@ export function cleanupSessionResources(sessionId?: string): void {
 		}
 	}
 	if (errors.length > 0) {
-		throw new AggregateError(errors, "Failed to cleanup session resources");
+		throw new AggregateError(errors, "清理会话资源失败");
 	}
 }

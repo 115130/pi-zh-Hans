@@ -1196,12 +1196,12 @@ export class TUI extends Container {
 				this.stop();
 
 				const errorMsg = [
-					`Rendered line ${i} exceeds terminal width (${visibleWidth(line)} > ${width}).`,
+					`渲染的行 ${i} 超过了终端宽度 (${visibleWidth(line)} > ${width})。`,
 					"",
-					"This is likely caused by a custom TUI component not truncating its output.",
-					"Use visibleWidth() to measure and truncateToWidth() to truncate lines.",
+					"这很可能是因为自定义 TUI 组件没有截断其输出。",
+					"请使用 visibleWidth() 测量并使用 truncateToWidth() 截断行。",
 					"",
-					`Debug log written to: ${crashLogPath}`,
+					`调试日志已写入: ${crashLogPath}`,
 				].join("\n");
 				throw new Error(errorMsg);
 			}

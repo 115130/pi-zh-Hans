@@ -214,7 +214,7 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 			for await (const item of response.stream!) {
 				if (item.messageStart) {
 					if (item.messageStart.role !== ConversationRole.ASSISTANT) {
-						throw new Error("Unexpected assistant message start but got user message start instead");
+						throw new Error("意料之外的助手消息开始，但收到了用户消息开始");
 					}
 					stream.push({ type: "start", partial: output });
 				} else if (item.contentBlockStart) {
@@ -241,11 +241,11 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 			}
 
 			if (options.signal?.aborted) {
-				throw new Error("Request was aborted");
+				throw new Error("请求已中止");
 			}
 
 			if (output.stopReason === "error" || output.stopReason === "aborted") {
-				throw new Error("An unknown error occurred");
+				throw new Error("发生未知错误");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason, message: output });
@@ -273,11 +273,11 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
  * prefix format rather than using the raw SDK exception name.
  */
 const BEDROCK_ERROR_PREFIXES: Record<string, string> = {
-	InternalServerException: "Internal server error",
-	ModelStreamErrorException: "Model stream error",
-	ValidationException: "Validation error",
-	ThrottlingException: "Throttling error",
-	ServiceUnavailableException: "Service unavailable",
+	InternalServerException: "内部服务器错误",
+	ModelStreamErrorException: "模型流错误",
+	ValidationException: "验证错误",
+	ThrottlingException: "限流错误",
+	ServiceUnavailableException: "服务不可用",
 };
 
 /**
@@ -940,7 +940,7 @@ function createImageBlock(mimeType: string, data: string) {
 			format = ImageFormat.WEBP;
 			break;
 		default:
-			throw new Error(`Unknown image type: ${mimeType}`);
+			throw new Error(`未知图片类型：${mimeType}`);
 	}
 
 	const binaryString = atob(data);

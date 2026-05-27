@@ -19,7 +19,7 @@ export function formatThrownValue(value: unknown): string {
 }
 
 export function extractDiagnosticError(error: unknown): DiagnosticErrorInfo {
-	if (!(error instanceof Error)) return { name: "ThrownValue", message: formatThrownValue(error) };
+	if (!(error instanceof Error)) return { name: "抛出的值", message: formatThrownValue(error) };
 	const code = (error as Error & { code?: unknown }).code;
 	return {
 		name: error.name || undefined,

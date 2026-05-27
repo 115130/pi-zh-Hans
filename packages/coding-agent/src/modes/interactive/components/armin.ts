@@ -99,7 +99,7 @@ export class ArminComponent implements Component {
 		});
 
 		// Add "ARMIN SAYS HI" at the end
-		const message = "ARMIN SAYS HI";
+		const message = "Armin 问好";
 		const msgPadRight = Math.max(0, width - padding - message.length);
 		this.cachedLines.push(` ${theme.fg("accent", message)}${" ".repeat(msgPadRight)}`);
 

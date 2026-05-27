@@ -280,7 +280,7 @@ function createAbortedMessage(partial: AssistantMessage): AssistantMessage {
 	return {
 		...partial,
 		stopReason: "aborted",
-		errorMessage: "Request was aborted",
+		errorMessage: "请求已中止",
 		timestamp: Date.now(),
 	};
 }
@@ -437,12 +437,7 @@ export function registerFauxProvider(options: RegisterFauxProviderOptions = {}):
 			try {
 				await streamOptions?.onResponse?.({ status: 200, headers: {} }, requestModel);
 				if (!step) {
-					let message = createErrorMessage(
-						new Error("No more faux responses queued"),
-						api,
-						provider,
-						requestModel.id,
-					);
+					let message = createErrorMessage(new Error("队列中没有更多模拟响应"), api, provider, requestModel.id);
 					message = withUsageEstimate(message, context, streamOptions, promptCache);
 					outer.push({ type: "error", reason: "error", error: message });
 					outer.end(message);

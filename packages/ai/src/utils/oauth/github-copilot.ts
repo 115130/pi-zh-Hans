@@ -113,7 +113,7 @@ async function startDeviceFlow(domain: string): Promise<DeviceCodeResponse> {
 	});
 
 	if (!data || typeof data !== "object") {
-		throw new Error("Invalid device code response");
+		throw new Error("无效的设备码响应");
 	}
 
 	const deviceCode = (data as Record<string, unknown>).device_code;
@@ -129,7 +129,7 @@ async function startDeviceFlow(domain: string): Promise<DeviceCodeResponse> {
 		(interval !== undefined && typeof interval !== "number") ||
 		typeof expiresIn !== "number"
 	) {
-		throw new Error("Invalid device code response fields");
+		throw new Error("无效的设备码响应字段");
 	}
 
 	return {
@@ -177,10 +177,10 @@ async function pollForGitHubAccessToken(domain: string, device: DeviceCodeRespon
 				}
 
 				const descriptionSuffix = description ? `: ${description}` : "";
-				return { status: "failed", message: `Device flow failed: ${error}${descriptionSuffix}` };
+				return { status: "failed", message: `设备流失败：${error}${descriptionSuffix}` };
 			}
 
-			return { status: "failed", message: "Invalid device token response" };
+			return { status: "failed", message: "无效的设备令牌响应" };
 		},
 	});
 }
@@ -204,14 +204,14 @@ export async function refreshGitHubCopilotToken(
 	});
 
 	if (!raw || typeof raw !== "object") {
-		throw new Error("Invalid Copilot token response");
+		throw new Error("无效的 Copilot 令牌响应");
 	}
 
 	const token = (raw as Record<string, unknown>).token;
 	const expiresAt = (raw as Record<string, unknown>).expires_at;
 
 	if (typeof token !== "string" || typeof expiresAt !== "number") {
-		throw new Error("Invalid Copilot token response fields");
+		throw new Error("无效的 Copilot 令牌响应字段");
 	}
 
 	return {
@@ -281,19 +281,19 @@ export async function loginGitHubCopilot(options: {
 	signal?: AbortSignal;
 }): Promise<OAuthCredentials> {
 	const input = await options.onPrompt({
-		message: "GitHub Enterprise URL/domain (blank for github.com)",
+		message: "GitHub Enterprise URL/域名（留空使用 github.com）",
 		placeholder: "company.ghe.com",
 		allowEmpty: true,
 	});
 
 	if (options.signal?.aborted) {
-		throw new Error("Login cancelled");
+		throw new Error("登录已取消");
 	}
 
 	const trimmed = input.trim();
 	const enterpriseDomain = normalizeDomain(input);
 	if (trimmed && !enterpriseDomain) {
-		throw new Error("Invalid GitHub Enterprise URL/domain");
+		throw new Error("无效的 GitHub Enterprise URL/域名");
 	}
 	const domain = enterpriseDomain || "github.com";
 
@@ -309,7 +309,7 @@ export async function loginGitHubCopilot(options: {
 	const credentials = await refreshGitHubCopilotToken(githubAccessToken, enterpriseDomain ?? undefined);
 
 	// Enable all models after successful login
-	options.onProgress?.("Enabling models...");
+	options.onProgress?.("正在启用模型...");
 	await enableAllGitHubCopilotModels(credentials.access, enterpriseDomain ?? undefined);
 	return credentials;
 }

@@ -8,7 +8,7 @@
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { ImageContent, Message, TextContent } from "@earendil-works/pi-ai";
 
-export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this point was compacted into the following summary:
+export const COMPACTION_SUMMARY_PREFIX = `此点之前的对话历史已被压缩为以下摘要：
 
 <summary>
 `;
@@ -16,7 +16,7 @@ export const COMPACTION_SUMMARY_PREFIX = `The conversation history before this p
 export const COMPACTION_SUMMARY_SUFFIX = `
 </summary>`;
 
-export const BRANCH_SUMMARY_PREFIX = `The following is a summary of a branch that this conversation came back from:
+export const BRANCH_SUMMARY_PREFIX = `以下是此对话返回的分支的摘要：
 
 <summary>
 `;
@@ -80,19 +80,19 @@ declare module "@earendil-works/pi-agent-core" {
  * Convert a BashExecutionMessage to user message text for LLM context.
  */
 export function bashExecutionToText(msg: BashExecutionMessage): string {
-	let text = `Ran \`${msg.command}\`\n`;
+	let text = `运行 \`${msg.command}\`\n`;
 	if (msg.output) {
 		text += `\`\`\`\n${msg.output}\n\`\`\``;
 	} else {
-		text += "(no output)";
+		text += "(无输出)";
 	}
 	if (msg.cancelled) {
-		text += "\n\n(command cancelled)";
+		text += "\n\n(命令已取消)";
 	} else if (msg.exitCode !== null && msg.exitCode !== undefined && msg.exitCode !== 0) {
-		text += `\n\nCommand exited with code ${msg.exitCode}`;
+		text += `\n\n命令退出，代码为 ${msg.exitCode}`;
 	}
 	if (msg.truncated && msg.fullOutputPath) {
-		text += `\n\n[Output truncated. Full output: ${msg.fullOutputPath}]`;
+		text += `\n\n[输出已截断。完整输出：${msg.fullOutputPath}]`;
 	}
 	return text;
 }

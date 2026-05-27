@@ -38,7 +38,7 @@ async function getNodeApis(): Promise<NodeApis> {
 	if (nodeApis) return nodeApis;
 	if (!nodeApisPromise) {
 		if (typeof process === "undefined" || (!process.versions?.node && !process.versions?.bun)) {
-			throw new Error("Anthropic OAuth is only available in Node.js environments");
+			throw new Error("Anthropic OAuth 仅在 Node.js 环境中可用");
 		}
 		nodeApisPromise = import("node:http").then((httpModule) => ({
 			createServer: httpModule.createServer,
@@ -114,7 +114,7 @@ async function startCallbackServer(expectedState: string): Promise<CallbackServe
 				const url = new URL(req.url || "", "http://localhost");
 				if (url.pathname !== CALLBACK_PATH) {
 					res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
-					res.end(oauthErrorHtml("Callback route not found."));
+					res.end(oauthErrorHtml("未找到回调路由。"));
 					return;
 				}
 
@@ -124,28 +124,28 @@ async function startCallbackServer(expectedState: string): Promise<CallbackServe
 
 				if (error) {
 					res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
-					res.end(oauthErrorHtml("Anthropic authentication did not complete.", `Error: ${error}`));
+					res.end(oauthErrorHtml("Anthropic 认证未完成。", `错误: ${error}`));
 					return;
 				}
 
 				if (!code || !state) {
 					res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
-					res.end(oauthErrorHtml("Missing code or state parameter."));
+					res.end(oauthErrorHtml("缺少 code 或 state 参数。"));
 					return;
 				}
 
 				if (state !== expectedState) {
 					res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
-					res.end(oauthErrorHtml("State mismatch."));
+					res.end(oauthErrorHtml("状态不匹配。"));
 					return;
 				}
 
 				res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-				res.end(oauthSuccessHtml("Anthropic authentication completed. You can close this window."));
+				res.end(oauthSuccessHtml("Anthropic 认证已完成。您可以关闭此窗口。"));
 				settleWait?.({ code, state });
 			} catch {
 				res.writeHead(500, { "Content-Type": "text/plain; charset=utf-8" });
-				res.end("Internal error");
+				res.end("内部错误");
 			}
 		});
 
@@ -180,7 +180,7 @@ async function postJson(url: string, body: Record<string, string | number>): Pro
 	const responseBody = await response.text();
 
 	if (!response.ok) {
-		throw new Error(`HTTP request failed. status=${response.status}; url=${url}; body=${responseBody}`);
+		throw new Error(`HTTP 请求失败。status=${response.status}; url=${url}; body=${responseBody}`);
 	}
 
 	return responseBody;
@@ -204,7 +204,7 @@ async function exchangeAuthorizationCode(
 		});
 	} catch (error) {
 		throw new Error(
-			`Token exchange request failed. url=${TOKEN_URL}; redirect_uri=${redirectUri}; response_type=authorization_code; details=${formatErrorDetails(error)}`,
+			`令牌交换请求失败。url=${TOKEN_URL}; redirect_uri=${redirectUri}; response_type=authorization_code; details=${formatErrorDetails(error)}`,
 		);
 	}
 
@@ -213,7 +213,7 @@ async function exchangeAuthorizationCode(
 		tokenData = JSON.parse(responseBody) as { access_token: string; refresh_token: string; expires_in: number };
 	} catch (error) {
 		throw new Error(
-			`Token exchange returned invalid JSON. url=${TOKEN_URL}; body=${responseBody}; details=${formatErrorDetails(error)}`,
+			`令牌交换返回无效 JSON。url=${TOKEN_URL}; body=${responseBody}; details=${formatErrorDetails(error)}`,
 		);
 	}
 
@@ -254,8 +254,7 @@ export async function loginAnthropic(options: {
 
 		options.onAuth({
 			url: `${AUTHORIZE_URL}?${authParams.toString()}`,
-			instructions:
-				"Complete login in your browser. If the browser is on another machine, paste the final redirect URL here.",
+			instructions: "在浏览器中完成登录。如果浏览器在另一台机器上，请在此处粘贴最终的跳转 URL。",
 		});
 
 		if (options.onManualCodeInput) {
@@ -285,7 +284,7 @@ export async function loginAnthropic(options: {
 			} else if (manualInput) {
 				const parsed = parseAuthorizationInput(manualInput);
 				if (parsed.state && parsed.state !== verifier) {
-					throw new Error("OAuth state mismatch");
+					throw new Error("OAuth 状态不匹配");
 				}
 				code = parsed.code;
 				state = parsed.state ?? verifier;
@@ -299,7 +298,7 @@ export async function loginAnthropic(options: {
 				if (manualInput) {
 					const parsed = parseAuthorizationInput(manualInput);
 					if (parsed.state && parsed.state !== verifier) {
-						throw new Error("OAuth state mismatch");
+						throw new Error("OAuth 状态不匹配");
 					}
 					code = parsed.code;
 					state = parsed.state ?? verifier;
@@ -316,26 +315,26 @@ export async function loginAnthropic(options: {
 
 		if (!code) {
 			const input = await options.onPrompt({
-				message: "Paste the authorization code or full redirect URL:",
+				message: "粘贴授权码或完整的跳转 URL：",
 				placeholder: REDIRECT_URI,
 			});
 			const parsed = parseAuthorizationInput(input);
 			if (parsed.state && parsed.state !== verifier) {
-				throw new Error("OAuth state mismatch");
+				throw new Error("OAuth 状态不匹配");
 			}
 			code = parsed.code;
 			state = parsed.state ?? verifier;
 		}
 
 		if (!code) {
-			throw new Error("Missing authorization code");
+			throw new Error("缺少授权码");
 		}
 
 		if (!state) {
-			throw new Error("Missing OAuth state");
+			throw new Error("缺少 OAuth 状态");
 		}
 
-		options.onProgress?.("Exchanging authorization code for tokens...");
+		options.onProgress?.("正在交换授权码以获取令牌...");
 		return exchangeAuthorizationCode(code, state, verifier, redirectUriForExchange);
 	} finally {
 		server.server.close();
@@ -354,7 +353,7 @@ export async function refreshAnthropicToken(refreshToken: string): Promise<OAuth
 			refresh_token: refreshToken,
 		});
 	} catch (error) {
-		throw new Error(`Anthropic token refresh request failed. url=${TOKEN_URL}; details=${formatErrorDetails(error)}`);
+		throw new Error(`Anthropic 令牌刷新请求失败。url=${TOKEN_URL}; details=${formatErrorDetails(error)}`);
 	}
 
 	let data: { access_token: string; refresh_token: string; expires_in: number; scope?: string };
@@ -367,7 +366,7 @@ export async function refreshAnthropicToken(refreshToken: string): Promise<OAuth
 		};
 	} catch (error) {
 		throw new Error(
-			`Anthropic token refresh returned invalid JSON. url=${TOKEN_URL}; body=${responseBody}; details=${formatErrorDetails(error)}`,
+			`Anthropic 令牌刷新返回无效 JSON。url=${TOKEN_URL}; body=${responseBody}; details=${formatErrorDetails(error)}`,
 		);
 	}
 

@@ -128,7 +128,7 @@ class SessionSelectorHeader implements Component {
 	invalidate(): void {}
 
 	render(width: number): string[] {
-		const title = this.scope === "current" ? "Resume Session (Current Folder)" : "Resume Session (All)";
+		const title = this.scope === "current" ? "恢复会话（当前文件夹）" : "恢复会话（所有）";
 		const leftText = theme.bold(title);
 
 		const sortLabel = this.sortMode === "threaded" ? "线程" : this.sortMode === "recent" ? "最近" : "模糊";
@@ -140,11 +140,11 @@ class SessionSelectorHeader implements Component {
 		let scopeText: string;
 		if (this.loading) {
 			const progressText = this.loadProgress ? `${this.loadProgress.loaded}/${this.loadProgress.total}` : "...";
-			scopeText = `${theme.fg("muted", "○ Current Folder | ")}${theme.fg("accent", `Loading ${progressText}`)}`;
+			scopeText = `${theme.fg("muted", "○ 当前文件夹 | ")}${theme.fg("accent", `加载中 ${progressText}`)}`;
 		} else if (this.scope === "current") {
-			scopeText = `${theme.fg("accent", "◉ Current Folder")}${theme.fg("muted", " | ○ All")}`;
+			scopeText = `${theme.fg("accent", "◉ 当前文件夹")}${theme.fg("muted", " | ○ 所有")}`;
 		} else {
-			scopeText = `${theme.fg("muted", "○ Current Folder | ")}${theme.fg("accent", "◉ All")}`;
+			scopeText = `${theme.fg("muted", "○ 当前文件夹 | ")}${theme.fg("accent", "◉ 所有")}`;
 		}
 
 		const rightText = truncateToWidth(`${scopeText}  ${nameText}  ${sortText}`, width, "");
@@ -156,7 +156,7 @@ class SessionSelectorHeader implements Component {
 		let hintLine1: string;
 		let hintLine2: string;
 		if (this.confirmingDeletePath !== null) {
-			const confirmHint = `Delete session? ${keyHint("tui.select.confirm", "confirm")} · ${keyHint("tui.select.cancel", "cancel")}`;
+			const confirmHint = `删除会话？ ${keyHint("tui.select.confirm", "确认")} · ${keyHint("tui.select.cancel", "取消")}`;
 			hintLine1 = theme.fg("error", truncateToWidth(confirmHint, width, "…"));
 			hintLine2 = "";
 		} else if (this.statusMessage) {
@@ -164,18 +164,17 @@ class SessionSelectorHeader implements Component {
 			hintLine1 = theme.fg(color, truncateToWidth(this.statusMessage.message, width, "…"));
 			hintLine2 = "";
 		} else {
-			const pathState = this.showPath ? "(on)" : "(off)";
+			const pathState = this.showPath ? "(开启)" : "(关闭)";
 			const sep = theme.fg("muted", " · ");
-			const hint1 =
-				keyHint("tui.input.tab", "scope") + sep + theme.fg("muted", 're:<pattern> regex · "phrase" exact');
+			const hint1 = keyHint("tui.input.tab", "范围") + sep + theme.fg("muted", 're:<模式> 正则 · "短语" 精确');
 			const hint2Parts = [
-				keyHint("app.session.toggleSort", "sort"),
-				keyHint("app.session.toggleNamedFilter", "named"),
-				keyHint("app.session.delete", "delete"),
-				keyHint("app.session.togglePath", `path ${pathState}`),
+				keyHint("app.session.toggleSort", "排序"),
+				keyHint("app.session.toggleNamedFilter", "已命名"),
+				keyHint("app.session.delete", "删除"),
+				keyHint("app.session.togglePath", `路径 ${pathState}`),
 			];
 			if (this.showRenameHint) {
-				hint2Parts.push(keyHint("app.session.rename", "rename"));
+				hint2Parts.push(keyHint("app.session.rename", "重命名"));
 			}
 			const hint2 = hint2Parts.join(sep);
 			hintLine1 = truncateToWidth(hint1, width, "…");
@@ -409,16 +408,16 @@ class SessionList implements Component, Focusable {
 			if (this.nameFilter === "named") {
 				const toggleKey = keyText("app.session.toggleNamedFilter");
 				if (this.showCwd) {
-					emptyMessage = `  No named sessions found. Press ${toggleKey} to show all.`;
+					emptyMessage = `  未找到已命名的会话。按 ${toggleKey} 显示所有。`;
 				} else {
-					emptyMessage = `  No named sessions in current folder. Press ${toggleKey} to show all, or Tab to view all.`;
+					emptyMessage = `  当前文件夹中没有已命名的会话。按 ${toggleKey} 显示所有，或按 Tab 查看所有会话。`;
 				}
 			} else if (this.showCwd) {
 				// "All" scope - no sessions anywhere that match filter
-				emptyMessage = "  No sessions found";
+				emptyMessage = "  未找到会话";
 			} else {
 				// "Current folder" scope - hint to try "all"
-				emptyMessage = "  No sessions in current folder. Press Tab to view all.";
+				emptyMessage = "  当前文件夹中没有会话。按 Tab 查看所有会话。";
 			}
 			lines.push(theme.fg("muted", truncateToWidth(emptyMessage, width, "…")));
 			return lines;
@@ -864,7 +863,7 @@ export class SessionSelectorComponent extends Container implements Focusable {
 		panel.addChild(new Spacer(1));
 		panel.addChild(
 			new Text(
-				theme.fg("muted", `${keyText("tui.select.confirm")} to save · ${keyText("tui.select.cancel")} to cancel`),
+				theme.fg("muted", `${keyText("tui.select.confirm")} 保存 · ${keyText("tui.select.cancel")} 取消`),
 				1,
 				0,
 			),

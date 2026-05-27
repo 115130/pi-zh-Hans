@@ -115,7 +115,7 @@ function applyExtensionFlagValues(
 	if (unknownFlags.length > 0) {
 		diagnostics.push({
 			type: "error",
-			message: `未知选项${unknownFlags.length === 1 ? "" : "s"}: ${unknownFlags.map((name) => `--${name}`).join(", ")}`,
+			message: `未知选项${unknownFlags.length === 1 ? "" : "（多个）"}: ${unknownFlags.map((name) => `--${name}`).join(", ")}`,
 		});
 	}
 

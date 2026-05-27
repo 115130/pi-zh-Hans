@@ -63,7 +63,7 @@ export class OutputAccumulator {
 
 	append(data: Buffer): void {
 		if (this.finished) {
-			throw new Error("Cannot append to a finished output accumulator");
+			throw new Error("无法向已完成的输出累加器中追加数据");
 		}
 
 		this.totalRawBytes += data.length;

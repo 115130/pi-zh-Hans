@@ -18,7 +18,7 @@ export interface NodeHttpProxyAgents {
 }
 
 export const UNSUPPORTED_PROXY_PROTOCOL_MESSAGE =
-	"Unsupported proxy protocol. SOCKS and PAC proxy URLs are not supported; use an HTTP or HTTPS proxy URL.";
+	"不支持的代理协议。不支持 SOCKS 和 PAC 代理 URL；请使用 HTTP 或 HTTPS 代理 URL。";
 
 function getProxyEnv(key: string): string {
 	return process.env[key.toLowerCase()] || process.env[key.toUpperCase()] || "";
@@ -99,12 +99,12 @@ export function resolveHttpProxyUrlForTarget(targetUrl: string | URL): URL | und
 		proxyUrl = new URL(proxy);
 	} catch (error) {
 		throw new Error(
-			`Invalid proxy URL ${JSON.stringify(proxy)}: ${error instanceof Error ? error.message : String(error)}`,
+			`无效的代理 URL ${JSON.stringify(proxy)}: ${error instanceof Error ? error.message : String(error)}`,
 		);
 	}
 
 	if (proxyUrl.protocol !== "http:" && proxyUrl.protocol !== "https:") {
-		throw new Error(`${UNSUPPORTED_PROXY_PROTOCOL_MESSAGE} Got ${proxyUrl.protocol}`);
+		throw new Error(`${UNSUPPORTED_PROXY_PROTOCOL_MESSAGE} 得到 ${proxyUrl.protocol}`);
 	}
 
 	return proxyUrl;

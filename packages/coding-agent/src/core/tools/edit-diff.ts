@@ -421,8 +421,8 @@ export async function computeEditsDiff(
 		try {
 			await access(absolutePath, constants.R_OK);
 		} catch (error: unknown) {
-			const errorMessage = error instanceof Error && "code" in error ? `Error code: ${error.code}` : String(error);
-			return { error: `Could not edit file: ${path}. ${errorMessage}.` };
+			const errorMessage = error instanceof Error && "code" in error ? `错误码: ${error.code}` : String(error);
+			return { error: `无法编辑文件: ${path}. ${errorMessage}.` };
 		}
 
 		// Read the file

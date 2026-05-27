@@ -107,7 +107,7 @@ export function createLocalBashOperations(options?: { shellPath?: string }): Bas
 						if (timeoutHandle) clearTimeout(timeoutHandle);
 						if (signal) signal.removeEventListener("abort", onAbort);
 						if (signal?.aborted) {
-							reject(new Error("aborted"));
+							reject(new Error("已中止"));
 							return;
 						}
 						if (timedOut) {
@@ -175,13 +175,13 @@ class BashResultRenderComponent extends Container {
 }
 
 function formatDuration(ms: number): string {
-	return `${(ms / 1000).toFixed(1)}s`;
+	return `${(ms / 1000).toFixed(1)}秒`;
 }
 
 function formatBashCall(args: { command?: string; timeout?: number } | undefined): string {
 	const command = str(args?.command);
 	const timeout = args?.timeout as number | undefined;
-	const timeoutSuffix = timeout ? theme.fg("muted", ` (timeout ${timeout}s)`) : "";
+	const timeoutSuffix = timeout ? theme.fg("muted", `（超时 ${timeout}秒）`) : "";
 	const commandDisplay = command === null ? invalidArgText(theme) : command ? command : theme.fg("toolOutput", "...");
 	return theme.fg("toolTitle", theme.bold(`$ ${commandDisplay}`)) + timeoutSuffix;
 }
@@ -221,8 +221,8 @@ function rebuildBashResultRenderComponent(
 					}
 					if (state.cachedSkipped && state.cachedSkipped > 0) {
 						const hint =
-							theme.fg("muted", `... (${state.cachedSkipped} earlier lines,`) +
-							` ${keyHint("app.tools.expand", "to expand")})`;
+							theme.fg("muted", `...（${state.cachedSkipped} 行之前的内容，`) +
+							` ${keyHint("app.tools.expand", "展开")}）`;
 						return ["", truncateToWidth(hint, width, "..."), ...(state.cachedLines ?? [])];
 					}
 					return ["", ...(state.cachedLines ?? [])];
@@ -241,22 +241,22 @@ function rebuildBashResultRenderComponent(
 	if (truncation?.truncated || fullOutputPath) {
 		const warnings: string[] = [];
 		if (fullOutputPath) {
-			warnings.push(`Full output: ${fullOutputPath}`);
+			warnings.push(`完整输出：${fullOutputPath}`);
 		}
 		if (truncation?.truncated) {
 			if (truncation.truncatedBy === "lines") {
-				warnings.push(`Truncated: showing ${truncation.outputLines} of ${truncation.totalLines} lines`);
+				warnings.push(`已截断：显示 ${truncation.outputLines} 行，共 ${truncation.totalLines} 行`);
 			} else {
 				warnings.push(
-					`Truncated: ${truncation.outputLines} lines shown (${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} limit)`,
+					`已截断：显示 ${truncation.outputLines} 行（最大 ${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)}）`,
 				);
 			}
 		}
-		component.addChild(new Text(`\n${theme.fg("warning", `[${warnings.join(". ")}]`)}`, 0, 0));
+		component.addChild(new Text(`\n${theme.fg("warning", `[${warnings.join("。 ")}]`)}`, 0, 0));
 	}
 
 	if (startedAt !== undefined) {
-		const label = options.isPartial ? "Elapsed" : "Took";
+		const label = options.isPartial ? "已用时" : "用时";
 		const endTime = endedAt ?? Date.now();
 		component.addChild(new Text(`\n${theme.fg("muted", `${label} ${formatDuration(endTime - startedAt)}`)}`, 0, 0));
 	}
@@ -343,7 +343,7 @@ export function createBashToolDefinition(
 				return snapshot;
 			};
 
-			const formatOutput = (snapshot: Awaited<ReturnType<typeof finishOutput>>, emptyText = "(no output)") => {
+			const formatOutput = (snapshot: Awaited<ReturnType<typeof finishOutput>>, emptyText = "（无输出）") => {
 				const truncation = snapshot.truncation;
 				let text = snapshot.content || emptyText;
 				let details: BashToolDetails | undefined;
@@ -353,11 +353,11 @@ export function createBashToolDefinition(
 					const endLine = truncation.totalLines;
 					if (truncation.lastLinePartial) {
 						const lastLineSize = formatSize(output.getLastLineBytes());
-						text += `\n\n[Showing last ${formatSize(truncation.outputBytes)} of line ${endLine} (line is ${lastLineSize}). Full output: ${snapshot.fullOutputPath}]`;
+						text += `\n\n[显示第 ${endLine} 行末尾 ${formatSize(truncation.outputBytes)}（该行 ${lastLineSize}）。完整输出：${snapshot.fullOutputPath}]`;
 					} else if (truncation.truncatedBy === "lines") {
-						text += `\n\n[Showing lines ${startLine}-${endLine} of ${truncation.totalLines}. Full output: ${snapshot.fullOutputPath}]`;
+						text += `\n\n[显示第 ${startLine}-${endLine} 行（共 ${truncation.totalLines} 行）。完整输出：${snapshot.fullOutputPath}]`;
 					} else {
-						text += `\n\n[Showing lines ${startLine}-${endLine} of ${truncation.totalLines} (${formatSize(DEFAULT_MAX_BYTES)} limit). Full output: ${snapshot.fullOutputPath}]`;
+						text += `\n\n[显示第 ${startLine}-${endLine} 行（共 ${truncation.totalLines} 行，最大 ${formatSize(DEFAULT_MAX_BYTES)}）。完整输出：${snapshot.fullOutputPath}]`;
 					}
 				}
 				return { text, details };
@@ -383,7 +383,7 @@ export function createBashToolDefinition(
 					}
 					if (err instanceof Error && err.message.startsWith("timeout:")) {
 						const timeoutSecs = err.message.split(":")[1];
-						throw new Error(appendStatus(text, `Command timed out after ${timeoutSecs} seconds`));
+						throw new Error(appendStatus(text, `命令超时，已等待 ${timeoutSecs} 秒`));
 					}
 					throw err;
 				}
@@ -391,7 +391,7 @@ export function createBashToolDefinition(
 				const snapshot = await finishOutput();
 				const { text: outputText, details } = formatOutput(snapshot);
 				if (exitCode !== 0 && exitCode !== null) {
-					throw new Error(appendStatus(outputText, `Command exited with code ${exitCode}`));
+					throw new Error(appendStatus(outputText, `命令退出，代码为 ${exitCode}`));
 				}
 				return { content: [{ type: "text", text: outputText }], details };
 			} finally {

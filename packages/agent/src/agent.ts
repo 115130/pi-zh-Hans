@@ -326,9 +326,7 @@ export class Agent {
 	async prompt(input: string, images?: ImageContent[]): Promise<void>;
 	async prompt(input: string | AgentMessage | AgentMessage[], images?: ImageContent[]): Promise<void> {
 		if (this.activeRun) {
-			throw new Error(
-				"Agent is already processing a prompt. Use steer() or followUp() to queue messages, or wait for completion.",
-			);
+			throw new Error("Agent 正在处理提示中。请使用 steer() 或 followUp() 排队消息，或等待完成。");
 		}
 		const messages = this.normalizePromptInput(input, images);
 		await this.runPromptMessages(messages);
@@ -337,12 +335,12 @@ export class Agent {
 	/** Continue from the current transcript. The last message must be a user or tool-result message. */
 	async continue(): Promise<void> {
 		if (this.activeRun) {
-			throw new Error("Agent is already processing. Wait for completion before continuing.");
+			throw new Error("Agent 正在处理中。请等待完成后再继续。");
 		}
 
 		const lastMessage = this._state.messages[this._state.messages.length - 1];
 		if (!lastMessage) {
-			throw new Error("No messages to continue from");
+			throw new Error("没有可继续的消息");
 		}
 
 		if (lastMessage.role === "assistant") {
@@ -358,7 +356,7 @@ export class Agent {
 				return;
 			}
 
-			throw new Error("Cannot continue from message role: assistant");
+			throw new Error("无法从消息角色 'assistant' 继续");
 		}
 
 		await this.runContinuation();
@@ -450,7 +448,7 @@ export class Agent {
 
 	private async runWithLifecycle(executor: (signal: AbortSignal) => Promise<void>): Promise<void> {
 		if (this.activeRun) {
-			throw new Error("Agent is already processing.");
+			throw new Error("Agent 正在处理中。");
 		}
 
 		const abortController = new AbortController();
@@ -548,7 +546,7 @@ export class Agent {
 
 		const signal = this.activeRun?.abortController.signal;
 		if (!signal) {
-			throw new Error("Agent listener invoked outside active run");
+			throw new Error("Agent 监听器在活动运行之外被调用");
 		}
 		for (const listener of this.listeners) {
 			await listener(event, signal);

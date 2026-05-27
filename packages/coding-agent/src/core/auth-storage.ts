@@ -361,7 +361,7 @@ export class AuthStorage {
 		}
 
 		if (this.fallbackResolver?.(provider)) {
-			return { configured: false, source: "fallback", label: "custom provider config" };
+			return { configured: false, source: "fallback", label: "自定义提供商配置" };
 		}
 
 		return { configured: false };
@@ -386,7 +386,7 @@ export class AuthStorage {
 	async login(providerId: OAuthProviderId, callbacks: OAuthLoginCallbacks): Promise<void> {
 		const provider = getOAuthProvider(providerId);
 		if (!provider) {
-			throw new Error(`Unknown OAuth provider: ${providerId}`);
+			throw new Error(`未知的 OAuth 提供商: ${providerId}`);
 		}
 
 		const credentials = await provider.login(callbacks);

@@ -266,11 +266,11 @@ export const streamGoogleVertex: StreamFunction<"google-vertex", GoogleVertexOpt
 			}
 
 			if (options?.signal?.aborted) {
-				throw new Error("Request was aborted");
+				throw new Error("请求已中止");
 			}
 
 			if (output.stopReason === "aborted" || output.stopReason === "error") {
-				throw new Error("An unknown error occurred");
+				throw new Error("发生未知错误");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason, message: output });
@@ -409,9 +409,7 @@ function isPlaceholderApiKey(apiKey: string): boolean {
 function resolveProject(options?: GoogleVertexOptions): string {
 	const project = options?.project || process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
 	if (!project) {
-		throw new Error(
-			"Vertex AI requires a project ID. Set GOOGLE_CLOUD_PROJECT/GCLOUD_PROJECT or pass project in options.",
-		);
+		throw new Error("Vertex AI 需要项目 ID。请设置 GOOGLE_CLOUD_PROJECT/GCLOUD_PROJECT 或在选项中传递项目。");
 	}
 	return project;
 }
@@ -419,7 +417,7 @@ function resolveProject(options?: GoogleVertexOptions): string {
 function resolveLocation(options?: GoogleVertexOptions): string {
 	const location = options?.location || process.env.GOOGLE_CLOUD_LOCATION;
 	if (!location) {
-		throw new Error("Vertex AI requires a location. Set GOOGLE_CLOUD_LOCATION or pass location in options.");
+		throw new Error("Vertex AI 需要位置。请设置 GOOGLE_CLOUD_LOCATION 或在选项中传递位置。");
 	}
 	return location;
 }
@@ -469,7 +467,7 @@ function buildParams(
 
 	if (options.signal) {
 		if (options.signal.aborted) {
-			throw new Error("Request aborted");
+			throw new Error("请求已中止");
 		}
 		config.abortSignal = options.signal;
 	}

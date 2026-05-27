@@ -3,11 +3,11 @@ import * as undici from "undici";
 export const DEFAULT_HTTP_IDLE_TIMEOUT_MS = 300_000;
 
 export const HTTP_IDLE_TIMEOUT_CHOICES = [
-	{ label: "30 sec", timeoutMs: 30_000 },
-	{ label: "1 min", timeoutMs: 60_000 },
-	{ label: "2 min", timeoutMs: 120_000 },
-	{ label: "5 min", timeoutMs: 300_000 },
-	{ label: "disabled", timeoutMs: 0 },
+	{ label: "30秒", timeoutMs: 30_000 },
+	{ label: "1分钟", timeoutMs: 60_000 },
+	{ label: "2分钟", timeoutMs: 120_000 },
+	{ label: "5分钟", timeoutMs: 300_000 },
+	{ label: "已禁用", timeoutMs: 0 },
 ] as const;
 
 export function parseHttpIdleTimeoutMs(value: unknown): number | undefined {
@@ -33,13 +33,13 @@ export function formatHttpIdleTimeoutMs(timeoutMs: number): string {
 	if (choice) {
 		return choice.label;
 	}
-	return `${timeoutMs / 1000} sec`;
+	return `${timeoutMs / 1000} 秒`;
 }
 
 export function configureHttpDispatcher(timeoutMs: number = DEFAULT_HTTP_IDLE_TIMEOUT_MS): void {
 	const normalizedTimeoutMs = parseHttpIdleTimeoutMs(timeoutMs);
 	if (normalizedTimeoutMs === undefined) {
-		throw new Error(`Invalid HTTP idle timeout: ${String(timeoutMs)}`);
+		throw new Error(`无效的HTTP空闲超时：${String(timeoutMs)}`);
 	}
 	undici.setGlobalDispatcher(
 		new undici.EnvHttpProxyAgent({

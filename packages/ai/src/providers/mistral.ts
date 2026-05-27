@@ -59,7 +59,7 @@ export const streamMistral: StreamFunction<"mistral-conversations", MistralOptio
 		try {
 			const apiKey = options?.apiKey || getEnvApiKey(model.provider);
 			if (!apiKey) {
-				throw new Error(`No API key for provider: ${model.provider}`);
+				throw new Error(`提供商 ${model.provider} 的 API 密钥未设置`);
 			}
 
 			// Intentionally per-request: avoids shared SDK mutable state across concurrent consumers.
@@ -81,11 +81,11 @@ export const streamMistral: StreamFunction<"mistral-conversations", MistralOptio
 			await consumeChatStream(model, output, stream, mistralStream);
 
 			if (options?.signal?.aborted) {
-				throw new Error("Request was aborted");
+				throw new Error("请求已中止");
 			}
 
 			if (output.stopReason === "aborted" || output.stopReason === "error") {
-				throw new Error("An unknown error occurred");
+				throw new Error("发生未知错误");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason, message: output });
@@ -115,7 +115,7 @@ export const streamSimpleMistral: StreamFunction<"mistral-conversations", Simple
 ): AssistantMessageEventStream => {
 	const apiKey = options?.apiKey || getEnvApiKey(model.provider);
 	if (!apiKey) {
-		throw new Error(`No API key for provider: ${model.provider}`);
+		throw new Error(`提供商 ${model.provider} 的 API 密钥未设置`);
 	}
 
 	const base = buildBaseOptions(model, options, apiKey);
@@ -189,9 +189,9 @@ function formatMistralError(error: unknown): string {
 		const statusCode = typeof sdkError.statusCode === "number" ? sdkError.statusCode : undefined;
 		const bodyText = typeof sdkError.body === "string" ? sdkError.body.trim() : undefined;
 		if (statusCode !== undefined && bodyText) {
-			return `Mistral API error (${statusCode}): ${truncateErrorText(bodyText, MAX_MISTRAL_ERROR_BODY_CHARS)}`;
+			return `Mistral API 错误 (${statusCode}): ${truncateErrorText(bodyText, MAX_MISTRAL_ERROR_BODY_CHARS)}`;
 		}
-		if (statusCode !== undefined) return `Mistral API error (${statusCode}): ${error.message}`;
+		if (statusCode !== undefined) return `Mistral API 错误 (${statusCode}): ${error.message}`;
 		return error.message;
 	}
 	return safeJsonStringify(error);
@@ -199,7 +199,7 @@ function formatMistralError(error: unknown): string {
 
 function truncateErrorText(text: string, maxChars: number): string {
 	if (text.length <= maxChars) return text;
-	return `${text.slice(0, maxChars)}... [truncated ${text.length - maxChars} chars]`;
+	return `${text.slice(0, maxChars)}... [已截断 ${text.length - maxChars} 个字符]`;
 }
 
 function safeJsonStringify(value: unknown): string {
@@ -569,7 +569,7 @@ function toChatMessages(messages: Message[], supportsImages: boolean): ChatCompl
 
 function buildToolResultText(text: string, hasImages: boolean, supportsImages: boolean, isError: boolean): string {
 	const trimmed = text.trim();
-	const errorPrefix = isError ? "[tool error] " : "";
+	const errorPrefix = isError ? "[工具错误] " : "";
 
 	if (trimmed.length > 0) {
 		const imageSuffix = hasImages && !supportsImages ? "\n[工具图片已省略：模型不支持图片]" : "";

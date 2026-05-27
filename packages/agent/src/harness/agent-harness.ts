@@ -453,7 +453,7 @@ export class AgentHarness<
 
 	private validateToolNames(toolNames: string[], tools: Map<string, TTool> = this.tools): void {
 		const missing = toolNames.filter((name) => !tools.has(name));
-		if (missing.length > 0) throw new AgentHarnessError("invalid_argument", `Unknown tool(s): ${missing.join(", ")}`);
+		if (missing.length > 0) throw new AgentHarnessError("invalid_argument", `未知工具: ${missing.join(", ")}`);
 	}
 
 	private async flushPendingSessionWrites(): Promise<void> {
@@ -576,7 +576,7 @@ export class AgentHarness<
 				} catch (failureError) {
 					const cause = new AggregateError(
 						[toError(error), toError(failureError)],
-						"Agent run failed and failure reporting failed",
+						"代理运行失败且失败报告也失败",
 					);
 					throw new AgentHarnessError("unknown", cause.message, cause);
 				}
@@ -590,7 +590,7 @@ export class AgentHarness<
 					return message;
 				}
 			}
-			throw new AgentHarnessError("invalid_state", "AgentHarness prompt completed without an assistant message");
+			throw new AgentHarnessError("invalid_state", "AgentHarness 提示完成但没有助手消息");
 		} finally {
 			try {
 				await this.flushPendingSessionWrites();
@@ -601,7 +601,7 @@ export class AgentHarness<
 	}
 
 	async prompt(text: string, options?: { images?: ImageContent[] }): Promise<AssistantMessage> {
-		if (this.phase !== "idle") throw new AgentHarnessError("busy", "AgentHarness is busy");
+		if (this.phase !== "idle") throw new AgentHarnessError("busy", "AgentHarness 正在忙");
 		this.phase = "turn";
 		const finishRunPromise = this.startRunPromise();
 		try {
@@ -616,13 +616,13 @@ export class AgentHarness<
 	}
 
 	async skill(name: string, additionalInstructions?: string): Promise<AssistantMessage> {
-		if (this.phase !== "idle") throw new AgentHarnessError("busy", "AgentHarness is busy");
+		if (this.phase !== "idle") throw new AgentHarnessError("busy", "AgentHarness 正在忙");
 		this.phase = "turn";
 		const finishRunPromise = this.startRunPromise();
 		try {
 			const turnState = await this.createTurnState();
 			const skill = (turnState.resources.skills ?? []).find((candidate) => candidate.name === name);
-			if (!skill) throw new AgentHarnessError("invalid_argument", `Unknown skill: ${name}`);
+			if (!skill) throw new AgentHarnessError("invalid_argument", `未知技能: ${name}`);
 			return await this.executeTurn(turnState, formatSkillInvocation(skill, additionalInstructions));
 		} catch (error) {
 			this.phase = "idle";
@@ -633,13 +633,13 @@ export class AgentHarness<
 	}
 
 	async promptFromTemplate(name: string, args: string[] = []): Promise<AssistantMessage> {
-		if (this.phase !== "idle") throw new AgentHarnessError("busy", "AgentHarness is busy");
+		if (this.phase !== "idle") throw new AgentHarnessError("busy", "AgentHarness 正在忙");
 		this.phase = "turn";
 		const finishRunPromise = this.startRunPromise();
 		try {
 			const turnState = await this.createTurnState();
 			const template = (turnState.resources.promptTemplates ?? []).find((candidate) => candidate.name === name);
-			if (!template) throw new AgentHarnessError("invalid_argument", `Unknown prompt template: ${name}`);
+			if (!template) throw new AgentHarnessError("invalid_argument", `未知提示模板: ${name}`);
 			return await this.executeTurn(turnState, formatPromptTemplateInvocation(template, args));
 		} catch (error) {
 			this.phase = "idle";
@@ -650,13 +650,13 @@ export class AgentHarness<
 	}
 
 	async steer(text: string, options?: { images?: ImageContent[] }): Promise<void> {
-		if (this.phase === "idle") throw new AgentHarnessError("invalid_state", "Cannot steer while idle");
+		if (this.phase === "idle") throw new AgentHarnessError("invalid_state", "空闲时无法执行 steer");
 		this.steerQueue.push(createUserMessage(text, options?.images));
 		await this.emitQueueUpdate();
 	}
 
 	async followUp(text: string, options?: { images?: ImageContent[] }): Promise<void> {
-		if (this.phase === "idle") throw new AgentHarnessError("invalid_state", "Cannot follow up while idle");
+		if (this.phase === "idle") throw new AgentHarnessError("invalid_state", "空闲时无法执行 follow up");
 		this.followUpQueue.push(createUserMessage(text, options?.images));
 		await this.emitQueueUpdate();
 	}
@@ -681,18 +681,18 @@ export class AgentHarness<
 	async compact(
 		customInstructions?: string,
 	): Promise<{ summary: string; firstKeptEntryId: string; tokensBefore: number; details?: unknown }> {
-		if (this.phase !== "idle") throw new AgentHarnessError("busy", "compact() requires idle harness");
+		if (this.phase !== "idle") throw new AgentHarnessError("busy", "compact() 需要空闲的 harness");
 		this.phase = "compaction";
 		try {
 			const model = this.model;
-			if (!model) throw new AgentHarnessError("invalid_state", "No model set for compaction");
+			if (!model) throw new AgentHarnessError("invalid_state", "未设置用于 compaction 的模型");
 			const auth = await this.getApiKeyAndHeaders?.(model);
-			if (!auth) throw new AgentHarnessError("auth", "No auth available for compaction");
+			if (!auth) throw new AgentHarnessError("auth", "没有可用于 compaction 的认证");
 			const branchEntries = await this.session.getBranch();
 			const preparationResult = prepareCompaction(branchEntries, DEFAULT_COMPACTION_SETTINGS);
 			if (!preparationResult.ok) throw preparationResult.error;
 			const preparation = preparationResult.value;
-			if (!preparation) throw new AgentHarnessError("compaction", "Nothing to compact");
+			if (!preparation) throw new AgentHarnessError("compaction", "没有需要压缩的内容");
 			const hookResult = await this.emitHook({
 				type: "session_before_compact",
 				preparation,
@@ -700,7 +700,7 @@ export class AgentHarness<
 				customInstructions,
 				signal: new AbortController().signal,
 			});
-			if (hookResult?.cancel) throw new AgentHarnessError("compaction", "Compaction cancelled");
+			if (hookResult?.cancel) throw new AgentHarnessError("compaction", "压缩已取消");
 			const provided = hookResult?.compaction;
 			const compactResult = provided
 				? { ok: true as const, value: provided }
@@ -738,13 +738,13 @@ export class AgentHarness<
 		targetId: string,
 		options?: { summarize?: boolean; customInstructions?: string; replaceInstructions?: boolean; label?: string },
 	): Promise<NavigateTreeResult> {
-		if (this.phase !== "idle") throw new AgentHarnessError("busy", "navigateTree() requires idle harness");
+		if (this.phase !== "idle") throw new AgentHarnessError("busy", "navigateTree() 需要空闲的 harness");
 		this.phase = "branch_summary";
 		try {
 			const oldLeafId = await this.session.getLeafId();
 			if (oldLeafId === targetId) return { cancelled: false };
 			const targetEntry = await this.session.getEntry(targetId);
-			if (!targetEntry) throw new AgentHarnessError("invalid_argument", `Entry ${targetId} not found`);
+			if (!targetEntry) throw new AgentHarnessError("invalid_argument", `条目 ${targetId} 未找到`);
 			const { entries, commonAncestorId } = await collectEntriesForBranchSummary(this.session, oldLeafId, targetId);
 			const preparation = {
 				targetId,
@@ -764,9 +764,9 @@ export class AgentHarness<
 			let summaryDetails: unknown = hookResult?.summary?.details;
 			if (!summaryText && options?.summarize && entries.length > 0) {
 				const model = this.model;
-				if (!model) throw new AgentHarnessError("invalid_state", "No model set for branch summary");
+				if (!model) throw new AgentHarnessError("invalid_state", "未设置用于分支摘要的模型");
 				const auth = await this.getApiKeyAndHeaders?.(model);
-				if (!auth) throw new AgentHarnessError("auth", "No auth available for branch summary");
+				if (!auth) throw new AgentHarnessError("auth", "没有可用于分支摘要的认证");
 				const branchSummary = await generateBranchSummary(entries, {
 					model,
 					apiKey: auth.apiKey,

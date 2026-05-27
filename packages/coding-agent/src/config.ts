@@ -309,23 +309,23 @@ export function getSelfUpdateUnavailableInstruction(
 ): string {
 	const method = detectInstallMethod();
 	if (method === "bun-binary") {
-		return `Download from: https://github.com/earendil-works/pi-mono/releases/latest`;
+		return `从以下地址下载：https://github.com/earendil-works/pi-mono/releases/latest`;
 	}
 	const command = getSelfUpdateCommandForMethod(method, packageName, updatePackageName, npmCommand);
 	if (command) {
 		if (isManagedByGlobalPackageManager(method, packageName, npmCommand) && !isSelfUpdatePathWritable()) {
-			return `This installation is managed by a global ${method} install, but the install path is not writable. Update it yourself with: ${command.display}`;
+			return `此安装由全局 ${method} 安装管理，但安装路径不可写。请自行更新，命令：${command.display}`;
 		}
-		return `This installation is not managed by a global ${method} install. Update it with the package manager, wrapper, or source checkout that provides it.`;
+		return `此安装不由全局 ${method} 安装管理。请使用提供此安装的包管理器、封装器或源代码签出来更新。`;
 	}
-	return `Update ${updatePackageName} using the package manager, wrapper, or source checkout that provides this installation.`;
+	return `使用提供此安装的包管理器、封装器或源代码签出来更新 ${updatePackageName}。`;
 }
 
 export function getUpdateInstruction(packageName: string): string {
 	const method = detectInstallMethod();
 	const command = getSelfUpdateCommandForMethod(method, packageName);
 	if (command) {
-		return `Run: ${command.display}`;
+		return `运行：${command.display}`;
 	}
 	return getSelfUpdateUnavailableInstruction(packageName);
 }

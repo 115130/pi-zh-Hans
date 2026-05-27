@@ -20,15 +20,15 @@ export interface ImageRenderOptions {
 	maxWidthCells?: number;
 	maxHeightCells?: number;
 	preserveAspectRatio?: boolean;
-	/** Kitty image ID. If provided, reuses/replaces existing image with this ID. */
+	/** Kitty 图像 ID。若提供，则复用/替换具有此 ID 的已有图像。 */
 	imageId?: number;
-	/** Whether Kitty should apply its default cursor movement after placement. */
+	/** 是否让 Kitty 在放置后应用默认光标移动。 */
 	moveCursor?: boolean;
 }
 
 let cachedCapabilities: TerminalCapabilities | null = null;
 
-// Default cell dimensions - updated by TUI when terminal responds to query
+// 默认单元格尺寸——TUI 在终端响应查询时更新
 let cellDimensions: CellDimensions = { widthPx: 9, heightPx: 18 };
 
 export function getCellDimensions(): CellDimensions {
@@ -45,10 +45,9 @@ export function detectCapabilities(): TerminalCapabilities {
 	const colorTerm = process.env.COLORTERM?.toLowerCase() || "";
 	const hasTrueColorHint = colorTerm === "truecolor" || colorTerm === "24bit";
 
-	// tmux and screen swallow OSC 8 by default (passthrough is opt-in and wraps
-	// sequences differently). Force hyperlinks off whenever we detect them, even
-	// when the outer terminal would otherwise support OSC 8. Image protocols are
-	// also unreliable under tmux/screen, so leave `images: null` for safety.
+	// tmux 和 screen 默认会吞掉 OSC 8（透传需显式启用，且序列封装方式不同）
+	// 只要检测到它们就强制关闭超链接，即使外层终端本应支持 OSC 8
+	// 图像协议在 tmux/screen 下也不可靠，因此安全起见将 `images` 设为 null
 	const inTmuxOrScreen = !!process.env.TMUX || term.startsWith("tmux") || term.startsWith("screen");
 	if (inTmuxOrScreen) {
 		return { images: null, trueColor: hasTrueColorHint, hyperlinks: false };
@@ -82,10 +81,9 @@ export function detectCapabilities(): TerminalCapabilities {
 		return { images: null, trueColor: true, hyperlinks: true };
 	}
 
-	// Unknown terminal: be conservative. OSC 8 is rendered invisibly as "just
-	// text" on terminals that swallow it, which means the URL disappears from
-	// the rendered output. Default to the legacy `text (url)` behavior unless we
-	// have positively identified a hyperlink-capable terminal above.
+	// 未知终端：采取保守策略。OSC 8 在会吞掉它的终端上会以“纯文本”方式不可见地渲染，
+	// 这意味着 URL 会从输出中消失。除非上面已明确识别出支持超链接的终端，
+	// 否则默认回退到旧式的 `text (url)` 行为。
 	return { images: null, trueColor: hasTrueColorHint, hyperlinks: false };
 }
 
@@ -100,7 +98,7 @@ export function resetCapabilitiesCache(): void {
 	cachedCapabilities = null;
 }
 
-/** Override the cached capabilities. Useful in tests to exercise both code paths. */
+/** 覆盖缓存的终端能力。在测试中可用于同时测试两条代码路径。 */
 export function setCapabilities(caps: TerminalCapabilities): void {
 	cachedCapabilities = caps;
 }
@@ -109,21 +107,20 @@ const KITTY_PREFIX = "\x1b_G";
 const ITERM2_PREFIX = "\x1b]1337;File=";
 
 export function isImageLine(line: string): boolean {
-	// Fast path: sequence at line start (single-row images)
+	// 快速路径：序列在行首（单行图像）
 	if (line.startsWith(KITTY_PREFIX) || line.startsWith(ITERM2_PREFIX)) {
 		return true;
 	}
-	// Slow path: sequence elsewhere (multi-row images have cursor-up prefix)
+	// 慢速路径：序列在其他位置（多行图像有光标上移前缀）
 	return line.includes(KITTY_PREFIX) || line.includes(ITERM2_PREFIX);
 }
 
 /**
- * Generate a random image ID for Kitty graphics protocol.
- * Uses random IDs to avoid collisions between different module instances
- * (e.g., main app vs extensions).
+ * 为 Kitty 图形协议生成一个随机图像 ID。
+ * 使用随机 ID 以避免不同模块实例（例如主应用与扩展）之间的冲突。
  */
 export function allocateImageId(): number {
-	// Use random ID in range [1, 0xffffffff] to avoid collisions
+	// 使用 [1, 0xffffffff] 范围的随机 ID 以避免冲突
 	return Math.floor(Math.random() * 0xfffffffe) + 1;
 }
 
@@ -133,7 +130,7 @@ export function encodeKitty(
 		columns?: number;
 		rows?: number;
 		imageId?: number;
-		/** Whether Kitty should apply its default cursor movement after placement. Default: true. */
+		/** 是否让 Kitty 在放置后应用默认光标移动。默认：true。 */
 		moveCursor?: boolean;
 	} = {},
 ): string {
@@ -174,16 +171,16 @@ export function encodeKitty(
 }
 
 /**
- * Delete a Kitty graphics image by ID.
- * Uses uppercase 'I' to also free the image data.
+ * 按 ID 删除 Kitty 图形图像。
+ * 使用大写 'I' 以同时释放图像数据。
  */
 export function deleteKittyImage(imageId: number): string {
 	return `\x1b_Ga=d,d=I,i=${imageId},q=2\x1b\\`;
 }
 
 /**
- * Delete all visible Kitty graphics images.
- * Uses uppercase 'A' to also free the image data.
+ * 删除所有可见的 Kitty 图形图像。
+ * 使用大写 'A' 以同时释放图像数据。
  */
 export function deleteAllKittyImages(): string {
 	return "\x1b_Ga=d,d=A,q=2\x1b\\";
@@ -431,14 +428,13 @@ export function renderImage(
 }
 
 /**
- * Wrap text in an OSC 8 hyperlink sequence.
- * The text is rendered as a clickable hyperlink in terminals that support OSC 8
- * (Ghostty, Kitty, WezTerm, iTerm2, VSCode, and others).
- * In terminals that do not support OSC 8, the escape sequences are ignored
- * and only the plain text is displayed.
+ * 将文本包裹在 OSC 8 超链接序列中。
+ * 在支持 OSC 8 的终端（如 Ghostty、Kitty、WezTerm、iTerm2、VSCode 等）中，
+ * 文本将渲染为可点击的超链接。
+ * 在不支持 OSC 8 的终端中，转义序列将被忽略，只显示纯文本。
  *
- * @param text - The visible text to display
- * @param url - The URL to link to
+ * @param text - 要显示的可见文本
+ * @param url - 要链接的 URL
  */
 export function hyperlink(text: string, url: string): string {
 	return `\x1b]8;;${url}\x1b\\${text}\x1b]8;;\x1b\\`;
@@ -449,5 +445,5 @@ export function imageFallback(mimeType: string, dimensions?: ImageDimensions, fi
 	if (filename) parts.push(filename);
 	parts.push(`[${mimeType}]`);
 	if (dimensions) parts.push(`${dimensions.widthPx}x${dimensions.heightPx}`);
-	return `[Image: ${parts.join(" ")}]`;
+	return `[图片：${parts.join(" ")}]`;
 }

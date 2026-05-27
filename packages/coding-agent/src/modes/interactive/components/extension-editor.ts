@@ -1,6 +1,6 @@
 /**
- * Multi-line editor component for extensions.
- * Supports Ctrl+G for external editor.
+ * 用于扩展的多行编辑器组件。
+ * 支持 Ctrl+G 打开外部编辑器。
  */
 
 import { spawn } from "node:child_process";
@@ -54,20 +54,20 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 		this.onSubmitCallback = onSubmit;
 		this.onCancelCallback = onCancel;
 
-		// Add top border
+		// 添加上边框
 		this.addChild(new DynamicBorder());
 		this.addChild(new Spacer(1));
 
-		// Add title
+		// 添加标题
 		this.addChild(new Text(theme.fg("accent", title), 1, 0));
 		this.addChild(new Spacer(1));
 
-		// Create editor
+		// 创建编辑器
 		this.editor = new Editor(tui, getEditorTheme(), options);
 		if (prefill) {
 			this.editor.setText(prefill);
 		}
-		// Wire up Enter to submit (Shift+Enter for newlines, like the main editor)
+		// 绑定 Enter 键提交（Shift+Enter 换行，与主编辑器一致）
 		this.editor.onSubmit = (text: string) => {
 			this.onSubmitCallback(text);
 		};
@@ -75,38 +75,38 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 
 		this.addChild(new Spacer(1));
 
-		// Add hint
+		// 添加提示
 		const hasExternalEditor = !!(process.env.VISUAL || process.env.EDITOR);
 		const hint =
-			keyHint("tui.select.confirm", "submit") +
+			keyHint("tui.select.confirm", "提交") +
 			"  " +
-			keyHint("tui.input.newLine", "newline") +
+			keyHint("tui.input.newLine", "换行") +
 			"  " +
-			keyHint("tui.select.cancel", "cancel") +
-			(hasExternalEditor ? `  ${keyHint("app.editor.external", "external editor")}` : "");
+			keyHint("tui.select.cancel", "取消") +
+			(hasExternalEditor ? `  ${keyHint("app.editor.external", "外部编辑器")}` : "");
 		this.addChild(new Text(hint, 1, 0));
 
 		this.addChild(new Spacer(1));
 
-		// Add bottom border
+		// 添加底边框
 		this.addChild(new DynamicBorder());
 	}
 
 	handleInput(keyData: string): void {
 		const kb = getKeybindings();
-		// Escape or Ctrl+C to cancel
+		// Escape 或 Ctrl+C 取消
 		if (kb.matches(keyData, "tui.select.cancel")) {
 			this.onCancelCallback();
 			return;
 		}
 
-		// External editor (app keybinding)
+		// 外部编辑器（应用按键绑定）
 		if (this.keybindings.matches(keyData, "app.editor.external")) {
 			this.openExternalEditor();
 			return;
 		}
 
-		// Forward to editor
+		// 转发给编辑器
 		this.editor.handleInput(keyData);
 	}
 
@@ -124,11 +124,10 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 			this.tui.stop();
 
 			const [editor, ...editorArgs] = editorCmd.split(" ");
-			process.stdout.write(`Launching external editor: ${editorCmd}\nPi will resume when the editor exits.\n`);
+			process.stdout.write(`正在启动外部编辑器：${editorCmd}\n编辑器退出后 Pi 将继续运行。\n`);
 
-			// Do not use spawnSync here. On Windows, synchronous child_process calls can keep
-			// Node/libuv's console input read active after tui.stop() pauses stdin, racing
-			// vim/nvim for the console input buffer until Ctrl+C cancels the pending read.
+			// 不要在此使用 spawnSync。在 Windows 上，同步子进程调用可能会在 tui.stop() 暂停 stdin 后仍保持
+			// Node/libuv 控制台输入读取活跃，与 vim/nvim 竞争控制台输入缓冲区，直到 Ctrl+C 取消待处理的读取。
 			const status = await new Promise<number | null>((resolve) => {
 				const child = spawn(editor, [...editorArgs, tmpFile], {
 					stdio: "inherit",
@@ -146,10 +145,10 @@ export class ExtensionEditorComponent extends Container implements Focusable {
 			try {
 				fs.unlinkSync(tmpFile);
 			} catch {
-				// Ignore cleanup errors
+				// 忽略清理错误
 			}
 			this.tui.start();
-			// Force full re-render since external editor uses alternate screen
+			// 外部编辑器使用了备用屏幕，强制完全重新渲染
 			this.tui.requestRender(true);
 		}
 	}

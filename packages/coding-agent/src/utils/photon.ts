@@ -1,16 +1,16 @@
 /**
- * Photon image processing wrapper.
+ * Photon 图像处理封装。
  *
- * This module provides a unified interface to @silvia-odwyer/photon-node that works in:
- * 1. Node.js (development, npm run build)
- * 2. Bun compiled binaries (standalone distribution)
+ * 该模块提供了对 @silvia-odwyer/photon-node 的统一接口，适用于：
+ * 1. Node.js（开发环境，npm run build）
+ * 2. Bun 编译二进制（独立分发）
  *
- * The challenge: photon-node's CJS entry uses fs.readFileSync(__dirname + '/photon_rs_bg.wasm')
- * which bakes the build machine's absolute path into Bun compiled binaries.
+ * 问题：photon-node 的 CJS 入口使用 fs.readFileSync(__dirname + '/photon_rs_bg.wasm')，
+ * 这会在 Bun 编译二进制中硬编码构建机器的绝对路径。
  *
- * Solution:
- * 1. Patch fs.readFileSync to redirect missing photon_rs_bg.wasm reads
- * 2. Copy photon_rs_bg.wasm next to the executable in build:binary
+ * 解决方案：
+ * 1. 修补 fs.readFileSync，将缺失的 photon_rs_bg.wasm 读取重定向
+ * 2. 在 build:binary 时将 photon_rs_bg.wasm 复制到可执行文件旁边
  */
 
 import type { PathOrFileDescriptor } from "fs";
@@ -21,14 +21,14 @@ import { fileURLToPath } from "url";
 const require = createRequire(import.meta.url);
 const fs = require("fs") as typeof import("fs");
 
-// Re-export types from the main package
+// 重新导出主包的类型
 export type { PhotonImage as PhotonImageType } from "@silvia-odwyer/photon-node";
 
 type ReadFileSync = typeof fs.readFileSync;
 
 const WASM_FILENAME = "photon_rs_bg.wasm";
 
-// Lazy-loaded photon module
+// 惰性加载的 photon 模块
 let photonModule: typeof import("@silvia-odwyer/photon-node") | null = null;
 let loadPromise: Promise<typeof import("@silvia-odwyer/photon-node") | null> | null = null;
 
@@ -126,8 +126,8 @@ function patchPhotonWasmRead(): () => void {
 }
 
 /**
- * Load the photon module asynchronously.
- * Returns cached module on subsequent calls.
+ * 异步加载 photon 模块。
+ * 后续调用将返回缓存模块。
  */
 export async function loadPhoton(): Promise<typeof import("@silvia-odwyer/photon-node") | null> {
 	if (photonModule) {

@@ -122,6 +122,6 @@ export async function copyToClipboard(text: string): Promise<void> {
 	}
 
 	if (!copied) {
-		throw new Error("Failed to copy to clipboard");
+		throw new Error("复制到剪贴板失败");
 	}
 }

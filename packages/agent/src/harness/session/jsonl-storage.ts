@@ -45,15 +45,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function invalidSession(filePath: string, message: string, cause?: Error): SessionError {
-	return new SessionError("invalid_session", `Invalid JSONL session file ${filePath}: ${message}`, cause);
+	return new SessionError("invalid_session", `无效的 JSONL 会话文件 ${filePath}: ${message}`, cause);
 }
 
 function invalidEntry(filePath: string, lineNumber: number, message: string, cause?: Error): SessionError {
-	return new SessionError(
-		"invalid_entry",
-		`Invalid JSONL session file ${filePath}: line ${lineNumber} ${message}`,
-		cause,
-	);
+	return new SessionError("invalid_entry", `无效的 JSONL 会话文件 ${filePath}: 第 ${lineNumber} 行 ${message}`, cause);
 }
 
 function parseHeaderLine(line: string, filePath: string): SessionHeader {
@@ -61,18 +57,18 @@ function parseHeaderLine(line: string, filePath: string): SessionHeader {
 	try {
 		parsed = JSON.parse(line);
 	} catch (error) {
-		throw invalidSession(filePath, "first line is not a valid session header", toError(error));
+		throw invalidSession(filePath, "第一行不是有效的会话头部", toError(error));
 	}
-	if (!isRecord(parsed)) throw invalidSession(filePath, "first line is not a valid session header");
-	if (parsed.type !== "session") throw invalidSession(filePath, "first line is not a valid session header");
-	if (parsed.version !== 3) throw invalidSession(filePath, "unsupported session version");
-	if (typeof parsed.id !== "string" || !parsed.id) throw invalidSession(filePath, "session header is missing id");
+	if (!isRecord(parsed)) throw invalidSession(filePath, "第一行不是有效的会话头部");
+	if (parsed.type !== "session") throw invalidSession(filePath, "第一行不是有效的会话头部");
+	if (parsed.version !== 3) throw invalidSession(filePath, "不支持的会话版本");
+	if (typeof parsed.id !== "string" || !parsed.id) throw invalidSession(filePath, "会话头部缺少 id");
 	if (typeof parsed.timestamp !== "string" || !parsed.timestamp) {
-		throw invalidSession(filePath, "session header is missing timestamp");
+		throw invalidSession(filePath, "会话头部缺少时间戳");
 	}
-	if (typeof parsed.cwd !== "string" || !parsed.cwd) throw invalidSession(filePath, "session header is missing cwd");
+	if (typeof parsed.cwd !== "string" || !parsed.cwd) throw invalidSession(filePath, "会话头部缺少 cwd");
 	if (parsed.parentSession !== undefined && typeof parsed.parentSession !== "string") {
-		throw invalidSession(filePath, "session header parentSession must be a string");
+		throw invalidSession(filePath, "会话头部的 parentSession 必须是字符串");
 	}
 	return {
 		type: "session",
@@ -89,19 +85,19 @@ function parseEntryLine(line: string, filePath: string, lineNumber: number): Ses
 	try {
 		parsed = JSON.parse(line);
 	} catch (error) {
-		throw invalidEntry(filePath, lineNumber, "is not valid JSON", toError(error));
+		throw invalidEntry(filePath, lineNumber, "不是有效的 JSON", toError(error));
 	}
-	if (!isRecord(parsed)) throw invalidEntry(filePath, lineNumber, "is not a valid session entry");
-	if (typeof parsed.type !== "string") throw invalidEntry(filePath, lineNumber, "is missing entry type");
-	if (typeof parsed.id !== "string" || !parsed.id) throw invalidEntry(filePath, lineNumber, "is missing entry id");
+	if (!isRecord(parsed)) throw invalidEntry(filePath, lineNumber, "不是有效的会话条目");
+	if (typeof parsed.type !== "string") throw invalidEntry(filePath, lineNumber, "缺少条目类型");
+	if (typeof parsed.id !== "string" || !parsed.id) throw invalidEntry(filePath, lineNumber, "缺少条目 id");
 	if (parsed.parentId !== null && typeof parsed.parentId !== "string") {
-		throw invalidEntry(filePath, lineNumber, "has invalid parentId");
+		throw invalidEntry(filePath, lineNumber, "无效的 parentId");
 	}
 	if (typeof parsed.timestamp !== "string" || !parsed.timestamp) {
-		throw invalidEntry(filePath, lineNumber, "is missing timestamp");
+		throw invalidEntry(filePath, lineNumber, "缺少时间戳");
 	}
 	if (parsed.type === "leaf" && parsed.targetId !== null && typeof parsed.targetId !== "string") {
-		throw invalidEntry(filePath, lineNumber, "has invalid targetId");
+		throw invalidEntry(filePath, lineNumber, "无效的 targetId");
 	}
 	return parsed as unknown as SessionTreeEntry;
 }
@@ -126,11 +122,11 @@ export async function loadJsonlSessionMetadata(
 ): Promise<JsonlSessionMetadata> {
 	const lines = getFileSystemResultOrThrow(
 		await fs.readTextLines(filePath, { maxLines: 1 }),
-		`Failed to read session header ${filePath}`,
+		`读取会话头部失败 ${filePath}`,
 	);
 	const line = lines[0];
 	if (line?.trim()) return headerToSessionMetadata(parseHeaderLine(line, filePath), filePath);
-	throw invalidSession(filePath, "missing session header");
+	throw invalidSession(filePath, "缺少会话头部");
 }
 
 async function loadJsonlStorage(
@@ -141,10 +137,10 @@ async function loadJsonlStorage(
 	entries: SessionTreeEntry[];
 	leafId: string | null;
 }> {
-	const content = getFileSystemResultOrThrow(await fs.readTextFile(filePath), `Failed to read session ${filePath}`);
+	const content = getFileSystemResultOrThrow(await fs.readTextFile(filePath), `读取会话失败 ${filePath}`);
 	const lines = content.split("\n").filter((line) => line.trim());
 	if (lines.length === 0) {
-		throw invalidSession(filePath, "missing session header");
+		throw invalidSession(filePath, "缺少会话头部");
 	}
 
 	const header = parseHeaderLine(lines[0]!, filePath);
@@ -207,7 +203,7 @@ export class JsonlSessionStorage implements SessionStorage<JsonlSessionMetadata>
 		};
 		getFileSystemResultOrThrow(
 			await fs.writeFile(filePath, `${JSON.stringify(header)}\n`),
-			`Failed to create session ${filePath}`,
+			`创建会话失败 ${filePath}`,
 		);
 		return new JsonlSessionStorage(fs, filePath, header, [], null);
 	}
@@ -218,14 +214,14 @@ export class JsonlSessionStorage implements SessionStorage<JsonlSessionMetadata>
 
 	async getLeafId(): Promise<string | null> {
 		if (this.currentLeafId !== null && !this.byId.has(this.currentLeafId)) {
-			throw new SessionError("invalid_session", `Entry ${this.currentLeafId} not found`);
+			throw new SessionError("invalid_session", `条目 ${this.currentLeafId} 未找到`);
 		}
 		return this.currentLeafId;
 	}
 
 	async setLeafId(leafId: string | null): Promise<void> {
 		if (leafId !== null && !this.byId.has(leafId)) {
-			throw new SessionError("not_found", `Entry ${leafId} not found`);
+			throw new SessionError("not_found", `条目 ${leafId} 未找到`);
 		}
 		const entry: LeafEntry = {
 			type: "leaf",
@@ -236,7 +232,7 @@ export class JsonlSessionStorage implements SessionStorage<JsonlSessionMetadata>
 		};
 		getFileSystemResultOrThrow(
 			await this.fs.appendFile(this.filePath, `${JSON.stringify(entry)}\n`),
-			`Failed to append session leaf ${entry.id}`,
+			`追加会话叶子节点失败 ${entry.id}`,
 		);
 		this.entries.push(entry);
 		this.byId.set(entry.id, entry);
@@ -250,7 +246,7 @@ export class JsonlSessionStorage implements SessionStorage<JsonlSessionMetadata>
 	async appendEntry(entry: SessionTreeEntry): Promise<void> {
 		getFileSystemResultOrThrow(
 			await this.fs.appendFile(this.filePath, `${JSON.stringify(entry)}\n`),
-			`Failed to append session entry ${entry.id}`,
+			`追加会话条目失败 ${entry.id}`,
 		);
 		this.entries.push(entry);
 		this.byId.set(entry.id, entry);
@@ -276,12 +272,12 @@ export class JsonlSessionStorage implements SessionStorage<JsonlSessionMetadata>
 		if (leafId === null) return [];
 		const path: SessionTreeEntry[] = [];
 		let current = this.byId.get(leafId);
-		if (!current) throw new SessionError("not_found", `Entry ${leafId} not found`);
+		if (!current) throw new SessionError("not_found", `条目 ${leafId} 未找到`);
 		while (current) {
 			path.unshift(current);
 			if (!current.parentId) break;
 			const parent = this.byId.get(current.parentId);
-			if (!parent) throw new SessionError("invalid_session", `Entry ${current.parentId} not found`);
+			if (!parent) throw new SessionError("invalid_session", `条目 ${current.parentId} 未找到`);
 			current = parent;
 		}
 		return path;

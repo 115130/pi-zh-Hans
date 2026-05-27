@@ -1,11 +1,11 @@
 /**
- * OpenAI Codex (ChatGPT OAuth) flow
+ * OpenAI Codex (ChatGPT OAuth) 流程
  *
- * NOTE: This module uses Node.js crypto and http for the OAuth callback.
- * It is only intended for CLI use, not browser environments.
+ * 注意：此模块使用 Node.js 的 crypto 和 http 来处理 OAuth 回调。
+ * 仅用于 CLI 环境，不适用于浏览器环境。
  */
 
-// NEVER convert to top-level imports - breaks browser/Vite builds
+// 切勿转换为顶级导入 - 会破坏浏览器/Vite 构建
 let _randomBytes: typeof import("node:crypto").randomBytes | null = null;
 let _http: typeof import("node:http") | null = null;
 if (typeof process !== "undefined" && (process.versions?.node || process.versions?.bun)) {
@@ -42,7 +42,7 @@ type JwtPayload = {
 
 function createState(): string {
 	if (!_randomBytes) {
-		throw new Error("OpenAI Codex OAuth is only available in Node.js environments");
+		throw new Error("OpenAI Codex OAuth 仅在 Node.js 环境中可用");
 	}
 	return _randomBytes(16).toString("hex");
 }
@@ -58,7 +58,7 @@ function parseAuthorizationInput(input: string): { code?: string; state?: string
 			state: url.searchParams.get("state") ?? undefined,
 		};
 	} catch {
-		// not a URL
+		// 不是 URL
 	}
 
 	if (value.includes("#")) {
@@ -111,7 +111,7 @@ async function exchangeAuthorizationCode(
 		return {
 			type: "failed",
 			status: response.status,
-			message: `OpenAI Codex token exchange failed (${response.status}): ${text || response.statusText}`,
+			message: `OpenAI Codex 令牌交换失败 (${response.status}): ${text || response.statusText}`,
 		};
 	}
 
@@ -124,7 +124,7 @@ async function exchangeAuthorizationCode(
 	if (!json.access_token || !json.refresh_token || typeof json.expires_in !== "number") {
 		return {
 			type: "failed",
-			message: `OpenAI Codex token exchange response missing fields: ${JSON.stringify(json)}`,
+			message: `OpenAI Codex 令牌交换响应缺少字段: ${JSON.stringify(json)}`,
 		};
 	}
 
@@ -153,7 +153,7 @@ async function refreshAccessToken(refreshToken: string): Promise<TokenResult> {
 			return {
 				type: "failed",
 				status: response.status,
-				message: `OpenAI Codex token refresh failed (${response.status}): ${text || response.statusText}`,
+				message: `OpenAI Codex 令牌刷新失败 (${response.status}): ${text || response.statusText}`,
 			};
 		}
 
@@ -166,7 +166,7 @@ async function refreshAccessToken(refreshToken: string): Promise<TokenResult> {
 		if (!json.access_token || !json.refresh_token || typeof json.expires_in !== "number") {
 			return {
 				type: "failed",
-				message: `OpenAI Codex token refresh response missing fields: ${JSON.stringify(json)}`,
+				message: `OpenAI Codex 令牌刷新响应缺少字段: ${JSON.stringify(json)}`,
 			};
 		}
 
@@ -179,7 +179,7 @@ async function refreshAccessToken(refreshToken: string): Promise<TokenResult> {
 	} catch (error) {
 		return {
 			type: "failed",
-			message: `OpenAI Codex token refresh error: ${error instanceof Error ? error.message : String(error)}`,
+			message: `OpenAI Codex 令牌刷新错误: ${error instanceof Error ? error.message : String(error)}`,
 		};
 	}
 }
@@ -213,7 +213,7 @@ type OAuthServerInfo = {
 
 function startLocalOAuthServer(state: string): Promise<OAuthServerInfo> {
 	if (!_http) {
-		throw new Error("OpenAI Codex OAuth is only available in Node.js environments");
+		throw new Error("OpenAI Codex OAuth 仅在 Node.js 环境中可用");
 	}
 
 	let settleWait: ((value: { code: string } | null) => void) | undefined;
@@ -232,30 +232,30 @@ function startLocalOAuthServer(state: string): Promise<OAuthServerInfo> {
 			if (url.pathname !== "/auth/callback") {
 				res.statusCode = 404;
 				res.setHeader("Content-Type", "text/html; charset=utf-8");
-				res.end(oauthErrorHtml("Callback route not found."));
+				res.end(oauthErrorHtml("未找到回调路由。"));
 				return;
 			}
 			if (url.searchParams.get("state") !== state) {
 				res.statusCode = 400;
 				res.setHeader("Content-Type", "text/html; charset=utf-8");
-				res.end(oauthErrorHtml("State mismatch."));
+				res.end(oauthErrorHtml("状态不匹配。"));
 				return;
 			}
 			const code = url.searchParams.get("code");
 			if (!code) {
 				res.statusCode = 400;
 				res.setHeader("Content-Type", "text/html; charset=utf-8");
-				res.end(oauthErrorHtml("Missing authorization code."));
+				res.end(oauthErrorHtml("缺少授权码。"));
 				return;
 			}
 			res.statusCode = 200;
 			res.setHeader("Content-Type", "text/html; charset=utf-8");
-			res.end(oauthSuccessHtml("OpenAI authentication completed. You can close this window."));
+			res.end(oauthSuccessHtml("OpenAI 身份验证已完成。您可以关闭此窗口。"));
 			settleWait?.({ code });
 		} catch {
 			res.statusCode = 500;
 			res.setHeader("Content-Type", "text/html; charset=utf-8");
-			res.end(oauthErrorHtml("Internal error while processing OAuth callback."));
+			res.end(oauthErrorHtml("处理 OAuth 回调时发生内部错误。"));
 		}
 	});
 
@@ -277,7 +277,7 @@ function startLocalOAuthServer(state: string): Promise<OAuthServerInfo> {
 						try {
 							server.close();
 						} catch {
-							// ignore
+							// 忽略
 						}
 					},
 					cancelWait: () => {},
@@ -295,15 +295,15 @@ function getAccountId(accessToken: string): string | null {
 }
 
 /**
- * Login with OpenAI Codex OAuth
+ * 使用 OpenAI Codex OAuth 登录
  *
- * @param options.onAuth - Called with URL and instructions when auth starts
- * @param options.onPrompt - Called to prompt user for manual code paste (fallback if no onManualCodeInput)
- * @param options.onProgress - Optional progress messages
- * @param options.onManualCodeInput - Optional promise that resolves with user-pasted code.
- *                                    Races with browser callback - whichever completes first wins.
- *                                    Useful for showing paste input immediately alongside browser flow.
- * @param options.originator - OAuth originator parameter (defaults to "pi")
+ * @param options.onAuth - 认证开始时调用，包含 URL 和说明
+ * @param options.onPrompt - 提示用户手动输入代码时调用（没有 onManualCodeInput 时的回退）
+ * @param options.onProgress - 可选的进度消息
+ * @param options.onManualCodeInput - 可选，返回用户粘贴代码的 Promise。
+ *                                    与浏览器回调竞争，谁先完成谁胜出。
+ *                                    适用于在浏览器流程开始时同时显示粘贴输入框。
+ * @param options.originator - OAuth originator 参数（默认为 "pi"）
  */
 export async function loginOpenAICodex(options: {
 	onAuth: (info: { url: string; instructions?: string }) => void;
@@ -315,12 +315,12 @@ export async function loginOpenAICodex(options: {
 	const { verifier, state, url } = await createAuthorizationFlow(options.originator);
 	const server = await startLocalOAuthServer(state);
 
-	options.onAuth({ url, instructions: "A browser window should open. Complete login to finish." });
+	options.onAuth({ url, instructions: "浏览器窗口应已打开。请完成登录以继续。" });
 
 	let code: string | undefined;
 	try {
 		if (options.onManualCodeInput) {
-			// Race between browser callback and manual input
+			// 浏览器回调与手动输入竞争
 			let manualCode: string | undefined;
 			let manualError: Error | undefined;
 			const manualPromise = options
@@ -336,24 +336,24 @@ export async function loginOpenAICodex(options: {
 
 			const result = await server.waitForCode();
 
-			// If manual input was cancelled, throw that error
+			// 如果手动输入被取消，抛出该错误
 			if (manualError) {
 				throw manualError;
 			}
 
 			if (result?.code) {
-				// Browser callback won
+				// 浏览器回调获胜
 				code = result.code;
 			} else if (manualCode) {
-				// Manual input won (or callback timed out and user had entered code)
+				// 手动输入获胜（或回调超时且用户已输入代码）
 				const parsed = parseAuthorizationInput(manualCode);
 				if (parsed.state && parsed.state !== state) {
-					throw new Error("State mismatch");
+					throw new Error("状态不匹配");
 				}
 				code = parsed.code;
 			}
 
-			// If still no code, wait for manual promise to complete and try that
+			// 如果仍然没有 code，等待手动 Promise 完成并尝试
 			if (!code) {
 				await manualPromise;
 				if (manualError) {
@@ -362,33 +362,33 @@ export async function loginOpenAICodex(options: {
 				if (manualCode) {
 					const parsed = parseAuthorizationInput(manualCode);
 					if (parsed.state && parsed.state !== state) {
-						throw new Error("State mismatch");
+						throw new Error("状态不匹配");
 					}
 					code = parsed.code;
 				}
 			}
 		} else {
-			// Original flow: wait for callback, then prompt if needed
+			// 原始流程：等待回调，然后如果需要则提示
 			const result = await server.waitForCode();
 			if (result?.code) {
 				code = result.code;
 			}
 		}
 
-		// Fallback to onPrompt if still no code
+		// 如果仍然没有 code，回退到 onPrompt
 		if (!code) {
 			const input = await options.onPrompt({
-				message: "Paste the authorization code (or full redirect URL):",
+				message: "请粘贴授权码（或完整的重定向 URL）：",
 			});
 			const parsed = parseAuthorizationInput(input);
 			if (parsed.state && parsed.state !== state) {
-				throw new Error("State mismatch");
+				throw new Error("状态不匹配");
 			}
 			code = parsed.code;
 		}
 
 		if (!code) {
-			throw new Error("Missing authorization code");
+			throw new Error("缺少授权码");
 		}
 
 		const tokenResult = await exchangeAuthorizationCode(code, verifier);
@@ -398,7 +398,7 @@ export async function loginOpenAICodex(options: {
 
 		const accountId = getAccountId(tokenResult.access);
 		if (!accountId) {
-			throw new Error("Failed to extract accountId from token");
+			throw new Error("无法从令牌中提取 accountId");
 		}
 
 		return {
@@ -413,7 +413,7 @@ export async function loginOpenAICodex(options: {
 }
 
 /**
- * Refresh OpenAI Codex OAuth token
+ * 刷新 OpenAI Codex OAuth 令牌
  */
 export async function refreshOpenAICodexToken(refreshToken: string): Promise<OAuthCredentials> {
 	const result = await refreshAccessToken(refreshToken);
@@ -423,7 +423,7 @@ export async function refreshOpenAICodexToken(refreshToken: string): Promise<OAu
 
 	const accountId = getAccountId(result.access);
 	if (!accountId) {
-		throw new Error("Failed to extract accountId from token");
+		throw new Error("无法从令牌中提取 accountId");
 	}
 
 	return {
@@ -436,7 +436,7 @@ export async function refreshOpenAICodexToken(refreshToken: string): Promise<OAu
 
 export const openaiCodexOAuthProvider: OAuthProviderInterface = {
 	id: "openai-codex",
-	name: "ChatGPT Plus/Pro (Codex Subscription)",
+	name: "ChatGPT Plus/Pro（Codex 订阅）",
 	usesCallbackServer: true,
 
 	async login(callbacks: OAuthLoginCallbacks): Promise<OAuthCredentials> {

@@ -20,7 +20,7 @@ export function createEventBus(): EventBusController {
 				try {
 					await handler(data);
 				} catch (err) {
-					console.error(`Event handler error (${channel}):`, err);
+					console.error(`事件处理器错误 (${channel}):`, err);
 				}
 			};
 			emitter.on(channel, safeHandler);

@@ -46,7 +46,7 @@ async function resizeImageInWorker(
 
 			worker.once("message", (message: unknown) => {
 				if (!isResizeImageWorkerResponse(message)) {
-					fail(new Error("Invalid image resize worker response"));
+					fail(new Error("无效的图像调整大小工作线程响应"));
 					return;
 				}
 				if (message.error) {
@@ -58,7 +58,7 @@ async function resizeImageInWorker(
 			worker.once("error", fail);
 			worker.once("exit", (code) => {
 				if (!settled) {
-					fail(new Error(`Image resize worker exited with code ${code}`));
+					fail(new Error(`图像调整大小工作线程以代码 ${code} 退出`));
 				}
 			});
 			worker.postMessage(
@@ -119,5 +119,5 @@ export function formatDimensionNote(result: ResizedImage): string | undefined {
 	}
 
 	const scale = result.originalWidth / result.width;
-	return `[Image: original ${result.originalWidth}x${result.originalHeight}, displayed at ${result.width}x${result.height}. Multiply coordinates by ${scale.toFixed(2)} to map to original image.]`;
+	return `[图片：原始 ${result.originalWidth}x${result.originalHeight}，显示为 ${result.width}x${result.height}。将坐标乘以 ${scale.toFixed(2)} 映射到原始图片。]`;
 }

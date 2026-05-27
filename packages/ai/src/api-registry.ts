@@ -45,7 +45,7 @@ function wrapStream<TApi extends Api, TOptions extends StreamOptions>(
 ): ApiStreamFunction {
 	return (model, context, options) => {
 		if (model.api !== api) {
-			throw new Error(`Mismatched api: ${model.api} expected ${api}`);
+			throw new Error(`API 不匹配：${model.api} 应为 ${api}`);
 		}
 		return stream(model as Model<TApi>, context, options as TOptions);
 	};
@@ -57,7 +57,7 @@ function wrapStreamSimple<TApi extends Api>(
 ): ApiStreamSimpleFunction {
 	return (model, context, options) => {
 		if (model.api !== api) {
-			throw new Error(`Mismatched api: ${model.api} expected ${api}`);
+			throw new Error(`API 不匹配：${model.api} 应为 ${api}`);
 		}
 		return streamSimple(model as Model<TApi>, context, options);
 	};

@@ -41,7 +41,7 @@ export class SessionImportFileNotFoundError extends Error {
 	readonly filePath: string;
 
 	constructor(filePath: string) {
-		super(`File not found: ${filePath}`);
+		super(`文件未找到: ${filePath}`);
 		this.name = "SessionImportFileNotFoundError";
 		this.filePath = filePath;
 	}

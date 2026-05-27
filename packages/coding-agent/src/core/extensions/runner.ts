@@ -216,7 +216,7 @@ const noOpUIContext: ExtensionUIContext = {
 	},
 	getAllThemes: () => [],
 	getTheme: () => undefined,
-	setTheme: (_theme: string | Theme) => ({ success: false, error: "UI not available" }),
+	setTheme: (_theme: string | Theme) => ({ success: false, error: "UI 不可用" }),
 	getToolsExpanded: () => false,
 	setToolsExpanded: () => {},
 };
@@ -433,7 +433,7 @@ export class ExtensionRunner {
 				const builtInKeybinding = builtinKeybindings[normalizedKey];
 				if (builtInKeybinding?.restrictOverride === true) {
 					addDiagnostic(
-						`Extension shortcut '${key}' from ${shortcut.extensionPath} conflicts with built-in shortcut. Skipping.`,
+						`来自 ${shortcut.extensionPath} 的扩展快捷键 '${key}' 与内置快捷键冲突。已跳过。`,
 						shortcut.extensionPath,
 					);
 					continue;
@@ -441,7 +441,7 @@ export class ExtensionRunner {
 
 				if (builtInKeybinding?.restrictOverride === false) {
 					addDiagnostic(
-						`Extension shortcut conflict: '${key}' is built-in shortcut for ${builtInKeybinding.keybinding} and ${shortcut.extensionPath}. Using ${shortcut.extensionPath}.`,
+						`扩展快捷键冲突：'${key}' 是 ${builtInKeybinding.keybinding} 的内置快捷键，也是 ${shortcut.extensionPath} 的快捷键。将使用 ${shortcut.extensionPath}。`,
 						shortcut.extensionPath,
 					);
 				}
@@ -449,7 +449,7 @@ export class ExtensionRunner {
 				const existingExtensionShortcut = extensionShortcuts.get(normalizedKey);
 				if (existingExtensionShortcut) {
 					addDiagnostic(
-						`Extension shortcut conflict: '${key}' registered by both ${existingExtensionShortcut.extensionPath} and ${shortcut.extensionPath}. Using ${shortcut.extensionPath}.`,
+						`扩展快捷键冲突：'${key}' 同时被 ${existingExtensionShortcut.extensionPath} 和 ${shortcut.extensionPath} 注册。将使用 ${shortcut.extensionPath}。`,
 						shortcut.extensionPath,
 					);
 				}
@@ -464,7 +464,7 @@ export class ExtensionRunner {
 	}
 
 	invalidate(
-		message = "This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(), ctx.fork(), ctx.switchSession(), or ctx.reload(). For newSession, fork, and switchSession, move post-replacement work into withSession and use the ctx passed to withSession. For reload, do not use the old ctx after await ctx.reload().",
+		message = "此扩展上下文在会话替换或重新加载后已过期。在 ctx.newSession()、ctx.fork()、ctx.switchSession() 或 ctx.reload() 之后，不要使用已捕获的 pi 或命令上下文。对于 newSession、fork 和 switchSession，将替换后的工作移到 withSession 中，并使用传递给 withSession 的上下文。对于 reload，在 await ctx.reload() 之后不要使用旧的上下文。",
 	): void {
 		if (!this.staleMessage) {
 			this.staleMessage = message;
@@ -730,7 +730,7 @@ export class ExtensionRunner {
 						this.emitError({
 							extensionPath: ext.path,
 							event: "message_end",
-							error: "message_end handlers must return a message with the same role",
+							error: "message_end 处理程序必须返回具有相同角色的消息",
 						});
 						continue;
 					}

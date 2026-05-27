@@ -91,7 +91,7 @@ function getNonVisionImageNote(model: Model<Api> | undefined): string | undefine
 	if (!model || model.input.includes("image")) {
 		return undefined;
 	}
-	return "[Current model does not support images. The image will be omitted from this request.]";
+	return "[当前模型不支持图片。图片将在此请求中忽略。]";
 }
 
 function toPosixPath(filePath: string): string {
@@ -145,10 +145,10 @@ function formatCompactReadCall(
 	args: ReadRenderArgs | undefined,
 	theme: Theme,
 ): string {
-	const expandHint = theme.fg("dim", ` (${keyText("app.tools.expand")} to expand)`);
+	const expandHint = theme.fg("dim", ` (${keyText("app.tools.expand")} 展开)`);
 	if (classification.kind === "skill") {
 		return (
-			theme.fg("customMessageLabel", `\x1b[1m[skill]\x1b[22m `) +
+			theme.fg("customMessageLabel", `\x1b[1m[技能]\x1b[22m `) +
 			theme.fg("customMessageText", classification.label) +
 			formatReadLineRange(args, theme) +
 			expandHint
@@ -156,7 +156,7 @@ function formatCompactReadCall(
 	}
 
 	return (
-		theme.fg("toolTitle", theme.bold(`read ${classification.kind}`)) +
+		theme.fg("toolTitle", theme.bold(`读取 ${classification.kind}`)) +
 		" " +
 		theme.fg("accent", classification.label) +
 		formatReadLineRange(args, theme) +
@@ -187,17 +187,17 @@ function formatReadResult(
 	const remaining = lines.length - maxLines;
 	let text = `\n${displayLines.map((line) => (lang ? replaceTabs(line) : theme.fg("toolOutput", replaceTabs(line)))).join("\n")}`;
 	if (remaining > 0) {
-		text += `${theme.fg("muted", `\n... (${remaining} more lines,`)} ${keyHint("app.tools.expand", "to expand")})`;
+		text += `${theme.fg("muted", `\n... (还有 ${remaining} 行，`)}${keyHint("app.tools.expand", "展开")})`;
 	}
 
 	const truncation = result.details?.truncation;
 	if (truncation?.truncated) {
 		if (truncation.firstLineExceedsLimit) {
-			text += `\n${theme.fg("warning", `[First line exceeds ${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} limit]`)}`;
+			text += `\n${theme.fg("warning", `[第一行超出 ${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} 限制]`)}`;
 		} else if (truncation.truncatedBy === "lines") {
-			text += `\n${theme.fg("warning", `[Truncated: showing ${truncation.outputLines} of ${truncation.totalLines} lines (${truncation.maxLines ?? DEFAULT_MAX_LINES} line limit)]`)}`;
+			text += `\n${theme.fg("warning", `[截断：显示 ${truncation.outputLines} 行，共 ${truncation.totalLines} 行（${truncation.maxLines ?? DEFAULT_MAX_LINES} 行限制）]`)}`;
 		} else {
-			text += `\n${theme.fg("warning", `[Truncated: ${truncation.outputLines} lines shown (${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} limit)]`)}`;
+			text += `\n${theme.fg("warning", `[截断：显示 ${truncation.outputLines} 行（${formatSize(truncation.maxBytes ?? DEFAULT_MAX_BYTES)} 限制）]`)}`;
 		}
 	}
 	return text;
@@ -254,12 +254,12 @@ export function createReadToolDefinition(
 									// Resize image if needed before sending it back to the model.
 									const resized = await resizeImage(buffer, mimeType);
 									if (!resized) {
-										let textNote = `Read image file [${mimeType}]\n[Image omitted: could not be resized below the inline image size limit.]`;
+										let textNote = `读取图片文件 [${mimeType}]\n[图片已省略：无法将其缩放到行内图像大小限制以下。]`;
 										if (nonVisionImageNote) textNote += `\n${nonVisionImageNote}`;
 										content = [{ type: "text", text: textNote }];
 									} else {
 										const dimensionNote = formatDimensionNote(resized);
-										let textNote = `Read image file [${resized.mimeType}]`;
+										let textNote = `读取图片文件 [${resized.mimeType}]`;
 										if (dimensionNote) textNote += `\n${dimensionNote}`;
 										if (nonVisionImageNote) textNote += `\n${nonVisionImageNote}`;
 										content = [
@@ -268,7 +268,7 @@ export function createReadToolDefinition(
 										];
 									}
 								} else {
-									let textNote = `Read image file [${mimeType}]`;
+									let textNote = `读取图片文件 [${mimeType}]`;
 									if (nonVisionImageNote) textNote += `\n${nonVisionImageNote}`;
 									content = [
 										{ type: "text", text: textNote },
@@ -286,7 +286,7 @@ export function createReadToolDefinition(
 								const startLineDisplay = startLine + 1;
 								// Check if offset is out of bounds.
 								if (startLine >= allLines.length) {
-									throw new Error(`Offset ${offset} is beyond end of file (${allLines.length} lines total)`);
+									throw new Error(`偏移量 ${offset} 超出了文件末尾（共 ${allLines.length} 行）`);
 								}
 								let selectedContent: string;
 								let userLimitedLines: number | undefined;
@@ -304,7 +304,7 @@ export function createReadToolDefinition(
 								if (truncation.firstLineExceedsLimit) {
 									// First line alone exceeds the byte limit. Point the model at a bash fallback.
 									const firstLineSize = formatSize(Buffer.byteLength(allLines[startLine], "utf-8"));
-									outputText = `[Line ${startLineDisplay} is ${firstLineSize}, exceeds ${formatSize(DEFAULT_MAX_BYTES)} limit. Use bash: sed -n '${startLineDisplay}p' ${path} | head -c ${DEFAULT_MAX_BYTES}]`;
+									outputText = `[第 ${startLineDisplay} 行大小为 ${firstLineSize}，超出 ${formatSize(DEFAULT_MAX_BYTES)} 限制。请使用 bash: sed -n '${startLineDisplay}p' ${path} | head -c ${DEFAULT_MAX_BYTES}]`;
 									details = { truncation };
 								} else if (truncation.truncated) {
 									// Truncation occurred. Build an actionable continuation notice.
@@ -312,16 +312,16 @@ export function createReadToolDefinition(
 									const nextOffset = endLineDisplay + 1;
 									outputText = truncation.content;
 									if (truncation.truncatedBy === "lines") {
-										outputText += `\n\n[Showing lines ${startLineDisplay}-${endLineDisplay} of ${totalFileLines}. Use offset=${nextOffset} to continue.]`;
+										outputText += `\n\n[显示第 ${startLineDisplay}-${endLineDisplay} 行，共 ${totalFileLines} 行。使用 offset=${nextOffset} 继续读取。]`;
 									} else {
-										outputText += `\n\n[Showing lines ${startLineDisplay}-${endLineDisplay} of ${totalFileLines} (${formatSize(DEFAULT_MAX_BYTES)} limit). Use offset=${nextOffset} to continue.]`;
+										outputText += `\n\n[显示第 ${startLineDisplay}-${endLineDisplay} 行，共 ${totalFileLines} 行（${formatSize(DEFAULT_MAX_BYTES)} 限制）。使用 offset=${nextOffset} 继续读取。]`;
 									}
 									details = { truncation };
 								} else if (userLimitedLines !== undefined && startLine + userLimitedLines < allLines.length) {
 									// User-specified limit stopped early, but the file still has more content.
 									const remaining = allLines.length - (startLine + userLimitedLines);
 									const nextOffset = startLine + userLimitedLines + 1;
-									outputText = `${truncation.content}\n\n[${remaining} more lines in file. Use offset=${nextOffset} to continue.]`;
+									outputText = `${truncation.content}\n\n[文件中还有 ${remaining} 行。使用 offset=${nextOffset} 继续读取。]`;
 								} else {
 									// No truncation and no remaining user-limited content.
 									outputText = truncation.content;

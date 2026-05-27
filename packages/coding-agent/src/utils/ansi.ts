@@ -45,7 +45,7 @@ const regex = ansiRegex();
 
 export function stripAnsi(value: string): string {
 	if (typeof value !== "string") {
-		throw new TypeError(`Expected a \`string\`, got \`${typeof value}\``);
+		throw new TypeError(`期望一个 \`string\`，但实际得到 \`${typeof value}\``);
 	}
 
 	// Fast path: ANSI codes require ESC (7-bit) or CSI (8-bit) introducer

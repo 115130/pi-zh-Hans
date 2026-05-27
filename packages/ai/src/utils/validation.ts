@@ -264,7 +264,7 @@ function formatValidationPath(error: TLocalizedValidationError): string {
 		}
 	}
 	const path = error.instancePath.replace(/^\//, "").replace(/\//g, ".");
-	return path || "root";
+	return path || "根";
 }
 
 /**
@@ -316,9 +316,9 @@ export function validateToolArguments(tool: Tool, toolCall: ToolCall): any {
 		validator
 			.Errors(args)
 			.map((error) => `  - ${formatValidationPath(error)}: ${error.message}`)
-			.join("\n") || "Unknown validation error";
+			.join("\n") || "未知验证错误";
 
-	const errorMessage = `Validation failed for tool "${toolCall.name}":\n${errors}\n\nReceived arguments:\n${JSON.stringify(toolCall.arguments, null, 2)}`;
+	const errorMessage = `工具 "${toolCall.name}" 验证失败:\n${errors}\n\n接收的参数:\n${JSON.stringify(toolCall.arguments, null, 2)}`;
 
 	throw new Error(errorMessage);
 }

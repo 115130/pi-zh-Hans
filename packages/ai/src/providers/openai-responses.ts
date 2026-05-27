@@ -57,7 +57,7 @@ function formatOpenAIResponsesError(error: unknown): string {
 		const status = (error as Error & { status?: unknown }).status;
 		const statusCode = typeof status === "number" ? status : undefined;
 		if (statusCode !== undefined) {
-			return `OpenAI API error (${statusCode}): ${error.message}`;
+			return `OpenAI API 错误 (${statusCode}): ${error.message}`;
 		}
 		return error.message;
 	}
@@ -131,11 +131,11 @@ export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIRes
 			});
 
 			if (options?.signal?.aborted) {
-				throw new Error("Request was aborted");
+				throw new Error("请求已中止");
 			}
 
 			if (output.stopReason === "aborted" || output.stopReason === "error") {
-				throw new Error("An unknown error occurred");
+				throw new Error("发生未知错误");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason, message: output });
@@ -163,7 +163,7 @@ export const streamSimpleOpenAIResponses: StreamFunction<"openai-responses", Sim
 ): AssistantMessageEventStream => {
 	const apiKey = options?.apiKey || getEnvApiKey(model.provider);
 	if (!apiKey) {
-		throw new Error(`No API key for provider: ${model.provider}`);
+		throw new Error(`提供商 ${model.provider} 没有 API 密钥`);
 	}
 
 	const base = buildBaseOptions(model, options, apiKey);
@@ -185,9 +185,7 @@ function createClient(
 ) {
 	if (!apiKey) {
 		if (!process.env.OPENAI_API_KEY) {
-			throw new Error(
-				"OpenAI API key is required. Set OPENAI_API_KEY environment variable or pass it as an argument.",
-			);
+			throw new Error("需要 OpenAI API 密钥。请设置 OPENAI_API_KEY 环境变量或作为参数传入。");
 		}
 		apiKey = process.env.OPENAI_API_KEY;
 	}

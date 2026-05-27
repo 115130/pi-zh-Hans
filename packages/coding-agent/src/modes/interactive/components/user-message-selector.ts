@@ -63,7 +63,7 @@ class UserMessageList implements Component {
 
 			// Second line: metadata (position in history)
 			const position = i + 1;
-			const metadata = `  Message ${position} of ${this.messages.length}`;
+			const metadata = `  消息 ${position} / ${this.messages.length}`;
 			const metadataLine = theme.fg("muted", metadata);
 			lines.push(metadataLine);
 			lines.push(""); // Blank line between messages
@@ -120,7 +120,7 @@ export class UserMessageSelectorComponent extends Container {
 
 		// Add header
 		this.addChild(new Spacer(1));
-		this.addChild(new Text(theme.bold("Fork from Message"), 1, 0));
+		this.addChild(new Text(theme.bold("从消息分叉"), 1, 0));
 		this.addChild(new Text(theme.fg("muted", "选择一条用户消息，将到该点的活动路径复制到新会话中"), 1, 0));
 		this.addChild(new Spacer(1));
 		this.addChild(new DynamicBorder());

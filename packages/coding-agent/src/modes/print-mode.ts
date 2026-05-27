@@ -95,7 +95,7 @@ export async function runPrintMode(runtimeHost: AgentSessionRuntime, options: Pr
 				},
 			},
 			onError: (err) => {
-				console.error(`Extension error (${err.extensionPath}): ${err.error}`);
+				console.error(`扩展错误 (${err.extensionPath}): ${err.error}`);
 			},
 		});
 
@@ -132,7 +132,7 @@ export async function runPrintMode(runtimeHost: AgentSessionRuntime, options: Pr
 			if (lastMessage?.role === "assistant") {
 				const assistantMsg = lastMessage as AssistantMessage;
 				if (assistantMsg.stopReason === "error" || assistantMsg.stopReason === "aborted") {
-					console.error(assistantMsg.errorMessage || `Request ${assistantMsg.stopReason}`);
+					console.error(assistantMsg.errorMessage || `请求 ${assistantMsg.stopReason}`);
 					exitCode = 1;
 				} else {
 					for (const content of assistantMsg.content) {

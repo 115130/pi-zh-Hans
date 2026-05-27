@@ -123,7 +123,7 @@ type HandlerFn = (...args: unknown[]) => Promise<unknown>;
  */
 export function createExtensionRuntime(): ExtensionRuntime {
 	const notInitialized = () => {
-		throw new Error("Extension runtime not initialized. Action methods cannot be called during extension loading.");
+		throw new Error("扩展运行时未初始化。在扩展加载期间无法调用动作方法。");
 	};
 	const state: { staleMessage?: string } = {};
 	const assertActive = () => {
@@ -145,7 +145,7 @@ export function createExtensionRuntime(): ExtensionRuntime {
 		// registerTool() is valid during extension load; refresh is only needed post-bind.
 		refreshTools: () => {},
 		getCommands: notInitialized,
-		setModel: () => Promise.reject(new Error("Extension runtime not initialized")),
+		setModel: () => Promise.reject(new Error("扩展运行时未初始化")),
 		getThinkingLevel: notInitialized,
 		setThinkingLevel: notInitialized,
 		flagValues: new Map(),
@@ -154,7 +154,7 @@ export function createExtensionRuntime(): ExtensionRuntime {
 		invalidate: (message) => {
 			state.staleMessage ??=
 				message ??
-				"This extension ctx is stale after session replacement or reload. Do not use a captured pi or command ctx after ctx.newSession(), ctx.fork(), ctx.switchSession(), or ctx.reload(). For newSession, fork, and switchSession, move post-replacement work into withSession and use the ctx passed to withSession. For reload, do not use the old ctx after await ctx.reload().";
+				"此扩展上下文在会话替换或重新加载后已过期。不要在 ctx.newSession()、ctx.fork()、ctx.switchSession() 或 ctx.reload() 之后使用捕获的 pi 或命令上下文。对于 newSession、fork 和 switchSession，请将替换后的工作移入 withSession，并使用传递给 withSession 的上下文。对于 reload，不要在 await ctx.reload() 之后使用旧的上下文。";
 		},
 		// Pre-bind: queue registrations so bindCore() can flush them once the
 		// model registry is available. bindCore() replaces both with direct calls.
@@ -376,7 +376,7 @@ async function loadExtension(
 	try {
 		const factory = await loadExtensionModule(resolvedPath);
 		if (!factory) {
-			return { extension: null, error: `Extension does not export a valid factory function: ${extensionPath}` };
+			return { extension: null, error: `扩展未导出有效的工厂函数: ${extensionPath}` };
 		}
 
 		const extension = createExtension(extensionPath, resolvedPath);

@@ -93,16 +93,16 @@ function renderPage(options: { title: string; heading: string; message: string; 
 
 export function oauthSuccessHtml(message: string): string {
 	return renderPage({
-		title: "Authentication successful",
-		heading: "Authentication successful",
+		title: "认证成功",
+		heading: "认证成功",
 		message,
 	});
 }
 
 export function oauthErrorHtml(message: string, details?: string): string {
 	return renderPage({
-		title: "Authentication failed",
-		heading: "Authentication failed",
+		title: "认证失败",
+		heading: "认证失败",
 		message,
 		details,
 	});

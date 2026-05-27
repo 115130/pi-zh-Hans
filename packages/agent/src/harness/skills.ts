@@ -36,7 +36,7 @@ interface SkillFrontmatter {
 
 /** Format a skill invocation prompt, optionally appending additional user instructions. */
 export function formatSkillInvocation(skill: Skill, additionalInstructions?: string): string {
-	const skillBlock = `<skill name="${skill.name}" location="${skill.filePath}">\nReferences are relative to ${dirnameEnvPath(skill.filePath)}.\n\n${skill.content}\n</skill>`;
+	const skillBlock = `<skill name="${skill.name}" location="${skill.filePath}">\n引用路径相对于 ${dirnameEnvPath(skill.filePath)}。\n\n${skill.content}\n</skill>`;
 	return additionalInstructions ? `${skillBlock}\n\n${additionalInstructions}` : skillBlock;
 }
 
@@ -280,22 +280,22 @@ async function loadSkillFromFile(
 
 function validateName(name: string, parentDirName: string): string[] {
 	const errors: string[] = [];
-	if (name !== parentDirName) errors.push(`name "${name}" does not match parent directory "${parentDirName}"`);
-	if (name.length > MAX_NAME_LENGTH) errors.push(`name exceeds ${MAX_NAME_LENGTH} characters (${name.length})`);
+	if (name !== parentDirName) errors.push(`name "${name}" 与父目录 "${parentDirName}" 不匹配`);
+	if (name.length > MAX_NAME_LENGTH) errors.push(`name 超过 ${MAX_NAME_LENGTH} 个字符 (当前 ${name.length} 个)`);
 	if (!/^[a-z0-9-]+$/.test(name)) {
-		errors.push("name contains invalid characters (must be lowercase a-z, 0-9, hyphens only)");
+		errors.push("name 包含无效字符 (只能使用小写字母 a-z、数字 0-9 和连字符)");
 	}
-	if (name.startsWith("-") || name.endsWith("-")) errors.push("name must not start or end with a hyphen");
-	if (name.includes("--")) errors.push("name must not contain consecutive hyphens");
+	if (name.startsWith("-") || name.endsWith("-")) errors.push("name 不能以连字符开头或结尾");
+	if (name.includes("--")) errors.push("name 不能包含连续的连字符");
 	return errors;
 }
 
 function validateDescription(description: string | undefined): string[] {
 	const errors: string[] = [];
 	if (!description || description.trim() === "") {
-		errors.push("description is required");
+		errors.push("description 是必填项");
 	} else if (description.length > MAX_DESCRIPTION_LENGTH) {
-		errors.push(`description exceeds ${MAX_DESCRIPTION_LENGTH} characters (${description.length})`);
+		errors.push(`description 超过 ${MAX_DESCRIPTION_LENGTH} 个字符 (当前 ${description.length} 个)`);
 	}
 	return errors;
 }

@@ -150,12 +150,12 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 
 	private formatStatusIndicator(provider: AuthSelectorProvider): string {
 		const credential = this.authStorage.get(provider.id);
-		if (credential?.type === provider.authType) return theme.fg("success", " ✓ configured");
+		if (credential?.type === provider.authType) return theme.fg("success", " ✓ 已配置");
 		if (credential) {
-			const label = credential.type === "oauth" ? "subscription configured" : "API key configured";
+			const label = credential.type === "oauth" ? "订阅已配置" : "API 密钥已配置";
 			return theme.fg("muted", " • ") + theme.fg("warning", label);
 		}
-		if (provider.authType !== "api_key") return theme.fg("muted", " • unconfigured");
+		if (provider.authType !== "api_key") return theme.fg("muted", " • 未配置");
 
 		const status = this.getAuthStatus(provider.id);
 		switch (status.source) {
@@ -170,7 +170,7 @@ export class OAuthSelectorComponent extends Container implements Focusable {
 			case "models_json_command":
 				return theme.fg("success", " ✓ models.json 中的命令");
 			default:
-				return theme.fg("muted", " • unconfigured");
+				return theme.fg("muted", " • 未配置");
 		}
 	}
 

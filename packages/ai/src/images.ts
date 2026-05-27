@@ -6,7 +6,7 @@ import type { AssistantImages, ImagesApi, ImagesContext, ImagesModel, ProviderIm
 function resolveImagesApiProvider(api: ImagesApi) {
 	const provider = getImagesApiProvider(api);
 	if (!provider) {
-		throw new Error(`No API provider registered for api: ${api}`);
+		throw new Error(`未注册API提供者: ${api}`);
 	}
 	return provider;
 }

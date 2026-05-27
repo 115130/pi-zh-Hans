@@ -103,10 +103,10 @@ export function resolveConfigValueOrThrow(config: string, description: string): 
 	}
 
 	if (config.startsWith("!")) {
-		throw new Error(`Failed to resolve ${description} from shell command: ${config.slice(1)}`);
+		throw new Error(`无法解析${description}来自shell命令: ${config.slice(1)}`);
 	}
 
-	throw new Error(`Failed to resolve ${description}`);
+	throw new Error(`无法解析${description}`);
 }
 
 /**

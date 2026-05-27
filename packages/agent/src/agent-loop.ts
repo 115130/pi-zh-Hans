@@ -68,11 +68,11 @@ export function agentLoopContinue(
 	streamFn?: StreamFn,
 ): EventStream<AgentEvent, AgentMessage[]> {
 	if (context.messages.length === 0) {
-		throw new Error("Cannot continue: no messages in context");
+		throw new Error("无法继续：上下文中没有消息");
 	}
 
 	if (context.messages[context.messages.length - 1].role === "assistant") {
-		throw new Error("Cannot continue from message role: assistant");
+		throw new Error("无法从角色为助手的消息继续");
 	}
 
 	const stream = createAgentStream();
@@ -125,11 +125,11 @@ export async function runAgentLoopContinue(
 	streamFn?: StreamFn,
 ): Promise<AgentMessage[]> {
 	if (context.messages.length === 0) {
-		throw new Error("Cannot continue: no messages in context");
+		throw new Error("无法继续：上下文中没有消息");
 	}
 
 	if (context.messages[context.messages.length - 1].role === "assistant") {
-		throw new Error("Cannot continue from message role: assistant");
+		throw new Error("无法从角色为助手的消息继续");
 	}
 
 	const newMessages: AgentMessage[] = [];
@@ -598,7 +598,7 @@ async function prepareToolCall(
 			if (beforeResult?.block) {
 				return {
 					kind: "immediate",
-					result: createErrorToolResult(beforeResult.reason || "Tool execution was blocked"),
+					result: createErrorToolResult(beforeResult.reason || "工具执行被阻止"),
 					isError: true,
 				};
 			}

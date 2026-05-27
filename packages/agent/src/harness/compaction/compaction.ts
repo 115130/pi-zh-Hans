@@ -18,11 +18,11 @@ import {
 	serializeConversation,
 } from "./utils.ts";
 
-/** File-operation details stored on generated compaction entries. */
+/** 压缩条目上存储的文件操作细节。 */
 export interface CompactionDetails {
-	/** Files read in the compacted history. */
+	/** 压缩历史中读取的文件。 */
 	readFiles: string[];
-	/** Files modified in the compacted history. */
+	/** 压缩历史中修改的文件。 */
 	modifiedFiles: string[];
 }
 function safeJsonStringify(value: unknown): string {
@@ -86,36 +86,36 @@ function getMessageFromEntryForCompaction(entry: SessionTreeEntry): AgentMessage
 	return getMessageFromEntry(entry);
 }
 
-/** Generated compaction data ready to be persisted as a compaction entry. */
+/** 生成的压缩数据，准备持久化为一个压缩条目。 */
 export interface CompactionResult<T = unknown> {
-	/** Summary text that replaces compacted history in future context. */
+	/** 替换压缩历史在将来上下文中使用的摘要文本。 */
 	summary: string;
-	/** Entry id where retained history starts. */
+	/** 保留历史开始处的条目ID。 */
 	firstKeptEntryId: string;
-	/** Estimated context tokens before compaction. */
+	/** 压缩前的估计上下文令牌数。 */
 	tokensBefore: number;
-	/** Optional implementation-specific details stored with the compaction entry. */
+	/** 可选的实现特定细节，与压缩条目一起存储。 */
 	details?: T;
 }
 
-/** Compaction thresholds and retention settings. */
+/** 压缩阈值和保留设置。 */
 export interface CompactionSettings {
-	/** Enable automatic compaction decisions. */
+	/** 启用自动压缩决策。 */
 	enabled: boolean;
-	/** Tokens reserved for summary prompt and output. */
+	/** 为摘要提示和输出预留的令牌数。 */
 	reserveTokens: number;
-	/** Approximate recent-context tokens to keep after compaction. */
+	/** 压缩后保留的近似最近上下文令牌数。 */
 	keepRecentTokens: number;
 }
 
-/** Default compaction settings used by the harness. */
+/** 测试框架使用的默认压缩设置。 */
 export const DEFAULT_COMPACTION_SETTINGS: CompactionSettings = {
 	enabled: true,
 	reserveTokens: 16384,
 	keepRecentTokens: 20000,
 };
 
-/** Calculate total context tokens from provider usage. */
+/** 根据提供者的使用情况计算总上下文令牌数。 */
 export function calculateContextTokens(usage: Usage): number {
 	return usage.totalTokens || usage.input + usage.output + usage.cacheRead + usage.cacheWrite;
 }
@@ -129,7 +129,7 @@ function getAssistantUsage(msg: AgentMessage): Usage | undefined {
 	return undefined;
 }
 
-/** Return usage from the last successful assistant message in session entries. */
+/** 从会话条目中返回最后一个成功的助手消息的使用情况。 */
 export function getLastAssistantUsage(entries: SessionTreeEntry[]): Usage | undefined {
 	for (let i = entries.length - 1; i >= 0; i--) {
 		const entry = entries[i];
@@ -141,15 +141,15 @@ export function getLastAssistantUsage(entries: SessionTreeEntry[]): Usage | unde
 	return undefined;
 }
 
-/** Estimated context-token usage for a message list. */
+/** 消息列表的估计上下文令牌使用情况。 */
 export interface ContextUsageEstimate {
-	/** Estimated total context tokens. */
+	/** 估计的总上下文令牌数。 */
 	tokens: number;
-	/** Tokens reported by the most recent assistant usage block. */
+	/** 最近的助手使用块报告的令牌数。 */
 	usageTokens: number;
-	/** Estimated tokens after the most recent assistant usage block. */
+	/** 最近的助手使用块之后的估计令牌数。 */
 	trailingTokens: number;
-	/** Index of the message that provided usage, or null when none exists. */
+	/** 提供使用情况的消息索引，不存在时为null。 */
 	lastUsageIndex: number | null;
 }
 
@@ -161,7 +161,7 @@ function getLastAssistantUsageInfo(messages: AgentMessage[]): { usage: Usage; in
 	return undefined;
 }
 
-/** Estimate context tokens for messages using provider usage when available. */
+/** 在使用可用时，使用提供者的使用情况估计消息的上下文令牌数。 */
 export function estimateContextTokens(messages: AgentMessage[]): ContextUsageEstimate {
 	const usageInfo = getLastAssistantUsageInfo(messages);
 
@@ -192,7 +192,7 @@ export function estimateContextTokens(messages: AgentMessage[]): ContextUsageEst
 	};
 }
 
-/** Return whether context usage exceeds the configured compaction threshold. */
+/** 返回上下文使用是否超过配置的压缩阈值。 */
 export function shouldCompact(contextTokens: number, contextWindow: number, settings: CompactionSettings): boolean {
 	if (!settings.enabled) return false;
 	return contextTokens > contextWindow - settings.reserveTokens;
@@ -216,7 +216,7 @@ function estimateTextAndImageContentChars(content: string | Array<{ type: string
 	return chars;
 }
 
-/** Estimate token count for one message using a conservative character heuristic. */
+/** 使用保守的字符启发式估计一条消息的令牌数。 */
 export function estimateTokens(message: AgentMessage): number {
 	let chars = 0;
 
@@ -297,7 +297,7 @@ function findValidCutPoints(entries: SessionTreeEntry[], startIndex: number, end
 	return cutPoints;
 }
 
-/** Find the user-visible message that starts the turn containing an entry. */
+/** 查找包含条目的回合开始的用户可见消息。 */
 export function findTurnStartIndex(entries: SessionTreeEntry[], entryIndex: number, startIndex: number): number {
 	for (let i = entryIndex; i >= startIndex; i--) {
 		const entry = entries[i];
@@ -314,17 +314,17 @@ export function findTurnStartIndex(entries: SessionTreeEntry[], entryIndex: numb
 	return -1;
 }
 
-/** Cut point selected for compaction. */
+/** 为压缩选择的切割点。 */
 export interface CutPointResult {
-	/** Index of the first entry retained after compaction. */
+	/** 压缩后保留的第一个条目的索引。 */
 	firstKeptEntryIndex: number;
-	/** Index of the turn-start entry when the cut splits a turn, otherwise -1. */
+	/** 当切割分割一个回合时，回合起始条目的索引，否则为-1。 */
 	turnStartIndex: number;
-	/** Whether the selected cut point splits an in-progress turn. */
+	/** 选定的切割点是否分割了一个正在进行的回合。 */
 	isSplitTurn: boolean;
 }
 
-/** Find the compaction cut point that keeps approximately the requested recent-token budget. */
+/** 找到压缩切割点，保留大约请求的近期令牌预算。 */
 export function findCutPoint(
 	entries: SessionTreeEntry[],
 	startIndex: number,
@@ -375,83 +375,83 @@ export function findCutPoint(
 	};
 }
 
-export const SUMMARIZATION_SYSTEM_PROMPT = `You are a context summarization assistant. Your task is to read a conversation between a user and an AI coding assistant, then produce a structured summary following the exact format specified.
+export const SUMMARIZATION_SYSTEM_PROMPT = `你是一个上下文摘要助手。你的任务是阅读用户与AI编码助手之间的对话，然后按照指定的精确格式生成结构化摘要。
 
-Do NOT continue the conversation. Do NOT respond to any questions in the conversation. ONLY output the structured summary.`;
+不要继续对话。不要回复对话中的任何问题。只输出结构化摘要。`;
 
-const SUMMARIZATION_PROMPT = `The messages above are a conversation to summarize. Create a structured context checkpoint summary that another LLM will use to continue the work.
+const SUMMARIZATION_PROMPT = `上述消息是需要摘要的对话。创建一个结构化的上下文检查点摘要，供另一个LLM用来继续工作。
 
-Use this EXACT format:
+使用以下精确格式：
 
-## Goal
-[What is the user trying to accomplish? Can be multiple items if the session covers different tasks.]
+## 目标
+[用户试图实现什么？如果会话涵盖不同任务，可以是多个条目。]
 
-## Constraints & Preferences
-- [Any constraints, preferences, or requirements mentioned by user]
-- [Or "(none)" if none were mentioned]
+## 约束与偏好
+- [用户提到的任何约束、偏好或要求]
+- [如果没有提到，则为"(无)"]
 
-## Progress
-### Done
-- [x] [Completed tasks/changes]
+## 进展
+### 已完成
+- [x] [已完成的任务/更改]
 
-### In Progress
-- [ ] [Current work]
+### 进行中
+- [ ] [当前工作]
 
-### Blocked
-- [Issues preventing progress, if any]
+### 受阻
+- [阻碍进展的问题（如果有）]
 
-## Key Decisions
-- **[Decision]**: [Brief rationale]
+## 关键决策
+- **[决策]**：[简要理由]
 
-## Next Steps
-1. [Ordered list of what should happen next]
+## 后续步骤
+1. [接下来应该发生什么的有序列表]
 
-## Critical Context
-- [Any data, examples, or references needed to continue]
-- [Or "(none)" if not applicable]
+## 关键上下文
+- [继续所需的数据、示例或引用]
+- [如果不适用，则为"(无)"]
 
-Keep each section concise. Preserve exact file paths, function names, and error messages.`;
+保持每个部分简洁。保留确切的文件路径、函数名称和错误消息。`;
 
-const UPDATE_SUMMARIZATION_PROMPT = `The messages above are NEW conversation messages to incorporate into the existing summary provided in <previous-summary> tags.
+const UPDATE_SUMMARIZATION_PROMPT = `上述消息是需要纳入现有摘要的新对话消息，现有摘要位于<previous-summary>标签中。
 
-Update the existing structured summary with new information. RULES:
-- PRESERVE all existing information from the previous summary
-- ADD new progress, decisions, and context from the new messages
-- UPDATE the Progress section: move items from "In Progress" to "Done" when completed
-- UPDATE "Next Steps" based on what was accomplished
-- PRESERVE exact file paths, function names, and error messages
-- If something is no longer relevant, you may remove it
+用新信息更新现有的结构化摘要。规则：
+- 保留现有摘要中的所有信息
+- 添加新消息中的新进展、决策和上下文
+- 更新"进展"部分：当项目完成时，从"进行中"移到"已完成"
+- 根据已完成的工作更新"后续步骤"
+- 保留确切的文件路径、函数名称和错误消息
+- 如果某些内容不再相关，可以删除
 
-Use this EXACT format:
+使用以下精确格式：
 
-## Goal
-[Preserve existing goals, add new ones if the task expanded]
+## 目标
+[保留现有目标，如果任务扩展，添加新目标]
 
-## Constraints & Preferences
-- [Preserve existing, add new ones discovered]
+## 约束与偏好
+- [保留现有项，添加新发现的项]
 
-## Progress
-### Done
-- [x] [Include previously done items AND newly completed items]
+## 进展
+### 已完成
+- [x] [包括之前完成的项目和新完成的项目]
 
-### In Progress
-- [ ] [Current work - update based on progress]
+### 进行中
+- [ ] [当前工作 - 根据进展更新]
 
-### Blocked
-- [Current blockers - remove if resolved]
+### 受阻
+- [当前障碍 - 如果已解决则删除]
 
-## Key Decisions
-- **[Decision]**: [Brief rationale] (preserve all previous, add new)
+## 关键决策
+- **[决策]**：[简要理由]（保留所有之前的，添加新的）
 
-## Next Steps
-1. [Update based on current state]
+## 后续步骤
+1. [根据当前状态更新]
 
-## Critical Context
-- [Preserve important context, add new if needed]
+## 关键上下文
+- [保留重要上下文，如果需要则添加新的]
 
-Keep each section concise. Preserve exact file paths, function names, and error messages.`;
+保持每个部分简洁。保留确切的文件路径、函数名称和错误消息。`;
 
-/** Generate or update a conversation summary for compaction. */
+/** 生成或更新用于压缩的对话摘要。 */
 export async function generateSummary(
 	currentMessages: AgentMessage[],
 	model: Model<any>,
@@ -469,7 +469,7 @@ export async function generateSummary(
 	);
 	let basePrompt = previousSummary ? UPDATE_SUMMARIZATION_PROMPT : SUMMARIZATION_PROMPT;
 	if (customInstructions) {
-		basePrompt = `${basePrompt}\n\nAdditional focus: ${customInstructions}`;
+		basePrompt = `${basePrompt}\n\n额外关注：${customInstructions}`;
 	}
 	const llmMessages = convertToLlm(currentMessages);
 	const conversationText = serializeConversation(llmMessages);
@@ -498,15 +498,10 @@ export async function generateSummary(
 		completionOptions,
 	);
 	if (response.stopReason === "aborted") {
-		return err(new CompactionError("aborted", response.errorMessage || "Summarization aborted"));
+		return err(new CompactionError("aborted", response.errorMessage || "摘要已中止"));
 	}
 	if (response.stopReason === "error") {
-		return err(
-			new CompactionError(
-				"summarization_failed",
-				`Summarization failed: ${response.errorMessage || "Unknown error"}`,
-			),
-		);
+		return err(new CompactionError("summarization_failed", `摘要失败：${response.errorMessage || "未知错误"}`));
 	}
 
 	const textContent = response.content
@@ -517,27 +512,27 @@ export async function generateSummary(
 	return ok(textContent);
 }
 
-/** Prepared inputs for a compaction run. */
+/** 为压缩运行准备的输入。 */
 export interface CompactionPreparation {
-	/** Entry id where retained history starts. */
+	/** 保留历史开始处的条目ID。 */
 	firstKeptEntryId: string;
-	/** Messages summarized into the history summary. */
+	/** 被摘要到历史摘要中的消息。 */
 	messagesToSummarize: AgentMessage[];
-	/** Prefix messages summarized separately when compaction splits a turn. */
+	/** 当压缩分割一个回合时，单独摘要的前缀消息。 */
 	turnPrefixMessages: AgentMessage[];
-	/** Whether compaction splits a turn. */
+	/** 压缩是否分割一个回合。 */
 	isSplitTurn: boolean;
-	/** Estimated context tokens before compaction. */
+	/** 压缩前的估计上下文令牌数。 */
 	tokensBefore: number;
-	/** Previous compaction summary used for iterative updates. */
+	/** 用于迭代更新的先前压缩摘要。 */
 	previousSummary?: string;
-	/** File operations extracted from summarized history. */
+	/** 从摘要历史中提取的文件操作。 */
 	fileOps: FileOperations;
-	/** Settings used to prepare compaction. */
+	/** 用于准备压缩的设置。 */
 	settings: CompactionSettings;
 }
 
-/** Prepare session entries for compaction, or return undefined when compaction is not applicable. */
+/** 准备会话条目以进行压缩，如果压缩不适用则返回undefined。 */
 export function prepareCompaction(
 	pathEntries: SessionTreeEntry[],
 	settings: CompactionSettings,
@@ -569,7 +564,7 @@ export function prepareCompaction(
 	const cutPoint = findCutPoint(pathEntries, boundaryStart, boundaryEnd, settings.keepRecentTokens);
 	const firstKeptEntry = pathEntries[cutPoint.firstKeptEntryIndex];
 	if (!firstKeptEntry?.id) {
-		return err(new CompactionError("invalid_session", "First kept entry has no UUID - session may need migration"));
+		return err(new CompactionError("invalid_session", "第一个保留的条目没有UUID - 会话可能需要迁移"));
 	}
 	const firstKeptEntryId = firstKeptEntry.id;
 
@@ -605,24 +600,24 @@ export function prepareCompaction(
 	});
 }
 
-const TURN_PREFIX_SUMMARIZATION_PROMPT = `This is the PREFIX of a turn that was too large to keep. The SUFFIX (recent work) is retained.
+const TURN_PREFIX_SUMMARIZATION_PROMPT = `这是一个回合的前缀部分，该回合太大而无法保留。其后缀（近期工作）被保留。
 
-Summarize the prefix to provide context for the retained suffix:
+摘要前缀以为保留的后缀提供上下文：
 
-## Original Request
-[What did the user ask for in this turn?]
+## 原始请求
+[用户在这个回合中要求什么？]
 
-## Early Progress
-- [Key decisions and work done in the prefix]
+## 早期进展
+- [前缀中的关键决策和完成的工作]
 
-## Context for Suffix
-- [Information needed to understand the retained recent work]
+## 后缀上下文
+- [理解保留的近期工作所需的信息]
 
-Be concise. Focus on what's needed to understand the kept suffix.`;
+保持简洁。重点放在理解保留的后缀所需的内容上。`;
 
 export { serializeConversation } from "./utils.ts";
 
-/** Generate compaction summary data from prepared session history. */
+/** 从准备好的会话历史生成压缩摘要数据。 */
 export async function compact(
 	preparation: CompactionPreparation,
 	model: Model<any>,
@@ -644,7 +639,7 @@ export async function compact(
 	} = preparation;
 
 	if (!firstKeptEntryId) {
-		return err(new CompactionError("invalid_session", "First kept entry has no UUID - session may need migration"));
+		return err(new CompactionError("invalid_session", "第一个保留的条目没有UUID - 会话可能需要迁移"));
 	}
 
 	let summary: string;
@@ -663,7 +658,7 @@ export async function compact(
 						previousSummary,
 						thinkingLevel,
 					)
-				: Promise.resolve(ok<string, CompactionError>("No prior history.")),
+				: Promise.resolve(ok<string, CompactionError>("无先前历史。")),
 			generateTurnPrefixSummary(
 				turnPrefixMessages,
 				model,
@@ -676,7 +671,7 @@ export async function compact(
 		]);
 		if (!historyResult.ok) return err(historyResult.error);
 		if (!turnPrefixResult.ok) return err(turnPrefixResult.error);
-		summary = `${historyResult.value}\n\n---\n\n**Turn Context (split turn):**\n\n${turnPrefixResult.value}`;
+		summary = `${historyResult.value}\n\n---\n\n**回合上下文（拆分回合）：**\n\n${turnPrefixResult.value}`;
 	} else {
 		const summaryResult = await generateSummary(
 			messagesToSummarize,
@@ -735,14 +730,11 @@ async function generateTurnPrefixSummary(
 			: { maxTokens, signal, apiKey, headers },
 	);
 	if (response.stopReason === "aborted") {
-		return err(new CompactionError("aborted", response.errorMessage || "Turn prefix summarization aborted"));
+		return err(new CompactionError("aborted", response.errorMessage || "回合前缀摘要已中止"));
 	}
 	if (response.stopReason === "error") {
 		return err(
-			new CompactionError(
-				"summarization_failed",
-				`Turn prefix summarization failed: ${response.errorMessage || "Unknown error"}`,
-			),
+			new CompactionError("summarization_failed", `回合前缀摘要失败：${response.errorMessage || "未知错误"}`),
 		);
 	}
 

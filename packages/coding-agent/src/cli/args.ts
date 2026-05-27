@@ -191,9 +191,9 @@ export function parseArgs(args: string[]): Args {
 export function printHelp(extensionFlags?: ExtensionFlag[]): void {
 	const extensionFlagsText =
 		extensionFlags && extensionFlags.length > 0
-			? `\n${chalk.bold("Extension CLI Flags:")}\n${extensionFlags
+			? `\n${chalk.bold("扩展 CLI 标志:")}\n${extensionFlags
 					.map((flag) => {
-						const value = flag.type === "string" ? " <value>" : "";
+						const value = flag.type === "string" ? " <值>" : "";
 						const description = flag.description ?? `由 ${flag.extensionPath} 注册`;
 						return `  --${flag.name}${value}`.padEnd(30) + description;
 					})

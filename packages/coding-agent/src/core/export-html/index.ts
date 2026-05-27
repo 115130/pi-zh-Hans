@@ -264,10 +264,10 @@ export async function exportSessionToHtml(
 
 	const sessionFile = sm.getSessionFile();
 	if (!sessionFile) {
-		throw new Error("Cannot export in-memory session to HTML");
+		throw new Error("无法导出内存中的会话到 HTML");
 	}
 	if (!existsSync(sessionFile)) {
-		throw new Error("Nothing to export yet - start a conversation first");
+		throw new Error("还没有可导出的内容 - 请先开始对话");
 	}
 
 	const entries = sm.getEntries();
@@ -312,7 +312,7 @@ export async function exportFromFile(inputPath: string, options?: ExportOptions 
 	const resolvedInputPath = resolvePath(inputPath);
 
 	if (!existsSync(resolvedInputPath)) {
-		throw new Error(`File not found: ${resolvedInputPath}`);
+		throw new Error(`文件未找到: ${resolvedInputPath}`);
 	}
 
 	const sm = SessionManager.open(resolvedInputPath);

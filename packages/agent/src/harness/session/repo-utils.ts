@@ -36,14 +36,14 @@ export async function getEntriesToFork(
 	if (!options.entryId) return storage.getEntries();
 	const target = await storage.getEntry(options.entryId);
 	if (!target) {
-		throw new SessionError("invalid_fork_target", `Entry ${options.entryId} not found`);
+		throw new SessionError("invalid_fork_target", `条目 ${options.entryId} 未找到`);
 	}
 	let effectiveLeafId: string | null;
 	if ((options.position ?? "before") === "at") {
 		effectiveLeafId = target.id;
 	} else {
 		if (target.type !== "message" || target.message.role !== "user") {
-			throw new SessionError("invalid_fork_target", `Entry ${options.entryId} is not a user message`);
+			throw new SessionError("invalid_fork_target", `条目 ${options.entryId} 不是用户消息`);
 		}
 		effectiveLeafId = target.parentId;
 	}

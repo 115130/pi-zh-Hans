@@ -53,7 +53,7 @@ export class InMemorySessionStorage<TMetadata extends SessionMetadata = SessionM
 		this.leafId = null;
 		for (const entry of this.entries) this.leafId = leafIdAfterEntry(entry);
 		if (this.leafId !== null && !this.byId.has(this.leafId)) {
-			throw new SessionError("invalid_session", `Entry ${this.leafId} not found`);
+			throw new SessionError("invalid_session", `条目 ${this.leafId} 未找到`);
 		}
 		this.metadata = options?.metadata ?? ({ id: uuidv7(), createdAt: new Date().toISOString() } as TMetadata);
 	}
@@ -64,14 +64,14 @@ export class InMemorySessionStorage<TMetadata extends SessionMetadata = SessionM
 
 	async getLeafId(): Promise<string | null> {
 		if (this.leafId !== null && !this.byId.has(this.leafId)) {
-			throw new SessionError("invalid_session", `Entry ${this.leafId} not found`);
+			throw new SessionError("invalid_session", `条目 ${this.leafId} 未找到`);
 		}
 		return this.leafId;
 	}
 
 	async setLeafId(leafId: string | null): Promise<void> {
 		if (leafId !== null && !this.byId.has(leafId)) {
-			throw new SessionError("not_found", `Entry ${leafId} not found`);
+			throw new SessionError("not_found", `条目 ${leafId} 未找到`);
 		}
 		const entry: LeafEntry = {
 			type: "leaf",
@@ -114,12 +114,12 @@ export class InMemorySessionStorage<TMetadata extends SessionMetadata = SessionM
 		if (leafId === null) return [];
 		const path: SessionTreeEntry[] = [];
 		let current = this.byId.get(leafId);
-		if (!current) throw new SessionError("not_found", `Entry ${leafId} not found`);
+		if (!current) throw new SessionError("not_found", `条目 ${leafId} 未找到`);
 		while (current) {
 			path.unshift(current);
 			if (!current.parentId) break;
 			const parent = this.byId.get(current.parentId);
-			if (!parent) throw new SessionError("invalid_session", `Entry ${current.parentId} not found`);
+			if (!parent) throw new SessionError("invalid_session", `条目 ${current.parentId} 未找到`);
 			current = parent;
 		}
 		return path;

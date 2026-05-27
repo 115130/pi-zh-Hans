@@ -77,14 +77,14 @@ function collectSettingsDiagnostics(
 ): AgentSessionRuntimeDiagnostic[] {
 	return settingsManager.drainErrors().map(({ scope, error }) => ({
 		type: "warning",
-		message: `(${context}, ${scope} settings) ${error.message}`,
+		message: `(${context}, ${scope} 设置) ${error.message}`,
 	}));
 }
 
 function reportDiagnostics(diagnostics: readonly AgentSessionRuntimeDiagnostic[]): void {
 	for (const diagnostic of diagnostics) {
 		const color = diagnostic.type === "error" ? chalk.red : diagnostic.type === "warning" ? chalk.yellow : chalk.dim;
-		const prefix = diagnostic.type === "error" ? "Error: " : diagnostic.type === "warning" ? "Warning: " : "";
+		const prefix = diagnostic.type === "error" ? "错误: " : diagnostic.type === "warning" ? "警告: " : "";
 		console.error(color(`${prefix}${diagnostic.message}`));
 	}
 }
@@ -197,7 +197,7 @@ function validateForkFlags(parsed: Args): void {
 	].filter((flag): flag is string => flag !== undefined);
 
 	if (conflictingFlags.length > 0) {
-		console.error(chalk.red(`Error: --fork cannot be combined with ${conflictingFlags.join(", ")}`));
+		console.error(chalk.red(`错误: --fork 不能与 ${conflictingFlags.join(", ")} 同时使用`));
 		process.exit(1);
 	}
 }
@@ -207,7 +207,7 @@ function forkSessionOrExit(sourcePath: string, cwd: string, sessionDir?: string)
 		return SessionManager.forkFrom(sourcePath, cwd, sessionDir);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : String(error);
-		console.error(chalk.red(`Error: ${message}`));
+		console.error(chalk.red(`错误: ${message}`));
 		process.exit(1);
 	}
 }
@@ -232,7 +232,7 @@ async function createSessionManager(
 				return forkSessionOrExit(resolved.path, cwd, sessionDir);
 
 			case "not_found":
-				console.error(chalk.red(`No session found matching '${resolved.arg}'`));
+				console.error(chalk.red(`没有找到与 '${resolved.arg}' 匹配的会话`));
 				process.exit(1);
 		}
 	}
@@ -246,8 +246,8 @@ async function createSessionManager(
 				return SessionManager.open(resolved.path, sessionDir);
 
 			case "global": {
-				console.log(chalk.yellow(`Session found in different project: ${resolved.cwd}`));
-				const shouldFork = await promptConfirm("Fork this session into current directory?");
+				console.log(chalk.yellow(`在其他项目中找到会话: ${resolved.cwd}`));
+				const shouldFork = await promptConfirm("是否将此会话分支到当前目录？");
 				if (!shouldFork) {
 					console.log(chalk.dim("已中止。"));
 					process.exit(0);
@@ -256,7 +256,7 @@ async function createSessionManager(
 			}
 
 			case "not_found":
-				console.error(chalk.red(`No session found matching '${resolved.arg}'`));
+				console.error(chalk.red(`没有找到与 '${resolved.arg}' 匹配的会话`));
 				process.exit(1);
 		}
 	}
@@ -269,7 +269,7 @@ async function createSessionManager(
 				SessionManager.listAll,
 			);
 			if (!selectedPath) {
-				console.log(chalk.dim("No session selected"));
+				console.log(chalk.dim("未选择会话"));
 				process.exit(0);
 			}
 			return SessionManager.open(selectedPath, sessionDir);
@@ -445,7 +445,7 @@ export async function main(args: string[], options?: MainOptions) {
 	if (parsed.diagnostics.length > 0) {
 		for (const d of parsed.diagnostics) {
 			const color = d.type === "error" ? chalk.red : chalk.yellow;
-			console.error(color(`${d.type === "error" ? "Error" : "Warning"}: ${d.message}`));
+			console.error(color(`${d.type === "error" ? "错误" : "警告"}: ${d.message}`));
 		}
 		if (parsed.diagnostics.some((d) => d.type === "error")) {
 			process.exit(1);
@@ -470,15 +470,15 @@ export async function main(args: string[], options?: MainOptions) {
 			result = await exportFromFile(parsed.export, outputPath);
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : "导出会话失败";
-			console.error(chalk.red(`Error: ${message}`));
+			console.error(chalk.red(`错误: ${message}`));
 			process.exit(1);
 		}
-		console.log(`Exported to: ${result}`);
+		console.log(`导出至: ${result}`);
 		process.exit(0);
 	}
 
 	if (parsed.mode === "rpc" && parsed.fileArgs.length > 0) {
-		console.error(chalk.red("Error: @file arguments are not supported in RPC mode"));
+		console.error(chalk.red("错误: RPC 模式不支持 @file 参数"));
 		process.exit(1);
 	}
 
@@ -580,7 +580,7 @@ export async function main(args: string[], options?: MainOptions) {
 			if (!sessionOptions.model) {
 				diagnostics.push({
 					type: "error",
-					message: "--api-key requires a model to be specified via --model, --provider/--model, or --models",
+					message: "--api-key 需要先通过 --model、--provider/--model 或 --models 指定模型",
 				});
 			} else {
 				authStorage.setRuntimeApiKey(sessionOptions.model.provider, parsed.apiKey);
@@ -671,7 +671,7 @@ export async function main(args: string[], options?: MainOptions) {
 
 	const startupBenchmark = isTruthyEnvFlag(process.env.PI_STARTUP_BENCHMARK);
 	if (startupBenchmark && appMode !== "interactive") {
-		console.error(chalk.red("Error: PI_STARTUP_BENCHMARK only supports interactive mode"));
+		console.error(chalk.red("错误: PI_STARTUP_BENCHMARK 仅支持交互模式"));
 		process.exit(1);
 	}
 

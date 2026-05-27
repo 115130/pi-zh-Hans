@@ -7,23 +7,22 @@ import { spawnProcessSync } from "./child-process.ts";
 const UNICODE_SPACES = /[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g;
 
 export interface PathInputOptions {
-	/** Trim leading/trailing whitespace before normalization. */
+	/** 规范化前修剪前导/尾随空白。 */
 	trim?: boolean;
-	/** Expand leading `~` to a home directory. Defaults to true. */
+	/** 将前导 `~` 扩展为主目录。默认为 true。 */
 	expandTilde?: boolean;
-	/** Home directory used for `~` expansion. Defaults to `os.homedir()`. */
+	/** 用于 `~` 扩展的主目录。默认为 `os.homedir()`。 */
 	homeDir?: string;
-	/** Strip a leading `@`, used for CLI @file paths. */
+	/** 去掉前导 `@`，用于 CLI @file 路径。 */
 	stripAtPrefix?: boolean;
-	/** Normalize unicode space variants to regular spaces. */
+	/** 将 Unicode 空格变体规范化为常规空格。 */
 	normalizeUnicodeSpaces?: boolean;
 }
 
 /**
- * Resolve a path to its canonical (real) form, following symlinks.
- * Falls back to the raw path if resolution fails (e.g. the target does
- * not exist yet), so that callers never crash on missing filesystem
- * entries.
+ * 将路径解析为其规范（真实）形式，遵循符号链接。
+ * 如果解析失败（例如目标尚不存在），则回退到原始路径，
+ * 以便调用者不会因缺少文件系统条目而崩溃。
  */
 export function canonicalizePath(path: string): string {
 	try {
@@ -34,13 +33,12 @@ export function canonicalizePath(path: string): string {
 }
 
 /**
- * Returns true if the value is NOT a package source (npm:, git:, etc.)
- * or a remote URL protocol. Bare names, relative paths, and file: URLs
- * are considered local.
+ * 如果值不是包源（npm:、git: 等）或远程 URL 协议，则返回 true。
+ * 裸名称、相对路径和 file: URL 被视为本地路径。
  */
 export function isLocalPath(value: string): boolean {
 	const trimmed = value.trim();
-	// Known non-local prefixes. file: URLs are local paths and are intentionally resolved by resolvePath().
+	// 已知的非本地前缀。file: URL 是本地路径，由 resolvePath() 有意解析。
 	if (
 		trimmed.startsWith("npm:") ||
 		trimmed.startsWith("git:") ||

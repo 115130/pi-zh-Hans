@@ -49,7 +49,7 @@ export class JsonlSessionRepo implements JsonlSessionRepoApi {
 		if (!this.sessionsRoot) {
 			this.sessionsRoot = getFileSystemResultOrThrow(
 				await this.fs.absolutePath(this.sessionsRootInput),
-				`Failed to resolve sessions root ${this.sessionsRootInput}`,
+				`无法解析会话根目录 ${this.sessionsRootInput}`,
 			);
 		}
 		return this.sessionsRoot;
@@ -58,7 +58,7 @@ export class JsonlSessionRepo implements JsonlSessionRepoApi {
 	private async getSessionDir(cwd: string): Promise<string> {
 		return getFileSystemResultOrThrow(
 			await this.fs.joinPath([await this.getSessionsRoot(), encodeCwd(cwd)]),
-			`Failed to resolve session directory for ${cwd}`,
+			`无法为 ${cwd} 解析会话目录`,
 		);
 	}
 
@@ -68,7 +68,7 @@ export class JsonlSessionRepo implements JsonlSessionRepoApi {
 				await this.getSessionDir(cwd),
 				`${timestamp.replace(/[:.]/g, "-")}_${sessionId}.jsonl`,
 			]),
-			`Failed to resolve session file path for ${sessionId}`,
+			`无法为 ${sessionId} 解析会话文件路径`,
 		);
 	}
 
@@ -78,7 +78,7 @@ export class JsonlSessionRepo implements JsonlSessionRepoApi {
 		const sessionDir = await this.getSessionDir(options.cwd);
 		getFileSystemResultOrThrow(
 			await this.fs.createDir(sessionDir, { recursive: true }),
-			`Failed to create session directory ${sessionDir}`,
+			`无法创建会话目录 ${sessionDir}`,
 		);
 		const filePath = await this.createSessionFilePath(options.cwd, id, createdAt);
 		const storage = await JsonlSessionStorage.create(this.fs, filePath, {
@@ -90,10 +90,8 @@ export class JsonlSessionRepo implements JsonlSessionRepoApi {
 	}
 
 	async open(metadata: JsonlSessionMetadata): Promise<Session<JsonlSessionMetadata>> {
-		if (
-			!getFileSystemResultOrThrow(await this.fs.exists(metadata.path), `Failed to check session ${metadata.path}`)
-		) {
-			throw new SessionError("not_found", `Session not found: ${metadata.path}`);
+		if (!getFileSystemResultOrThrow(await this.fs.exists(metadata.path), `检查会话 ${metadata.path} 时失败`)) {
+			throw new SessionError("not_found", `未找到会话：${metadata.path}`);
 		}
 		const storage = await JsonlSessionStorage.open(this.fs, metadata.path);
 		return toSession(storage);
@@ -103,13 +101,12 @@ export class JsonlSessionRepo implements JsonlSessionRepoApi {
 		const dirs = options.cwd ? [await this.getSessionDir(options.cwd)] : await this.listSessionDirs();
 		const sessions: JsonlSessionMetadata[] = [];
 		for (const dir of dirs) {
-			if (!getFileSystemResultOrThrow(await this.fs.exists(dir), `Failed to check session directory ${dir}`)) {
+			if (!getFileSystemResultOrThrow(await this.fs.exists(dir), `检查会话目录 ${dir} 时失败`)) {
 				continue;
 			}
-			const files = getFileSystemResultOrThrow(
-				await this.fs.listDir(dir),
-				`Failed to list sessions in ${dir}`,
-			).filter((file) => file.kind !== "directory" && file.name.endsWith(".jsonl"));
+			const files = getFileSystemResultOrThrow(await this.fs.listDir(dir), `列出 ${dir} 中的会话时失败`).filter(
+				(file) => file.kind !== "directory" && file.name.endsWith(".jsonl"),
+			);
 			for (const file of files) {
 				try {
 					sessions.push(await loadJsonlSessionMetadata(this.fs, file.path));
@@ -126,7 +123,7 @@ export class JsonlSessionRepo implements JsonlSessionRepoApi {
 	async delete(metadata: JsonlSessionMetadata): Promise<void> {
 		getFileSystemResultOrThrow(
 			await this.fs.remove(metadata.path, { force: true }),
-			`Failed to delete session ${metadata.path}`,
+			`删除会话 ${metadata.path} 时失败`,
 		);
 	}
 
@@ -141,7 +138,7 @@ export class JsonlSessionRepo implements JsonlSessionRepoApi {
 		const sessionDir = await this.getSessionDir(options.cwd);
 		getFileSystemResultOrThrow(
 			await this.fs.createDir(sessionDir, { recursive: true }),
-			`Failed to create session directory ${sessionDir}`,
+			`无法创建会话目录 ${sessionDir}`,
 		);
 		const storage = await JsonlSessionStorage.create(
 			this.fs,
@@ -160,17 +157,12 @@ export class JsonlSessionRepo implements JsonlSessionRepoApi {
 
 	private async listSessionDirs(): Promise<string[]> {
 		const sessionsRoot = await this.getSessionsRoot();
-		if (
-			!getFileSystemResultOrThrow(
-				await this.fs.exists(sessionsRoot),
-				`Failed to check sessions root ${sessionsRoot}`,
-			)
-		) {
+		if (!getFileSystemResultOrThrow(await this.fs.exists(sessionsRoot), `检查会话根目录 ${sessionsRoot} 时失败`)) {
 			return [];
 		}
 		const entries = getFileSystemResultOrThrow(
 			await this.fs.listDir(sessionsRoot),
-			`Failed to list sessions root ${sessionsRoot}`,
+			`列出会话根目录 ${sessionsRoot} 时失败`,
 		);
 		return entries.filter((entry) => entry.kind === "directory").map((entry) => entry.path);
 	}

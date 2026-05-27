@@ -60,7 +60,7 @@ export function getShellConfig(customShellPath?: string): ShellConfig {
 		if (existsSync(customShellPath)) {
 			return { shell: customShellPath, args: ["-c"] };
 		}
-		throw new Error(`Custom shell path not found: ${customShellPath}`);
+		throw new Error(`未找到自定义 shell 路径: ${customShellPath}`);
 	}
 
 	if (process.platform === "win32") {
@@ -88,11 +88,11 @@ export function getShellConfig(customShellPath?: string): ShellConfig {
 		}
 
 		throw new Error(
-			`No bash shell found. Options:\n` +
-				`  1. Install Git for Windows: https://git-scm.com/download/win\n` +
-				`  2. Add your bash to PATH (Cygwin, MSYS2, etc.)\n` +
-				"  3. Set shellPath in settings.json\n\n" +
-				`Searched Git Bash in:\n${paths.map((p) => `  ${p}`).join("\n")}`,
+			`未找到 bash  shell。可选方案:\n` +
+				`  1. 安装 Git for Windows: https://git-scm.com/download/win\n` +
+				`  2. 将你的 bash 添加到 PATH 环境变量 (Cygwin, MSYS2, 等)\n` +
+				"  3. 在 settings.json 中设置 shellPath\n\n" +
+				`已搜索 Git Bash 位于:\n${paths.map((p) => `  ${p}`).join("\n")}`,
 		);
 	}
 
