@@ -258,8 +258,8 @@ export class InteractiveMode {
 	private workingMessage: string | undefined = undefined;
 	private workingVisible = true;
 	private workingIndicatorOptions: LoaderIndicatorOptions | undefined = undefined;
-	private readonly defaultWorkingMessage = "Working...";
-	private readonly defaultHiddenThinkingLabel = "Thinking...";
+	private readonly defaultWorkingMessage = "工作中...";
+	private readonly defaultHiddenThinkingLabel = "思考中...";
 	private hiddenThinkingLabel = this.defaultHiddenThinkingLabel;
 
 	private lastSigintTime = 0;
@@ -555,7 +555,7 @@ export class InteractiveMode {
 			const condensedText = `Updated to v${latestVersion}. Use ${theme.bold("/changelog")} to view full changelog.`;
 			this.chatContainer.addChild(new Text(condensedText, 1, 0));
 		} else {
-			this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "What's New")), 1, 0));
+			this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "更新内容")), 1, 0));
 			this.chatContainer.addChild(new Spacer(1));
 			this.chatContainer.addChild(
 				new Markdown(this.changelogMarkdown.trim(), 1, 0, this.getMarkdownThemeWithSettings()),
@@ -1357,7 +1357,7 @@ export class InteractiveMode {
 					contextFiles.map((contextFile) => this.formatContextPath(contextFile.path)),
 					{ sort: false },
 				);
-				addLoadedSection("Context", contextCompactList, contextList);
+				addLoadedSection("上下文", contextCompactList, contextList);
 			}
 
 			const skills = skillsResult.skills;
@@ -1370,7 +1370,7 @@ export class InteractiveMode {
 					formatPackagePath: (item) => this.getShortPath(item.path, item.sourceInfo),
 				});
 				const skillCompactList = formatCompactList(skills.map((skill) => skill.name));
-				addLoadedSection("Skills", skillCompactList, skillList);
+				addLoadedSection("技能", skillCompactList, skillList);
 			}
 
 			const templates = this.session.promptTemplates;
@@ -1390,7 +1390,7 @@ export class InteractiveMode {
 					},
 				});
 				const promptCompactList = formatCompactList(templates.map((template) => `/${template.name}`));
-				addLoadedSection("Prompts", promptCompactList, templateList);
+				addLoadedSection("提示", promptCompactList, templateList);
 			}
 
 			if (extensions.length > 0) {
@@ -1401,7 +1401,7 @@ export class InteractiveMode {
 						this.formatExtensionDisplayPath(this.getShortPath(item.path, item.sourceInfo)),
 				});
 				const extensionCompactList = formatCompactList(this.getCompactExtensionLabels(extensions));
-				addLoadedSection("Extensions", extensionCompactList, extList, "mdHeading");
+				addLoadedSection("扩展", extensionCompactList, extList, "mdHeading");
 			}
 
 			// Show loaded themes (excluding built-in)
@@ -1424,7 +1424,7 @@ export class InteractiveMode {
 							loadedTheme.name ?? this.getCompactPathLabel(loadedTheme.sourcePath!, loadedTheme.sourceInfo),
 					),
 				);
-				addLoadedSection("Themes", themeCompactList, themeList);
+				addLoadedSection("主题", themeCompactList, themeList);
 			}
 		}
 
@@ -1512,7 +1512,7 @@ export class InteractiveMode {
 						if (!result.cancelled) {
 							this.renderCurrentSessionState();
 							this.editor.setText(result.selectedText ?? "");
-							this.showStatus("Forked to new session");
+							this.showStatus("已创建新分支会话");
 						}
 						return { cancelled: result.cancelled };
 					} catch (error: unknown) {
@@ -1535,7 +1535,7 @@ export class InteractiveMode {
 					if (result.editorText && !this.editor.getText().trim()) {
 						this.editor.setText(result.editorText);
 					}
-					this.showStatus("Navigated to selected point");
+					this.showStatus("已导航到选中位置");
 					void this.flushCompactionQueue({ willRetry: false });
 					return { cancelled: false };
 				},
@@ -2081,8 +2081,8 @@ export class InteractiveMode {
 		message: string,
 		opts?: ExtensionUIDialogOptions,
 	): Promise<boolean> {
-		const result = await this.showExtensionSelector(`${title}\n${message}`, ["Yes", "No"], opts);
-		return result === "Yes";
+		const result = await this.showExtensionSelector(`${title}\n${message}`, ["是", "否"], opts);
+		return result === "是";
 	}
 
 	private async promptForMissingSessionCwd(error: MissingSessionCwdError): Promise<string | undefined> {
@@ -2773,7 +2773,7 @@ export class InteractiveMode {
 
 					if (this.streamingMessage.stopReason === "aborted" || this.streamingMessage.stopReason === "error") {
 						if (!errorMessage) {
-							errorMessage = this.streamingMessage.errorMessage || "Error";
+							errorMessage = this.streamingMessage.errorMessage || "错误";
 						}
 						for (const [, component] of this.pendingTools.entries()) {
 							component.updateResult({
@@ -2873,7 +2873,7 @@ export class InteractiveMode {
 				const label =
 					event.reason === "manual"
 						? `Compacting context... ${cancelHint}`
-						: `${event.reason === "overflow" ? "Context overflow detected, " : ""}Auto-compacting... ${cancelHint}`;
+						: `${event.reason === "overflow" ? "检测到上下文溢出，" : ""}正在自动压缩... ${cancelHint}`;
 				this.autoCompactionLoader = new Loader(
 					this.ui,
 					(spinner) => theme.fg("accent", spinner),
@@ -2900,9 +2900,9 @@ export class InteractiveMode {
 				}
 				if (event.aborted) {
 					if (event.reason === "manual") {
-						this.showError("Compaction cancelled");
+						this.showError("压缩已取消");
 					} else {
-						this.showStatus("Auto-compaction cancelled");
+						this.showStatus("自动压缩已取消");
 					}
 				} else if (event.result) {
 					this.chatContainer.clear();
@@ -3163,7 +3163,7 @@ export class InteractiveMode {
 										? `Aborted after ${retryAttempt} retry attempt${retryAttempt > 1 ? "s" : ""}`
 										: "操作已中止";
 							} else {
-								errorMessage = message.errorMessage || "Error";
+								errorMessage = message.errorMessage || "错误";
 							}
 							component.updateResult({ content: [{ type: "text", text: errorMessage }], isError: true });
 						} else {
@@ -3357,7 +3357,7 @@ export class InteractiveMode {
 
 	private handleCtrlZ(): void {
 		if (process.platform === "win32") {
-			this.showStatus("Suspend to background is not supported on Windows");
+			this.showStatus("Windows 不支持挂起到后台");
 			return;
 		}
 
@@ -3427,7 +3427,7 @@ export class InteractiveMode {
 	private handleDequeue(): void {
 		const restored = this.restoreQueuedMessagesToEditor();
 		if (restored === 0) {
-			this.showStatus("No queued messages to restore");
+			this.showStatus("没有排队消息需要恢复");
 		} else {
 			this.showStatus(`Restored ${restored} queued message${restored > 1 ? "s" : ""} to editor`);
 		}
@@ -3446,7 +3446,7 @@ export class InteractiveMode {
 	private cycleThinkingLevel(): void {
 		const newLevel = this.session.cycleThinkingLevel();
 		if (newLevel === undefined) {
-			this.showStatus("Current model does not support thinking");
+			this.showStatus("当前模型不支持思考");
 		} else {
 			this.footer.invalidate();
 			this.updateEditorBorderColor();
@@ -3458,7 +3458,7 @@ export class InteractiveMode {
 		try {
 			const result = await this.session.cycleModel(direction);
 			if (result === undefined) {
-				const msg = this.session.scopedModels.length > 0 ? "Only one model in scope" : "Only one model available";
+				const msg = this.session.scopedModels.length > 0 ? "范围内只有一个模型" : "只有一个可用模型";
 				this.showStatus(msg);
 			} else {
 				this.footer.invalidate();
@@ -3513,7 +3513,7 @@ export class InteractiveMode {
 		// Determine editor (respect $VISUAL, then $EDITOR)
 		const editorCmd = process.env.VISUAL || process.env.EDITOR;
 		if (!editorCmd) {
-			this.showWarning("No editor configured. Set $VISUAL or $EDITOR environment variable.");
+			this.showWarning("未配置编辑器。请设置 $VISUAL 或 $EDITOR 环境变量。");
 			return;
 		}
 
@@ -3594,13 +3594,13 @@ export class InteractiveMode {
 		const changelogLink = getCapabilities().hyperlinks
 			? hyperlink(theme.fg("accent", "open changelog"), changelogUrl)
 			: theme.fg("accent", changelogUrl);
-		const changelogLine = theme.fg("muted", "Changelog: ") + changelogLink;
+		const changelogLine = theme.fg("muted", "更新日志：") + changelogLink;
 		const note = release.note?.trim();
 
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new DynamicBorder((text) => theme.fg("warning", text)));
 		this.chatContainer.addChild(
-			new Text(`${theme.bold(theme.fg("warning", "Update Available"))}\n${updateInstruction}`, 1, 0),
+			new Text(`${theme.bold(theme.fg("warning", "有可用更新"))}\n${updateInstruction}`, 1, 0),
 		);
 		if (note) {
 			this.chatContainer.addChild(new Spacer(1));
@@ -3618,14 +3618,14 @@ export class InteractiveMode {
 
 	showPackageUpdateNotification(packages: string[]): void {
 		const action = theme.fg("accent", `${APP_NAME} update`);
-		const updateInstruction = theme.fg("muted", "Package updates are available. Run ") + action;
+		const updateInstruction = theme.fg("muted", "包更新可用。运行 ") + action;
 		const packageLines = packages.map((pkg) => `- ${pkg}`).join("\n");
 
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new DynamicBorder((text) => theme.fg("warning", text)));
 		this.chatContainer.addChild(
 			new Text(
-				`${theme.bold(theme.fg("warning", "Package Updates Available"))}\n${updateInstruction}\n${theme.fg("muted", "Packages:")}\n${packageLines}`,
+				`${theme.bold(theme.fg("warning", "有可用的包更新"))}\n${updateInstruction}\n${theme.fg("muted", "包：")}\n${packageLines}`,
 				1,
 				0,
 			),
@@ -3715,7 +3715,7 @@ export class InteractiveMode {
 		this.editor.addToHistory?.(text);
 		this.editor.setText("");
 		this.updatePendingMessagesDisplay();
-		this.showStatus("Queued message for after compaction");
+		this.showStatus("已排队消息，压缩后处理");
 	}
 
 	private isExtensionCommand(text: string): boolean {
@@ -4111,7 +4111,7 @@ export class InteractiveMode {
 		const allModels = this.session.modelRegistry.getAvailable();
 
 		if (allModels.length === 0) {
-			this.showStatus("No models available");
+			this.showStatus("没有可用模型");
 			return;
 		}
 
@@ -4170,7 +4170,7 @@ export class InteractiveMode {
 								? undefined // All enabled = clear filter
 								: enabledIds;
 						this.settingsManager.setEnabledModels(newPatterns ? [...newPatterns] : undefined);
-						this.showStatus("Model selection saved to settings");
+						this.showStatus("模型选择已保存到设置");
 					},
 					onCancel: () => {
 						done();
@@ -4207,7 +4207,7 @@ export class InteractiveMode {
 						this.renderCurrentSessionState();
 						this.editor.setText(result.selectedText ?? "");
 						done();
-						this.showStatus("Forked to new session");
+						this.showStatus("已创建新分支会话");
 					} catch (error: unknown) {
 						done();
 						this.showError(error instanceof Error ? error.message : String(error));
@@ -4226,7 +4226,7 @@ export class InteractiveMode {
 	private async handleCloneCommand(): Promise<void> {
 		const leafId = this.sessionManager.getLeafId();
 		if (!leafId) {
-			this.showStatus("Nothing to clone yet");
+			this.showStatus("暂无内容可克隆");
 			return;
 		}
 
@@ -4239,7 +4239,7 @@ export class InteractiveMode {
 
 			this.renderCurrentSessionState();
 			this.editor.setText("");
-			this.showStatus("Cloned to new session");
+			this.showStatus("已克隆到新会话");
 		} catch (error: unknown) {
 			this.showError(error instanceof Error ? error.message : String(error));
 		}
@@ -4251,7 +4251,7 @@ export class InteractiveMode {
 		const initialFilterMode = this.settingsManager.getTreeFilterMode();
 
 		if (tree.length === 0) {
-			this.showStatus("No entries in session");
+			this.showStatus("会话中没有条目");
 			return;
 		}
 
@@ -4264,7 +4264,7 @@ export class InteractiveMode {
 					// Selecting the current leaf is a no-op (already there)
 					if (entryId === realLeafId) {
 						done();
-						this.showStatus("Already at this point");
+						this.showStatus("已在此位置");
 						return;
 					}
 
@@ -4293,7 +4293,7 @@ export class InteractiveMode {
 							wantsSummary = summaryChoice !== "无摘要";
 
 							if (summaryChoice === "自定义提示词摘要") {
-								customInstructions = await this.showExtensionEditor("Custom summarization instructions");
+								customInstructions = await this.showExtensionEditor("自定义汇总说明");
 								if (customInstructions === undefined) {
 									// User cancelled - loop back to summary selector
 									continue;
@@ -4332,12 +4332,12 @@ export class InteractiveMode {
 
 						if (result.aborted) {
 							// Summarization aborted - re-show tree selector with same selection
-							this.showStatus("Branch summarization cancelled");
+							this.showStatus("分支汇总已取消");
 							this.showTreeSelector(entryId);
 							return;
 						}
 						if (result.cancelled) {
-							this.showStatus("Navigation cancelled");
+							this.showStatus("导航已取消");
 							return;
 						}
 
@@ -4347,7 +4347,7 @@ export class InteractiveMode {
 						if (result.editorText && !this.editor.getText().trim()) {
 							this.editor.setText(result.editorText);
 						}
-						this.showStatus("Navigated to selected point");
+						this.showStatus("已导航到选中位置");
 						void this.flushCompactionQueue({ willRetry: false });
 					} catch (error) {
 						this.showError(error instanceof Error ? error.message : String(error));
@@ -4426,13 +4426,13 @@ export class InteractiveMode {
 				return result;
 			}
 			this.renderCurrentSessionState();
-			this.showStatus("Resumed session");
+			this.showStatus("已恢复会话");
 			return result;
 		} catch (error: unknown) {
 			if (error instanceof MissingSessionCwdError) {
 				const selectedCwd = await this.promptForMissingSessionCwd(error);
 				if (!selectedCwd) {
-					this.showStatus("Resume cancelled");
+					this.showStatus("恢复已取消");
 					return { cancelled: true };
 				}
 				const result = await this.runtimeHost.switchSession(sessionPath, {
@@ -4443,7 +4443,7 @@ export class InteractiveMode {
 					return result;
 				}
 				this.renderCurrentSessionState();
-				this.showStatus("Resumed session in current cwd");
+				this.showStatus("已恢复会话到当前工作目录");
 				return result;
 			}
 			return this.handleFatalRuntimeError("恢复会话失败", error);
@@ -4519,9 +4519,7 @@ export class InteractiveMode {
 	private showLoginProviderSelector(authType: "oauth" | "api_key"): void {
 		const providerOptions = this.getLoginProviderOptions(authType);
 		if (providerOptions.length === 0) {
-			this.showStatus(
-				authType === "oauth" ? "No subscription providers available." : "No API key providers available.",
-			);
+			this.showStatus(authType === "oauth" ? "没有可用的订阅提供商。" : "没有可用的 API 密钥提供商。");
 			return;
 		}
 
@@ -4565,7 +4563,7 @@ export class InteractiveMode {
 		const providerOptions = this.getLogoutProviderOptions();
 		if (providerOptions.length === 0) {
 			this.showStatus(
-				"No stored credentials to remove. /logout only removes credentials saved by /login; environment variables and models.json config are unchanged.",
+				"没有存储的凭据可移除。/logout 只会移除由 /login 保存的凭据；环境变量和 models.json 配置不变。",
 			);
 			return;
 		}
@@ -4674,9 +4672,9 @@ export class InteractiveMode {
 			"Amazon Bedrock 设置",
 		);
 		dialog.showInfo([
-			theme.fg("text", "Amazon Bedrock uses AWS credentials instead of a single API key."),
-			theme.fg("text", "Configure an AWS profile, IAM keys, bearer token, or role-based credentials."),
-			theme.fg("muted", "See:"),
+			theme.fg("text", "Amazon Bedrock 使用 AWS 凭据而非单个 API 密钥。"),
+			theme.fg("text", "配置 AWS 配置文件、IAM 密钥、Bearer 令牌或基于角色的凭据。"),
+			theme.fg("muted", "参见："),
 			theme.fg("accent", `  ${path.join(getDocsPath(), "providers.md")}`),
 		]);
 
@@ -4711,7 +4709,7 @@ export class InteractiveMode {
 		};
 
 		try {
-			const apiKey = (await dialog.showPrompt("Enter API key:")).trim();
+			const apiKey = (await dialog.showPrompt("输入 API 密钥：")).trim();
 			if (!apiKey) {
 				throw new Error("API key cannot be empty.");
 			}
@@ -4723,7 +4721,7 @@ export class InteractiveMode {
 		} catch (error: unknown) {
 			restoreEditor();
 			const errorMsg = error instanceof Error ? error.message : String(error);
-			if (errorMsg !== "Login cancelled") {
+			if (errorMsg !== "登录已取消") {
 				this.showError(`保存 ${providerName} 的 API 密钥失败: ${errorMsg}`);
 			}
 		}
@@ -4815,7 +4813,7 @@ export class InteractiveMode {
 							})
 							.catch(() => {
 								if (manualCodeReject) {
-									manualCodeReject(new Error("Login cancelled"));
+									manualCodeReject(new Error("登录已取消"));
 									manualCodeReject = undefined;
 								}
 							});
@@ -4825,7 +4823,7 @@ export class InteractiveMode {
 
 				onDeviceCode: (info) => {
 					dialog.showDeviceCode(info);
-					dialog.showWaiting("Waiting for authentication...");
+					dialog.showWaiting("等待认证...");
 				},
 
 				onPrompt: async (prompt: { message: string; placeholder?: string }) => {
@@ -4849,7 +4847,7 @@ export class InteractiveMode {
 		} catch (error: unknown) {
 			restoreEditor();
 			const errorMsg = error instanceof Error ? error.message : String(error);
-			if (errorMsg !== "Login cancelled") {
+			if (errorMsg !== "登录已取消") {
 				this.showError(`登录 ${providerName} 失败: ${errorMsg}`);
 			}
 		}
@@ -4861,11 +4859,11 @@ export class InteractiveMode {
 
 	private async handleReloadCommand(): Promise<void> {
 		if (this.session.isStreaming) {
-			this.showWarning("Wait for the current response to finish before reloading.");
+			this.showWarning("请等待当前响应完成后再重载。");
 			return;
 		}
 		if (this.session.isCompacting) {
-			this.showWarning("Wait for compaction to finish before reloading.");
+			this.showWarning("请等待压缩完成后再重载。");
 			return;
 		}
 
@@ -4875,9 +4873,7 @@ export class InteractiveMode {
 		const borderColor = (s: string) => theme.fg("border", s);
 		reloadBox.addChild(new DynamicBorder(borderColor));
 		reloadBox.addChild(new Spacer(1));
-		reloadBox.addChild(
-			new Text(theme.fg("muted", "Reloading keybindings, extensions, skills, prompts, themes..."), 1, 0),
-		);
+		reloadBox.addChild(new Text(theme.fg("muted", "正在重载快捷键、扩展、技能、提示、主题..."), 1, 0));
 		reloadBox.addChild(new Spacer(1));
 		reloadBox.addChild(new DynamicBorder(borderColor));
 
@@ -4933,7 +4929,7 @@ export class InteractiveMode {
 			if (modelsJsonError) {
 				this.showError(`models.json error: ${modelsJsonError}`);
 			}
-			this.showStatus("Reloaded keybindings, extensions, skills, prompts, themes");
+			this.showStatus("已重载快捷键、扩展、技能、提示、主题");
 		} catch (error) {
 			dismissReloadBox(previousEditor as Component);
 			this.showError(`Reload failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -4992,9 +4988,9 @@ export class InteractiveMode {
 			return;
 		}
 
-		const confirmed = await this.showExtensionConfirm("Import session", `Replace current session with ${inputPath}?`);
+		const confirmed = await this.showExtensionConfirm("导入会话", `是否用 ${inputPath} 替换当前会话？`);
 		if (!confirmed) {
-			this.showStatus("Import cancelled");
+			this.showStatus("导入已取消");
 			return;
 		}
 
@@ -5006,7 +5002,7 @@ export class InteractiveMode {
 			this.statusContainer.clear();
 			const result = await this.runtimeHost.importFromJsonl(inputPath);
 			if (result.cancelled) {
-				this.showStatus("Import cancelled");
+				this.showStatus("导入已取消");
 				return;
 			}
 			this.renderCurrentSessionState();
@@ -5015,12 +5011,12 @@ export class InteractiveMode {
 			if (error instanceof MissingSessionCwdError) {
 				const selectedCwd = await this.promptForMissingSessionCwd(error);
 				if (!selectedCwd) {
-					this.showStatus("Import cancelled");
+					this.showStatus("导入已取消");
 					return;
 				}
 				const result = await this.runtimeHost.importFromJsonl(inputPath, selectedCwd);
 				if (result.cancelled) {
-					this.showStatus("Import cancelled");
+					this.showStatus("导入已取消");
 					return;
 				}
 				this.renderCurrentSessionState();
@@ -5058,7 +5054,7 @@ export class InteractiveMode {
 		}
 
 		// Show cancellable loader, replacing the editor
-		const loader = new BorderedLoader(this.ui, theme, "Creating gist...");
+		const loader = new BorderedLoader(this.ui, theme, "正在创建 Gist...");
 		this.editorContainer.clear();
 		this.editorContainer.addChild(loader);
 		this.ui.setFocus(loader);
@@ -5082,7 +5078,7 @@ export class InteractiveMode {
 		loader.onAbort = () => {
 			proc?.kill();
 			restoreEditor();
-			this.showStatus("Share cancelled");
+			this.showStatus("分享已取消");
 		};
 
 		try {
@@ -5132,13 +5128,13 @@ export class InteractiveMode {
 	private async handleCopyCommand(): Promise<void> {
 		const text = this.session.getLastAssistantText();
 		if (!text) {
-			this.showError("No agent messages to copy yet.");
+			this.showError("还没有助手消息可以复制。");
 			return;
 		}
 
 		try {
 			await copyToClipboard(text);
-			this.showStatus("Copied last agent message to clipboard");
+			this.showStatus("已将最后一条助手消息复制到剪贴板");
 		} catch (error) {
 			this.showError(error instanceof Error ? error.message : String(error));
 		}
@@ -5152,7 +5148,7 @@ export class InteractiveMode {
 				this.chatContainer.addChild(new Spacer(1));
 				this.chatContainer.addChild(new Text(theme.fg("dim", `Session name: ${currentName}`), 1, 0));
 			} else {
-				this.showWarning("Usage: /name <name>");
+				this.showWarning("用法：/name <名称>");
 			}
 			this.ui.requestRender();
 			return;
@@ -5168,32 +5164,32 @@ export class InteractiveMode {
 		const stats = this.session.getSessionStats();
 		const sessionName = this.sessionManager.getSessionName();
 
-		let info = `${theme.bold("Session Info")}\n\n`;
+		let info = `${theme.bold("会话信息")}\n\n`;
 		if (sessionName) {
-			info += `${theme.fg("dim", "Name:")} ${sessionName}\n`;
+			info += `${theme.fg("dim", "名称：")} ${sessionName}\n`;
 		}
-		info += `${theme.fg("dim", "File:")} ${stats.sessionFile ?? "In-memory"}\n`;
-		info += `${theme.fg("dim", "ID:")} ${stats.sessionId}\n\n`;
-		info += `${theme.bold("Messages")}\n`;
-		info += `${theme.fg("dim", "User:")} ${stats.userMessages}\n`;
-		info += `${theme.fg("dim", "Assistant:")} ${stats.assistantMessages}\n`;
-		info += `${theme.fg("dim", "Tool Calls:")} ${stats.toolCalls}\n`;
-		info += `${theme.fg("dim", "Tool Results:")} ${stats.toolResults}\n`;
-		info += `${theme.fg("dim", "Total:")} ${stats.totalMessages}\n\n`;
-		info += `${theme.bold("Tokens")}\n`;
-		info += `${theme.fg("dim", "Input:")} ${stats.tokens.input.toLocaleString()}\n`;
-		info += `${theme.fg("dim", "Output:")} ${stats.tokens.output.toLocaleString()}\n`;
+		info += `${theme.fg("dim", "文件：")} ${stats.sessionFile ?? "内存中"}\n`;
+		info += `${theme.fg("dim", "ID：")} ${stats.sessionId}\n\n`;
+		info += `${theme.bold("消息")}\n`;
+		info += `${theme.fg("dim", "用户：")} ${stats.userMessages}\n`;
+		info += `${theme.fg("dim", "助手：")} ${stats.assistantMessages}\n`;
+		info += `${theme.fg("dim", "工具调用：")} ${stats.toolCalls}\n`;
+		info += `${theme.fg("dim", "工具结果：")} ${stats.toolResults}\n`;
+		info += `${theme.fg("dim", "总计：")} ${stats.totalMessages}\n\n`;
+		info += `${theme.bold("令牌")}\n`;
+		info += `${theme.fg("dim", "输入：")} ${stats.tokens.input.toLocaleString()}\n`;
+		info += `${theme.fg("dim", "输出：")} ${stats.tokens.output.toLocaleString()}\n`;
 		if (stats.tokens.cacheRead > 0) {
-			info += `${theme.fg("dim", "Cache Read:")} ${stats.tokens.cacheRead.toLocaleString()}\n`;
+			info += `${theme.fg("dim", "缓存读取：")} ${stats.tokens.cacheRead.toLocaleString()}\n`;
 		}
 		if (stats.tokens.cacheWrite > 0) {
-			info += `${theme.fg("dim", "Cache Write:")} ${stats.tokens.cacheWrite.toLocaleString()}\n`;
+			info += `${theme.fg("dim", "缓存写入：")} ${stats.tokens.cacheWrite.toLocaleString()}\n`;
 		}
-		info += `${theme.fg("dim", "Total:")} ${stats.tokens.total.toLocaleString()}\n`;
+		info += `${theme.fg("dim", "总计：")} ${stats.tokens.total.toLocaleString()}\n`;
 
 		if (stats.cost > 0) {
-			info += `\n${theme.bold("Cost")}\n`;
-			info += `${theme.fg("dim", "Total:")} ${stats.cost.toFixed(4)}`;
+			info += `\n${theme.bold("费用")}\n`;
+			info += `${theme.fg("dim", "总计：")} ${stats.cost.toFixed(4)}`;
 		}
 
 		this.chatContainer.addChild(new Spacer(1));
@@ -5211,11 +5207,11 @@ export class InteractiveMode {
 						.reverse()
 						.map((e) => e.content)
 						.join("\n\n")
-				: "No changelog entries found.";
+				: "未找到更新日志条目。";
 
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new DynamicBorder());
-		this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "What's New")), 1, 0));
+		this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "更新内容")), 1, 0));
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new Markdown(changelogMarkdown, 1, 1, this.getMarkdownThemeWithSettings()));
 		this.chatContainer.addChild(new DynamicBorder());
@@ -5344,7 +5340,7 @@ export class InteractiveMode {
 
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new DynamicBorder());
-		this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "Keyboard Shortcuts")), 1, 0));
+		this.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "键盘快捷键")), 1, 0));
 		this.chatContainer.addChild(new Spacer(1));
 		this.chatContainer.addChild(new Markdown(hotkeys.trim(), 1, 1, this.getMarkdownThemeWithSettings()));
 		this.chatContainer.addChild(new DynamicBorder());
@@ -5520,7 +5516,7 @@ export class InteractiveMode {
 		const messageCount = entries.filter((e) => e.type === "message").length;
 
 		if (messageCount < 2) {
-			this.showWarning("Nothing to compact (no messages yet)");
+			this.showWarning("没有可压缩的内容（尚无消息）");
 			return;
 		}
 

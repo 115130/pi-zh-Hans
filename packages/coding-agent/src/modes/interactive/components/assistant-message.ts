@@ -128,9 +128,7 @@ export class AssistantMessageComponent extends Container {
 		if (!hasToolCalls) {
 			if (message.stopReason === "aborted") {
 				const abortMessage =
-					message.errorMessage && message.errorMessage !== "Request was aborted"
-						? message.errorMessage
-						: "操作已中止";
+					message.errorMessage && message.errorMessage !== "请求已中止" ? message.errorMessage : "操作已中止";
 				if (hasVisibleContent) {
 					this.contentContainer.addChild(new Spacer(1));
 				} else {

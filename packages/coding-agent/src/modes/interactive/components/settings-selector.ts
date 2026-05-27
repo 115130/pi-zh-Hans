@@ -190,7 +190,7 @@ class SelectSubmenu extends Container {
 
 		// Hint
 		this.addChild(new Spacer(1));
-		this.addChild(new Text(theme.fg("dim", "  Enter to select · Esc to go back"), 0, 0));
+		this.addChild(new Text(theme.fg("dim", "  Enter 选择 · Esc 返回"), 0, 0));
 	}
 
 	handleInput(data: string): void {
@@ -242,9 +242,8 @@ export class SettingsSelectorComponent extends Container {
 			},
 			{
 				id: "http-idle-timeout",
-				label: "HTTP idle timeout",
-				description:
-					"Maximum idle gap while waiting for HTTP headers or body chunks. Disable for local models that pause longer than five minutes.",
+				label: "HTTP 空闲超时",
+				description: "等待 HTTP 头或数据块时的最大空闲时间。对于暂停超过五分钟的本地模型请禁用。",
 				currentValue: formatHttpIdleTimeoutMs(config.httpIdleTimeoutMs),
 				values: HTTP_IDLE_TIMEOUT_CHOICES.map((choice) => choice.label),
 			},
@@ -329,13 +328,13 @@ export class SettingsSelectorComponent extends Container {
 			},
 			{
 				id: "theme",
-				label: "Theme",
-				description: "Color theme for the interface",
+				label: "主题",
+				description: "界面的颜色主题",
 				currentValue: config.currentTheme,
 				submenu: (currentValue, done) =>
 					new SelectSubmenu(
-						"Theme",
-						"Select color theme",
+						"主题",
+						"选择颜色主题",
 						config.availableThemes.map((t) => ({
 							value: t,
 							label: t,
@@ -363,15 +362,15 @@ export class SettingsSelectorComponent extends Container {
 			// Insert after autocompact
 			items.splice(1, 0, {
 				id: "show-images",
-				label: "Show images",
-				description: "Render images inline in terminal",
+				label: "显示图片",
+				description: "在终端中内联渲染图片",
 				currentValue: config.showImages ? "true" : "false",
 				values: ["true", "false"],
 			});
 			items.splice(2, 0, {
 				id: "image-width-cells",
-				label: "Image width",
-				description: "Preferred inline image width in terminal cells",
+				label: "图片宽度",
+				description: "终端单元格中首选的内联图片宽度",
 				currentValue: String(config.imageWidthCells),
 				values: ["60", "80", "120"],
 			});
@@ -380,8 +379,8 @@ export class SettingsSelectorComponent extends Container {
 		// Image auto-resize toggle (always available, affects both attached and read images)
 		items.splice(supportsImages ? 3 : 1, 0, {
 			id: "auto-resize-images",
-			label: "Auto-resize images",
-			description: "Resize large images to 2000x2000 max for better model compatibility",
+			label: "自动调整图片大小",
+			description: "将大图片调整到最大 2000x2000 以获得更好的模型兼容性",
 			currentValue: config.autoResizeImages ? "true" : "false",
 			values: ["true", "false"],
 		});
@@ -390,8 +389,8 @@ export class SettingsSelectorComponent extends Container {
 		const autoResizeIndex = items.findIndex((item) => item.id === "auto-resize-images");
 		items.splice(autoResizeIndex + 1, 0, {
 			id: "block-images",
-			label: "Block images",
-			description: "Prevent images from being sent to LLM providers",
+			label: "拦截图片",
+			description: "阻止图片发送到 LLM 提供商",
 			currentValue: config.blockImages ? "true" : "false",
 			values: ["true", "false"],
 		});
@@ -400,8 +399,8 @@ export class SettingsSelectorComponent extends Container {
 		const blockImagesIndex = items.findIndex((item) => item.id === "block-images");
 		items.splice(blockImagesIndex + 1, 0, {
 			id: "skill-commands",
-			label: "Skill commands",
-			description: "Register skills as /skill:name commands",
+			label: "技能命令",
+			description: "将技能注册为 /skill:name 命令",
 			currentValue: config.enableSkillCommands ? "true" : "false",
 			values: ["true", "false"],
 		});
@@ -410,8 +409,8 @@ export class SettingsSelectorComponent extends Container {
 		const skillCommandsIndex = items.findIndex((item) => item.id === "skill-commands");
 		items.splice(skillCommandsIndex + 1, 0, {
 			id: "show-hardware-cursor",
-			label: "Show hardware cursor",
-			description: "Show the terminal cursor while still positioning it for IME support",
+			label: "显示硬件光标",
+			description: "在定位光标的同时显示终端光标以支持 IME",
 			currentValue: config.showHardwareCursor ? "true" : "false",
 			values: ["true", "false"],
 		});
@@ -421,7 +420,7 @@ export class SettingsSelectorComponent extends Container {
 		items.splice(hardwareCursorIndex + 1, 0, {
 			id: "editor-padding",
 			label: "编辑器内边距",
-			description: "Horizontal padding for input editor (0-3)",
+			description: "输入编辑器的水平内边距 (0-3)",
 			currentValue: String(config.editorPaddingX),
 			values: ["0", "1", "2", "3"],
 		});
@@ -430,8 +429,8 @@ export class SettingsSelectorComponent extends Container {
 		const editorPaddingIndex = items.findIndex((item) => item.id === "editor-padding");
 		items.splice(editorPaddingIndex + 1, 0, {
 			id: "autocomplete-max-visible",
-			label: "Autocomplete max items",
-			description: "Max visible items in autocomplete dropdown (3-20)",
+			label: "自动补全最大项数",
+			description: "自动补全下拉菜单中最大可见项数 (3-20)",
 			currentValue: String(config.autocompleteMaxVisible),
 			values: ["3", "5", "7", "10", "15", "20"],
 		});
@@ -440,8 +439,8 @@ export class SettingsSelectorComponent extends Container {
 		const autocompleteIndex = items.findIndex((item) => item.id === "autocomplete-max-visible");
 		items.splice(autocompleteIndex + 1, 0, {
 			id: "clear-on-shrink",
-			label: "Clear on shrink",
-			description: "Clear empty rows when content shrinks (may cause flicker)",
+			label: "收缩时清除",
+			description: "内容收缩时清除空行（可能导致闪烁）",
 			currentValue: config.clearOnShrink ? "true" : "false",
 			values: ["true", "false"],
 		});
@@ -450,8 +449,8 @@ export class SettingsSelectorComponent extends Container {
 		const clearOnShrinkIndex = items.findIndex((item) => item.id === "clear-on-shrink");
 		items.splice(clearOnShrinkIndex + 1, 0, {
 			id: "terminal-progress",
-			label: "Terminal progress",
-			description: "Show OSC 9;4 progress indicators in the terminal tab bar",
+			label: "终端进度",
+			description: "在终端标签栏中显示 OSC 9;4 进度指示器",
 			currentValue: config.showTerminalProgress ? "true" : "false",
 			values: ["true", "false"],
 		});

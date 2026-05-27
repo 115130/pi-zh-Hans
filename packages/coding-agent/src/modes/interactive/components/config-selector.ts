@@ -25,10 +25,10 @@ import { rawKeyHint } from "./keybinding-hints.ts";
 type ResourceType = "extensions" | "skills" | "prompts" | "themes";
 
 const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
-	extensions: "Extensions",
-	skills: "Skills",
-	prompts: "Prompts",
-	themes: "Themes",
+	extensions: "扩展",
+	skills: "技能",
+	prompts: "提示",
+	themes: "主题",
 };
 
 interface ResourceItem {
@@ -84,9 +84,9 @@ function getGroupLabel(metadata: PathMetadata): string {
 				? `User (${formatBaseDir(metadata.baseDir)})`
 				: `Project (${formatBaseDir(metadata.baseDir)})`;
 		}
-		return metadata.scope === "user" ? "User (~/.pi/agent/)" : "Project (.pi/)";
+		return metadata.scope === "user" ? "用户 (~/.pi/agent/)" : "项目 (.pi/)";
 	}
-	return metadata.scope === "user" ? "User settings" : "Project settings";
+	return metadata.scope === "user" ? "用户设置" : "项目设置";
 }
 
 function buildGroups(resolved: ResolvedPaths): ResourceGroup[] {
@@ -188,10 +188,7 @@ class ConfigSelectorHeader implements Component {
 		const titleWidth = visibleWidth(title);
 		const spacing = Math.max(1, width - titleWidth - hintWidth);
 
-		return [
-			truncateToWidth(`${title}${" ".repeat(spacing)}${hint}`, width, ""),
-			theme.fg("muted", "Type to filter resources"),
-		];
+		return [truncateToWidth(`${title}${" ".repeat(spacing)}${hint}`, width, ""), theme.fg("muted", "输入以过滤资源")];
 	}
 }
 

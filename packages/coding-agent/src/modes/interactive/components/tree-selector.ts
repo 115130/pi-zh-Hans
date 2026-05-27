@@ -1067,9 +1067,9 @@ class SearchLine implements Component {
 	render(width: number): string[] {
 		const query = this.treeList.getSearchQuery();
 		if (query) {
-			return [truncateToWidth(`  ${theme.fg("muted", "Type to search:")} ${theme.fg("accent", query)}`, width)];
+			return [truncateToWidth(`  ${theme.fg("muted", "输入以搜索：")} ${theme.fg("accent", query)}`, width)];
 		}
-		return [truncateToWidth(`  ${theme.fg("muted", "Type to search:")}`, width)];
+		return [truncateToWidth(`  ${theme.fg("muted", "输入以搜索：")}`, width)];
 	}
 
 	handleInput(_keyData: string): void {}
@@ -1106,7 +1106,7 @@ class LabelInput implements Component, Focusable {
 		const lines: string[] = [];
 		const indent = "  ";
 		const availableWidth = width - indent.length;
-		lines.push(truncateToWidth(`${indent}${theme.fg("muted", "Label (empty to remove):")}`, width));
+		lines.push(truncateToWidth(`${indent}${theme.fg("muted", "标签（留空移除）：")}`, width));
 		lines.push(...this.input.render(availableWidth).map((line) => truncateToWidth(`${indent}${line}`, width)));
 		lines.push(
 			truncateToWidth(

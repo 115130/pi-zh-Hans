@@ -131,11 +131,11 @@ class SessionSelectorHeader implements Component {
 		const title = this.scope === "current" ? "Resume Session (Current Folder)" : "Resume Session (All)";
 		const leftText = theme.bold(title);
 
-		const sortLabel = this.sortMode === "threaded" ? "Threaded" : this.sortMode === "recent" ? "Recent" : "Fuzzy";
-		const sortText = theme.fg("muted", "Sort: ") + theme.fg("accent", sortLabel);
+		const sortLabel = this.sortMode === "threaded" ? "线程" : this.sortMode === "recent" ? "最近" : "模糊";
+		const sortText = theme.fg("muted", "排序：") + theme.fg("accent", sortLabel);
 
-		const nameLabel = this.nameFilter === "all" ? "All" : "Named";
-		const nameText = theme.fg("muted", "Name: ") + theme.fg("accent", nameLabel);
+		const nameLabel = this.nameFilter === "all" ? "全部" : "已命名";
+		const nameText = theme.fg("muted", "名称：") + theme.fg("accent", nameLabel);
 
 		let scopeText: string;
 		if (this.loading) {
@@ -383,7 +383,7 @@ class SessionList implements Component, Focusable {
 
 		// Prevent deleting current session
 		if (this.isCurrentSessionPath(selected.session.path)) {
-			this.onError?.("Cannot delete the currently active session");
+			this.onError?.("无法删除当前活动会话");
 			return;
 		}
 
@@ -832,7 +832,7 @@ export class SessionSelectorComponent extends Container implements Focusable {
 				const showCwd = this.scope === "all";
 				this.sessionList.setSessions(sessions, showCwd);
 
-				const msg = result.method === "trash" ? "Session moved to trash" : "Session deleted";
+				const msg = result.method === "trash" ? "会话已移到回收站" : "会话已删除";
 				this.header.setStatusMessage({ type: "info", message: msg }, 2000);
 				await this.refreshSessionsAfterMutation();
 			} else {
@@ -858,7 +858,7 @@ export class SessionSelectorComponent extends Container implements Focusable {
 		this.renameInput.focused = true;
 
 		const panel = new Container();
-		panel.addChild(new Text(theme.bold("Rename Session"), 1, 0));
+		panel.addChild(new Text(theme.bold("重命名会话"), 1, 0));
 		panel.addChild(new Spacer(1));
 		panel.addChild(this.renameInput);
 		panel.addChild(new Spacer(1));

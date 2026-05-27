@@ -196,7 +196,7 @@ export class ModelSelectorComponent extends Container implements Focusable {
 	private getScopeText(): string {
 		const allText = this.scope === "all" ? theme.fg("accent", "all") : theme.fg("muted", "all");
 		const scopedText = this.scope === "scoped" ? theme.fg("accent", "scoped") : theme.fg("muted", "scoped");
-		return `${theme.fg("muted", "Scope: ")}${allText}${theme.fg("muted", " | ")}${scopedText}`;
+		return `${theme.fg("muted", "范围：")}${allText}${theme.fg("muted", " | ")}${scopedText}`;
 	}
 
 	private getScopeHintText(): string {
