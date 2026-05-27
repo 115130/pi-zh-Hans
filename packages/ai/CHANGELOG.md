@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 中文化 provider 错误消息（英→中）
+
 ### Fixed
 
 - Fixed OpenAI Codex Responses cache-affinity headers to send `session-id` instead of proxy-incompatible `session_id` ([#4967](https://github.com/earendil-works/pi/issues/4967)).

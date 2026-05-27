@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added nix flake development environment (`.envrc`, `flake.nix`, `flake.lock`)
+- Added bun embedded CLI entry point (`cli-embedded.ts`, `embed-assets.mjs`)
+
+### Changed
+
+- 中文化全部 UI 文本：快捷键描述、斜杠命令描述、CLI 帮助、工具描述/参数描述、系统提示词注释、错误消息等
+
 ### Fixed
 
 - Fixed user message transcript rendering to preserve user-authored ordered-list markers ([#5013](https://github.com/earendil-works/pi/issues/5013)).

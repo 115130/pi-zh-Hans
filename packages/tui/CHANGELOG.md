@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 中文化全部快捷键描述文本（英→中）
+
 ### Added
 
 - Added an opt-in Markdown renderer option to preserve source ordered-list markers for transcript rendering ([#5013](https://github.com/earendil-works/pi/issues/5013)).

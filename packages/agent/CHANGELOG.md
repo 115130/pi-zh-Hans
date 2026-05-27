@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 中文化 "Operation aborted" 错误消息为 "操作已中止"
+
 ### Fixed
 
 - Fixed context token estimates to count user image attachments consistently with tool result images ([#4983](https://github.com/earendil-works/pi/issues/4983)).
