@@ -25,8 +25,8 @@ import { buildBaseOptions } from "./simple-options.ts";
 const OPENAI_TOOL_CALL_PROVIDERS = new Set(["openai", "openai-codex", "opencode"]);
 
 /**
- * Resolve cache retention preference.
- * Defaults to "short" and uses PI_CACHE_RETENTION for backward compatibility.
+ * 解析缓存保留偏好。
+ * 默认值为 "short"，并为向后兼容使用 PI_CACHE_RETENTION。
  */
 function resolveCacheRetention(cacheRetention?: CacheRetention): CacheRetention {
 	if (cacheRetention) {
@@ -68,7 +68,7 @@ function formatOpenAIResponsesError(error: unknown): string {
 	}
 }
 
-// OpenAI Responses-specific options
+// OpenAI Responses 特定选项
 export interface OpenAIResponsesOptions extends StreamOptions {
 	reasoningEffort?: "minimal" | "low" | "medium" | "high" | "xhigh";
 	reasoningSummary?: "auto" | "detailed" | "concise" | null;
@@ -76,7 +76,7 @@ export interface OpenAIResponsesOptions extends StreamOptions {
 }
 
 /**
- * Generate function for OpenAI Responses API
+ * 为 OpenAI Responses API 生成函数
  */
 export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIResponsesOptions> = (
 	model: Model<"openai-responses">,
@@ -85,7 +85,7 @@ export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIRes
 ): AssistantMessageEventStream => {
 	const stream = new AssistantMessageEventStream();
 
-	// Start async processing
+	// 启动异步处理
 	(async () => {
 		const output: AssistantMessage = {
 			role: "assistant",
@@ -106,7 +106,7 @@ export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIRes
 		};
 
 		try {
-			// Create OpenAI client
+			// 创建 OpenAI 客户端
 			const apiKey = options?.apiKey || getEnvApiKey(model.provider) || "";
 			const cacheRetention = resolveCacheRetention(options?.cacheRetention);
 			const cacheSessionId = cacheRetention === "none" ? undefined : options?.sessionId;
@@ -143,7 +143,7 @@ export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIRes
 		} catch (error) {
 			for (const block of output.content) {
 				delete (block as { index?: number }).index;
-				// partialJson is only a streaming scratch buffer; never persist it.
+				// partialJson 只是流式处理的临时缓冲区；不应持久化。
 				delete (block as { partialJson?: string }).partialJson;
 			}
 			output.stopReason = options?.signal?.aborted ? "aborted" : "error";
@@ -208,7 +208,7 @@ function createClient(
 		headers["x-client-request-id"] = sessionId;
 	}
 
-	// Merge options headers last so they can override defaults
+	// 最后合并选项头部，以便它们可以覆盖默认值
 	if (optionsHeaders) {
 		Object.assign(headers, optionsHeaders);
 	}

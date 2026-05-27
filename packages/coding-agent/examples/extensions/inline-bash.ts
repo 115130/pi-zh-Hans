@@ -72,7 +72,7 @@ export default function (pi: ExtensionAPI) {
 			} catch (err) {
 				const errorMsg = err instanceof Error ? err.message : String(err);
 				expansions.push({ command, output: "", error: errorMsg });
-				result = result.replace(full, `[error: ${errorMsg}]`);
+				result = result.replace(full, `[错误: ${errorMsg}]`);
 			}
 		}
 
@@ -86,7 +86,7 @@ export default function (pi: ExtensionAPI) {
 				})
 				.join("\n");
 
-			ctx.ui.notify(`Expanded ${expansions.length} inline command(s):\n${summary}`, "info");
+			ctx.ui.notify(`已展开 ${expansions.length} 个内联命令：\n${summary}`, "info");
 		}
 
 		return { action: "transform", text: result, images: event.images };

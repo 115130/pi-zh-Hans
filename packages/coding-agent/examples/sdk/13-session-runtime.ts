@@ -43,7 +43,7 @@ async function bindSession() {
 	await session.bindExtensions({});
 	unsubscribe = session.subscribe((event) => {
 		if (event.type === "queue_update") {
-			console.log("Queued:", event.steering.length + event.followUp.length);
+			console.log("排队：", event.steering.length + event.followUp.length);
 		}
 	});
 	return session;
@@ -51,16 +51,16 @@ async function bindSession() {
 
 let session = await bindSession();
 const originalSessionFile = session.sessionFile;
-console.log("Initial session:", originalSessionFile);
+console.log("初始会话：", originalSessionFile);
 
 await runtime.newSession();
 session = await bindSession();
-console.log("After newSession():", session.sessionFile);
+console.log("newSession() 后：", session.sessionFile);
 
 if (originalSessionFile) {
 	await runtime.switchSession(originalSessionFile);
 	session = await bindSession();
-	console.log("After switchSession():", session.sessionFile);
+	console.log("switchSession() 后：", session.sessionFile);
 }
 
 unsubscribe?.();

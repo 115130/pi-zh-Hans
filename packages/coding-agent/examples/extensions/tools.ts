@@ -65,7 +65,7 @@ export default function toolsExtension(pi: ExtensionAPI) {
 
 	// Register /tools command
 	pi.registerCommand("tools", {
-		description: "Enable/disable tools",
+		description: "启用/禁用工具",
 		handler: async (_args, ctx) => {
 			// Refresh tool list
 			allTools = pi.getAllTools();
@@ -83,7 +83,7 @@ export default function toolsExtension(pi: ExtensionAPI) {
 				container.addChild(
 					new (class {
 						render(_width: number) {
-							return [theme.fg("accent", theme.bold("Tool Configuration")), ""];
+							return [theme.fg("accent", theme.bold("工具配置")), ""];
 						}
 						invalidate() {}
 					})(),

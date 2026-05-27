@@ -14,8 +14,7 @@ export interface InitialMessageResult {
 }
 
 /**
- * Combine stdin content, @file text, and the first CLI message into a single
- * initial prompt for non-interactive mode.
+ * 将 stdin 内容、@file 文本和第一条 CLI 消息合并成一个用于非交互模式的初始提示。
  */
 export function buildInitialMessage({
 	parsed,

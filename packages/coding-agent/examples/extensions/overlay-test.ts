@@ -13,7 +13,7 @@ import { CURSOR_MARKER, type Focusable, matchesKey, visibleWidth } from "@earend
 
 export default function (pi: ExtensionAPI) {
 	pi.registerCommand("overlay-test", {
-		description: "Test overlay rendering with edge cases",
+		description: "测试叠加渲染（含边界情况）",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			const result = await ctx.ui.custom<{ action: string; query?: string } | undefined>(
 				(_tui, theme, _keybindings, done) => new OverlayTestComponent(theme, done),
@@ -36,10 +36,10 @@ class OverlayTestComponent implements Focusable {
 
 	private selected = 0;
 	private items = [
-		{ label: "Search", hasInput: true, text: "", cursor: 0 },
-		{ label: "Run", hasInput: true, text: "", cursor: 0 },
-		{ label: "Settings", hasInput: false, text: "", cursor: 0 },
-		{ label: "Cancel", hasInput: false, text: "", cursor: 0 },
+		{ label: "搜索", hasInput: true, text: "", cursor: 0 },
+		{ label: "运行", hasInput: true, text: "", cursor: 0 },
+		{ label: "设置", hasInput: false, text: "", cursor: 0 },
+		{ label: "取消", hasInput: false, text: "", cursor: 0 },
 	];
 
 	private theme: Theme;
@@ -98,22 +98,22 @@ class OverlayTestComponent implements Focusable {
 		const row = (content: string) => th.fg("border", "│") + pad(content, innerW) + th.fg("border", "│");
 
 		lines.push(th.fg("border", `╭${"─".repeat(innerW)}╮`));
-		lines.push(row(` ${th.fg("accent", "🧪 Overlay Test")}`));
+		lines.push(row(` ${th.fg("accent", "🧪 叠加测试")}`));
 		lines.push(row(""));
 
 		// Edge cases - full width lines to test compositing at boundaries
-		lines.push(row(` ${th.fg("dim", "─── Edge Cases (borders should align) ───")}`));
-		lines.push(row(` Wide: ${th.fg("warning", "中文日本語한글テスト漢字繁體简体ひらがなカタカナ가나다라마바")}`));
+		lines.push(row(` ${th.fg("dim", "─── 边界情况（边框应对齐） ───")}`));
+		lines.push(row(` 宽字符: ${th.fg("warning", "中文日本語한글テスト漢字繁體简体ひらがなカタカナ가나다라마바")}`));
 		lines.push(
 			row(
-				` Styled: ${th.fg("error", "RED")} ${th.fg("success", "GREEN")} ${th.fg("warning", "YELLOW")} ${th.fg("accent", "ACCENT")} ${th.fg("dim", "DIM")} ${th.fg("error", "more")} ${th.fg("success", "colors")}`,
+				` 样式: ${th.fg("error", "红")} ${th.fg("success", "绿")} ${th.fg("warning", "黄")} ${th.fg("accent", "强调")} ${th.fg("dim", "暗淡")} ${th.fg("error", "更多")} ${th.fg("success", "颜色")}`,
 			),
 		);
-		lines.push(row(" Emoji: 👨‍👩‍👧‍👦 🇯🇵 🚀 💻 🎉 🔥 😀 🎯 🌟 💡 🎨 🔧 📦 🏆 🌈 🎪 🎭 🎬 🎮 🎲"));
+		lines.push(row(" 表情符号: 👨‍👩‍👧‍👦 🇯🇵 🚀 💻 🎉 🔥 😀 🎯 🌟 💡 🎨 🔧 📦 🏆 🌈 🎪 🎭 🎬 🎮 🎲"));
 		lines.push(row(""));
 
 		// Menu with inline inputs
-		lines.push(row(` ${th.fg("dim", "─── Actions ───")}`));
+		lines.push(row(` ${th.fg("dim", "─── 操作 ───")}`));
 
 		for (let i = 0; i < this.items.length; i++) {
 			const item = this.items[i]!;
@@ -142,7 +142,7 @@ class OverlayTestComponent implements Focusable {
 		}
 
 		lines.push(row(""));
-		lines.push(row(` ${th.fg("dim", "↑↓ navigate • type to input • Enter select • Esc cancel")}`));
+		lines.push(row(` ${th.fg("dim", "↑↓ 导航 • 输入文本 • 回车选择 • Esc 取消")}`));
 		lines.push(th.fg("border", `╰${"─".repeat(innerW)}╯`));
 
 		return lines;

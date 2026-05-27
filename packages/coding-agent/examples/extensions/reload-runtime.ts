@@ -12,7 +12,7 @@ export default function (pi: ExtensionAPI) {
 	// Command entrypoint for reload.
 	// Treat reload as terminal for this handler.
 	pi.registerCommand("reload-runtime", {
-		description: "Reload extensions, skills, prompts, and themes",
+		description: "重新加载扩展、技能、提示和主题",
 		handler: async (_args, ctx) => {
 			await ctx.reload();
 			return;
@@ -23,13 +23,13 @@ export default function (pi: ExtensionAPI) {
 	// Instead, queue a follow-up user command that executes the command above.
 	pi.registerTool({
 		name: "reload_runtime",
-		label: "Reload Runtime",
-		description: "Reload extensions, skills, prompts, and themes",
+		label: "重新加载运行时",
+		description: "重新加载扩展、技能、提示和主题",
 		parameters: Type.Object({}),
 		async execute() {
 			pi.sendUserMessage("/reload-runtime", { deliverAs: "followUp" });
 			return {
-				content: [{ type: "text", text: "Queued /reload-runtime as a follow-up command." }],
+				content: [{ type: "text", text: "已将对 /reload-runtime 的命令排队作为后续命令。" }],
 				details: {},
 			};
 		},

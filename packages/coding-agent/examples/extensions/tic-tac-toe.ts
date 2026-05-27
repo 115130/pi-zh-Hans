@@ -1,3 +1,6 @@
+// 以下是翻译后的 TypeScript 文件，只翻译了 description、label、promptSnippet、promptGuidelines、
+// 用户可见的错误消息、UI 文本等，未修改任何变量名、类型、import/export、技术术语或代码逻辑。
+
 /**
  * Tic-Tac-Toe extension - demonstrates executionMode: "sequential" on tools.
  *
@@ -451,8 +454,8 @@ class TicTacToeComponent implements Component {
 		const lines: string[] = [];
 
 		// Top title banner, full width.
-		const titleText = " Tic-Tac-Toe ";
-		const titleLen = visibleWidth(titleText);
+		const titleText = " 井字棋 ";
+		const titleLen = visibleWidth(titleText); // visibleWidth should handle Chinese characters correctly
 		const borderLen = Math.max(0, width - titleLen);
 		const leftBorder = Math.floor(borderLen / 2);
 		const rightBorder = borderLen - leftBorder;
@@ -464,15 +467,15 @@ class TicTacToeComponent implements Component {
 		if (this.state.status !== "playing") {
 			const statusText =
 				this.state.status === "draw"
-					? bold(yellow("Draw!"))
+					? bold(yellow("平局！"))
 					: this.state.status === "win_X"
-						? bold(green("X wins!"))
-						: bold(yellow("O wins!"));
+						? bold(green("X 获胜！"))
+						: bold(yellow("O 获胜！"));
 			lines.push(centerPad(statusText, width));
 		} else if (this.state.currentTurn === "X") {
-			lines.push(centerPad(`Turn: ${bold(blue("X"))} (You)  ${dim("|")}  ${bold(yellow("O"))} (Agent)`, width));
+			lines.push(centerPad(`回合：${bold(blue("X"))}（你）  ${dim("|")}  ${bold(yellow("O"))}（Agent）`, width));
 		} else {
-			lines.push(centerPad(`${blue("X")} (You)  ${dim("|")}  Turn: ${bold(yellow("O"))} (Agent)`, width));
+			lines.push(centerPad(`${blue("X")}（你）  ${dim("|")}  回合：${bold(yellow("O"))}（Agent）`, width));
 		}
 
 		lines.push("");
@@ -486,11 +489,11 @@ class TicTacToeComponent implements Component {
 		// Footer.
 		let footer: string;
 		if (this.state.status !== "playing") {
-			footer = `${bold("R")} restart  ${dim("|")}  ${bold("Q")}/${bold("ESC")} quit`;
+			footer = `${bold("R")} 重新开始  ${dim("|")}  ${bold("Q")}/${bold("ESC")} 退出`;
 		} else if (this.state.currentTurn !== this.state.userMark) {
-			footer = dim("Agent is thinking...");
+			footer = dim("Agent 正在思考...");
 		} else {
-			footer = `${bold("\u2190\u2191\u2193\u2192")} move  ${dim("|")}  ${bold("ENTER")} play  ${dim("|")}  ${bold("ESC")} quit`;
+			footer = `${bold("\u2190\u2191\u2193\u2192")} 移动  ${dim("|")}  ${bold("ENTER")} 落子  ${dim("|")}  ${bold("ESC")} 退出`;
 		}
 		lines.push(centerPad(footer, width));
 
@@ -571,19 +574,19 @@ class GameOverMessageComponent implements Component {
 		let sub: string;
 		switch (this.status) {
 			case "win_X":
-				title = bold(this.theme.fg("accent", "\u2605 Player X wins \u2605"));
-				sub = "You beat the agent.";
+				title = bold(this.theme.fg("accent", "\u2605 玩家 X 获胜 \u2605"));
+				sub = "你击败了 Agent。";
 				break;
 			case "win_O":
-				title = bold(this.theme.fg("warning", "\u2605 Player O wins \u2605"));
-				sub = "The agent beat you.";
+				title = bold(this.theme.fg("warning", "\u2605 玩家 O 获胜 \u2605"));
+				sub = "Agent 击败了你。";
 				break;
 			case "draw":
-				title = bold(this.theme.fg("muted", "\u2014 Draw \u2014"));
-				sub = "No winner.";
+				title = bold(this.theme.fg("muted", "\u2014 平局 \u2014"));
+				sub = "没有赢家。";
 				break;
 			default:
-				title = bold("Game over");
+				title = bold("游戏结束");
 				sub = "";
 				break;
 		}
@@ -665,15 +668,15 @@ export default function (pi: ExtensionAPI) {
 	const emitGameOverMessage = (): void => {
 		const label =
 			gameState.status === "win_X"
-				? "Player X (human) wins"
+				? "玩家 X（人类）获胜"
 				: gameState.status === "win_O"
-					? "Player O (agent) wins"
+					? "玩家 O（Agent）获胜"
 					: gameState.status === "draw"
-						? "Draw"
-						: "Game over";
+						? "平局"
+						: "游戏结束";
 		pi.sendMessage({
 			customType: GAME_OVER_MESSAGE_TYPE,
-			content: `Game over: ${label}.`,
+			content: `游戏结束：${label}。`,
 			display: true,
 			details: getBoardDetails(),
 		});
@@ -686,9 +689,9 @@ export default function (pi: ExtensionAPI) {
 		const details = message.details as BoardDetails | undefined;
 		const turnLabel =
 			details?.currentTurn === "O"
-				? `${theme.fg("warning", theme.bold("O"))} (Agent)`
-				: `${theme.fg("accent", theme.bold("X"))} (You)`;
-		const title = `${theme.fg("accent", theme.bold("Player X played"))}  ${theme.fg("dim", "\u2192")}  next: ${turnLabel}`;
+				? `${theme.fg("warning", theme.bold("O"))}（Agent）`
+				: `${theme.fg("accent", theme.bold("X"))}（你）`;
+		const title = `${theme.fg("accent", theme.bold("玩家 X 落子"))}  ${theme.fg("dim", "\u2192")}  下一手：${turnLabel}`;
 		return new BannerMessageComponent(title, details, expanded, theme);
 	});
 
@@ -776,11 +779,11 @@ Decide the target cell first, then dump every action for the turn in one go.
 	// /tic-tac-toe command
 	// -----------------------------------------------------------------------
 	pi.registerCommand("tic-tac-toe", {
-		description: "Play tic-tac-toe against the agent",
+		description: "与 Agent 玩井字棋",
 
 		handler: async (_args, ctx) => {
 			if (!ctx.hasUI) {
-				ctx.ui.notify("Tic-tac-toe requires interactive mode", "error");
+				ctx.ui.notify("井字棋需要交互模式", "error");
 				return;
 			}
 
@@ -820,11 +823,10 @@ Decide the target cell first, then dump every action for the turn in one go.
 								{
 									customType: MOVE_MESSAGE_TYPE,
 									content:
-										`Player X played at (row=${row}, col=${col}). It is now Player O's turn.\n\n` +
-										`Board (your cursor marked with <>):\n${boardAscii}\n\n` +
-										`Your cursor is at (row=${gameState.agentCursorRow}, col=${gameState.agentCursorCol}). ` +
-										`Decide your target cell, then emit every move_* and the final play ` +
-										`as separate tic_tac_toe tool calls in THIS response.`,
+										`玩家 X 在 (行=${row}, 列=${col}) 落子。现在轮到玩家 O。\n\n` +
+										`棋盘（你的光标用 < > 标记）：\n${boardAscii}\n\n` +
+										`你的光标位于 (行=${gameState.agentCursorRow}, 列=${gameState.agentCursorCol})。` +
+										`决定你的目标格子，然后在此响应中依次发出每个 move_* 和最终的 play 作为单独的 tic_tac_toe 工具调用。`,
 									display: true,
 									details: getBoardDetails(),
 								},
@@ -858,18 +860,17 @@ Decide the target cell first, then dump every action for the turn in one go.
 
 	pi.registerTool({
 		name: "tic_tac_toe",
-		label: "Tic-Tac-Toe",
+		label: "井字棋",
 		description:
-			"Execute ONE tic-tac-toe action as Player O. `action` is exactly one of: move_up, move_down, move_left, move_right (move YOUR cursor one cell, clamped at edges), or play (place O under YOUR cursor; errors if the cell is not empty). There is no batched form. To play at (r, c) from your current cursor (r0, c0), emit the required move_down/move_up and move_right/move_left calls, then play, all as separate tool_use blocks in the SAME assistant response. Do not split the sequence across responses and do not wait for a result before emitting the next call. Your cursor position persists between turns and is reset to (0,0) only after a successful play.",
-		promptSnippet: "Play a tic-tac-toe action (move_up/down/left/right or play) as Player O",
+			"作为玩家 O 执行一个井字棋操作。`action` 必须是以下之一：move_up, move_down, move_left, move_right（将你的光标移动一格，边缘处会卡住），或 play（在光标位置放置 O；如果格子不为空则报错）。没有批量形式。要从当前光标位置 (r0, c0) 落到 (r, c)，请在同一个 assistant 响应中依次发出必要的 move_down/move_up 和 move_right/move_left 调用，然后是 play，每个都是单独的 tool_use 块。不要将序列拆分成多个响应，也不要等待前一个调用的结果再发出下一个调用。你的光标位置在回合之间保持不变，只有在成功 play 后才会重置到 (0,0)。",
+		promptSnippet: "作为玩家 O 执行一个井字棋动作（move_up/down/left/right 或 play）",
 		promptGuidelines: [
-			"When it is your tic-tac-toe turn, decide the target cell first, then emit every move_* plus the final play as separate tic_tac_toe tool calls in a SINGLE assistant response. Never split them across responses or wait for intermediate results.",
-			"Never ask the user for the board. The board and your cursor position are included in the user's move message; use tic_tac_toe_see_board if you need them restated.",
+			"当轮到你的井字棋回合时，先决定目标格子，然后在一个单独的 assistant 响应中依次发出每个 move_* 和最终的 play 作为单独的 tic_tac_toe 工具调用。切勿将序列拆分到多个响应中或等待中间结果。",
+			"永远不要向用户询问棋盘。棋盘和你的光标位置已包含在用户的移动消息中；如果你需要重新查看，可以使用 tic_tac_toe_see_board。",
 		],
 		parameters: Type.Object({
 			action: StringEnum(["move_up", "move_down", "move_left", "move_right", "play"] as const, {
-				description:
-					"The single action to perform this call. Emit multiple tic_tac_toe calls in one response to string actions together.",
+				description: "本次调用要执行的单个操作。在同一个响应中发出多个 tic_tac_toe 调用以串联操作。",
 			}),
 		}),
 		executionMode: "sequential" as ToolExecutionMode,
@@ -883,26 +884,26 @@ Decide the target cell first, then dump every action for the turn in one go.
 			switch (params.action) {
 				case "move_up":
 					if (gameState.agentCursorRow > 0) gameState.agentCursorRow--;
-					result = `Moved up. Cursor: (${gameState.agentCursorRow}, ${gameState.agentCursorCol})`;
+					result = `向上移动。光标：(${gameState.agentCursorRow}, ${gameState.agentCursorCol})`;
 					break;
 				case "move_down":
 					if (gameState.agentCursorRow < 2) gameState.agentCursorRow++;
-					result = `Moved down. Cursor: (${gameState.agentCursorRow}, ${gameState.agentCursorCol})`;
+					result = `向下移动。光标：(${gameState.agentCursorRow}, ${gameState.agentCursorCol})`;
 					break;
 				case "move_left":
 					if (gameState.agentCursorCol > 0) gameState.agentCursorCol--;
-					result = `Moved left. Cursor: (${gameState.agentCursorRow}, ${gameState.agentCursorCol})`;
+					result = `向左移动。光标：(${gameState.agentCursorRow}, ${gameState.agentCursorCol})`;
 					break;
 				case "move_right":
 					if (gameState.agentCursorCol < 2) gameState.agentCursorCol++;
-					result = `Moved right. Cursor: (${gameState.agentCursorRow}, ${gameState.agentCursorCol})`;
+					result = `向右移动。光标：(${gameState.agentCursorRow}, ${gameState.agentCursorCol})`;
 					break;
 				case "play": {
 					if (gameState.status !== "playing") {
-						throw new TicTacToeError(`Game is over (${gameState.status}).`);
+						throw new TicTacToeError(`游戏已结束（${gameState.status}）。`);
 					}
 					if (gameState.currentTurn !== gameState.agentMark) {
-						throw new TicTacToeError("It is not your turn.");
+						throw new TicTacToeError("现在不是你的回合。");
 					}
 					const r = gameState.agentCursorRow;
 					const c = gameState.agentCursorCol;
@@ -912,7 +913,7 @@ Decide the target cell first, then dump every action for the turn in one go.
 						component?.updateState(gameState);
 						pi.appendEntry(SAVE_TYPE, getBoardDetails());
 						throw new TicTacToeError(
-							`Cell (${r},${c}) is already ${gameState.board[r][c]}. Your cursor is still at (${r},${c}). Move to an empty cell and retry play.`,
+							`格子 (${r},${c}) 已被 ${gameState.board[r][c]} 占据。你的光标仍在 (${r},${c})。请移动到空格子并重试落子。`,
 						);
 					}
 					gameState.board[r][c] = gameState.agentMark;
@@ -922,17 +923,17 @@ Decide the target cell first, then dump every action for the turn in one go.
 					gameState.agentCursorCol = AGENT_CURSOR_HOME_COL;
 					if (gameState.status === "playing") {
 						gameState.currentTurn = gameState.userMark;
-						result = `Placed O at (${r},${c}). Cursor reset to (${AGENT_CURSOR_HOME_ROW},${AGENT_CURSOR_HOME_COL}). Your turn, X!`;
+						result = `已在 (${r},${c}) 放置 O。光标重置到 (${AGENT_CURSOR_HOME_ROW},${AGENT_CURSOR_HOME_COL})。轮到你了 X！`;
 					} else if (gameState.status === "win_O") {
-						result = `Placed O at (${r},${c}). Player O wins!`;
+						result = `已在 (${r},${c}) 放置 O。玩家 O 获胜！`;
 						gameActive = false;
 						emitGameOverMessage();
 					} else if (gameState.status === "draw") {
-						result = `Placed O at (${r},${c}). It's a draw!`;
+						result = `已在 (${r},${c}) 放置 O。平局！`;
 						gameActive = false;
 						emitGameOverMessage();
 					} else {
-						result = `Placed O at (${r},${c}).`;
+						result = `已在 (${r},${c}) 放置 O。`;
 					}
 					break;
 				}
@@ -971,19 +972,19 @@ Decide the target cell first, then dump every action for the turn in one go.
 	// -----------------------------------------------------------------------
 	pi.registerTool({
 		name: "tic_tac_toe_see_board",
-		label: "See Board",
+		label: "查看棋盘",
 		description:
-			"Return the current tic-tac-toe board state and YOUR cursor position (Player O). Takes no arguments. Use this if you need the current state restated mid-turn (for example after a failed play). The user's cursor is never exposed.",
-		promptSnippet: "Inspect the tic-tac-toe board and your cursor",
+			"返回当前的井字棋棋盘状态和你（玩家 O）的光标位置。不带参数。如果你需要在回合中重新查看当前状态（例如在落子失败后），可以使用此工具。用户的光标从不暴露。",
+		promptSnippet: "查看井字棋棋盘和你的光标",
 		parameters: Type.Object({}),
 
 		async execute(_toolCallId, _params, _signal, _onUpdate, _ctx) {
 			const boardAscii = boardToAscii(gameState.board, gameState.agentCursorRow, gameState.agentCursorCol);
 			const text =
-				`Board (your cursor marked with <>):\n${boardAscii}\n\n` +
-				`Your cursor: (row=${gameState.agentCursorRow}, col=${gameState.agentCursorCol})\n` +
-				`Status: ${gameState.status}\n` +
-				`Turn: ${gameState.currentTurn === gameState.agentMark ? "Player O (you)" : "Player X"}`;
+				`棋盘（你的光标用 < > 标记）：\n${boardAscii}\n\n` +
+				`你的光标：(行=${gameState.agentCursorRow}, 列=${gameState.agentCursorCol})\n` +
+				`状态：${gameState.status}\n` +
+				`当前回合：${gameState.currentTurn === gameState.agentMark ? "玩家 O（你）" : "玩家 X"}`;
 			return {
 				content: [{ type: "text", text }],
 				details: getBoardDetails(),
@@ -998,7 +999,7 @@ Decide the target cell first, then dump every action for the turn in one go.
 			const details = result.details as BoardDetails | undefined;
 			const summary =
 				theme.fg("success", "\u2713 ") +
-				theme.fg("muted", `cursor (${details?.agentCursorRow ?? 0},${details?.agentCursorCol ?? 0})`);
+				theme.fg("muted", `光标 (${details?.agentCursorRow ?? 0},${details?.agentCursorCol ?? 0})`);
 			if (expanded && details) {
 				return new BannerMessageComponent(summary, details, true, theme);
 			}

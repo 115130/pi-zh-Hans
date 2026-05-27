@@ -19,13 +19,13 @@ export default function (pi: ExtensionAPI) {
 		if (isDangerous) {
 			if (!ctx.hasUI) {
 				// In non-interactive mode, block by default
-				return { block: true, reason: "Dangerous command blocked (no UI for confirmation)" };
+				return { block: true, reason: "危险命令已被阻止（无确认界面）" };
 			}
 
-			const choice = await ctx.ui.select(`⚠️ Dangerous command:\n\n  ${command}\n\nAllow?`, ["Yes", "No"]);
+			const choice = await ctx.ui.select(`⚠️ 危险命令：\n\n  ${command}\n\n是否允许？`, ["是", "否"]);
 
-			if (choice !== "Yes") {
-				return { block: true, reason: "Blocked by user" };
+			if (choice !== "是") {
+				return { block: true, reason: "用户已阻止" };
 			}
 		}
 

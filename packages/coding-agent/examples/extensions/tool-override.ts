@@ -60,17 +60,16 @@ async function logAccess(path: string, allowed: boolean, reason?: string) {
 }
 
 const readSchema = Type.Object({
-	path: Type.String({ description: "Path to the file to read (relative or absolute)" }),
-	offset: Type.Optional(Type.Number({ description: "Line number to start reading from (1-indexed)" })),
-	limit: Type.Optional(Type.Number({ description: "Maximum number of lines to read" })),
+	path: Type.String({ description: "要读取的文件路径（相对或绝对）" }),
+	offset: Type.Optional(Type.Number({ description: "开始读取的行号（从1开始）" })),
+	limit: Type.Optional(Type.Number({ description: "最大读取行数" })),
 });
 
 export default function (pi: ExtensionAPI) {
 	pi.registerTool({
 		name: "read", // Same name as built-in - this will override it
-		label: "read (audited)",
-		description:
-			"Read the contents of a file with access logging. Some sensitive paths (.env, secrets, credentials) are blocked.",
+		label: "读取（带审计）",
+		description: "读取文件内容并记录访问日志。某些敏感路径（.env、secrets、credentials）已被阻止。",
 		parameters: readSchema,
 
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -84,7 +83,7 @@ export default function (pi: ExtensionAPI) {
 					content: [
 						{
 							type: "text",
-							text: `Access denied: "${path}" matches a blocked pattern (sensitive file). This tool blocks access to .env files, secrets, credentials, and SSH/AWS/GPG directories.`,
+							text: `访问被拒绝："${path}" 匹配到被阻止的模式（敏感文件）。此工具阻止对 .env 文件、secrets、credentials 以及 SSH/AWS/GPG 目录的访问。`,
 						},
 					],
 					details: { blocked: true },
@@ -109,7 +108,7 @@ export default function (pi: ExtensionAPI) {
 				let text = selectedLines.join("\n");
 				const maxBytes = 50 * 1024;
 				if (Buffer.byteLength(text, "utf-8") > maxBytes) {
-					text = `${text.slice(0, maxBytes)}\n\n[Output truncated at 50KB]`;
+					text = `${text.slice(0, maxBytes)}\n\n[输出以50KB截断]`;
 				}
 
 				return {
@@ -118,7 +117,7 @@ export default function (pi: ExtensionAPI) {
 				};
 			} catch (error: any) {
 				return {
-					content: [{ type: "text", text: `Error reading file: ${error.message}` }] as TextContent[],
+					content: [{ type: "text", text: `读取文件错误：${error.message}` }] as TextContent[],
 					details: { error: true },
 				};
 			}
@@ -130,14 +129,14 @@ export default function (pi: ExtensionAPI) {
 
 	// Also register a command to view the access log
 	pi.registerCommand("read-log", {
-		description: "View the file access log",
+		description: "查看文件访问日志",
 		handler: async (_args, ctx) => {
 			try {
 				const log = readFileSync(LOG_FILE, "utf-8");
 				const lines = log.trim().split("\n").slice(-20); // Last 20 entries
-				ctx.ui.notify(`Recent file access:\n${lines.join("\n")}`, "info");
+				ctx.ui.notify(`最近的文件访问：\n${lines.join("\n")}`, "info");
 			} catch {
-				ctx.ui.notify("No access log found", "info");
+				ctx.ui.notify("未找到访问日志", "info");
 			}
 		},
 	});

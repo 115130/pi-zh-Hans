@@ -9,8 +9,7 @@ interface ResizeImageWorkerResponse {
 }
 
 function toTransferableBytes(input: Uint8Array): Uint8Array<ArrayBuffer> {
-	// Transfer detaches the buffer, so transfer a worker-owned copy and leave the
-	// caller's bytes intact.
+	// 传输会分离缓冲区，因此传输一个工作线程拥有的副本，保持调用方的字节不变。
 	return new Uint8Array(input);
 }
 
@@ -76,11 +75,10 @@ async function resizeImageInWorker(
 }
 
 /**
- * Resize an image to fit within the specified max dimensions and encoded file size.
- * Runs Photon in a worker thread so WASM decoding, resizing, and encoding do not
- * block the TUI event loop. If the worker cannot be loaded (for example in some
- * Bun compiled executable layouts), fall back to in-process resizing so image
- * reads still work.
+ * 将图像调整到指定的最大尺寸和编码文件大小内。
+ * 在工作线程中运行 Photon，使得 WASM 解码、调整大小和编码不会阻塞 TUI 事件循环。
+ * 如果无法加载工作线程（例如在某些 Bun 编译的可执行文件布局中），则回退到进程内调整大小，
+ * 以确保图像读取仍然有效。
  */
 export async function resizeImage(
 	inputBytes: Uint8Array,
@@ -93,9 +91,9 @@ export async function resizeImage(
 		import.meta.url,
 	);
 
-	// Bun compiled executables resolve worker entrypoints by string path, not via
-	// new URL(..., import.meta.url). Try the string path first under Bun so the
-	// release binary uses the embedded worker instead of falling back in-process.
+	// Bun 编译的可执行文件通过字符串路径解析工作线程入口点，而不是通过
+	// new URL(..., import.meta.url)。在 Bun 下先尝试字符串路径，
+	// 这样发布版本就能使用内嵌的工作线程，而不是回退到进程内处理。
 	if (typeof process.versions.bun === "string") {
 		try {
 			return await resizeImageInWorker("./src/utils/image-resize-worker.ts", inputBytes, mimeType, options);
@@ -110,8 +108,8 @@ export async function resizeImage(
 }
 
 /**
- * Format a dimension note for resized images.
- * This helps the model understand the coordinate mapping.
+ * 格式化已调整大小图像的尺寸说明。
+ * 这有助于模型理解坐标映射关系。
  */
 export function formatDimensionNote(result: ResizedImage): string | undefined {
 	if (!result.wasResized) {

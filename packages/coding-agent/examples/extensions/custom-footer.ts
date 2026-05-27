@@ -16,7 +16,7 @@ export default function (pi: ExtensionAPI) {
 	let enabled = false;
 
 	pi.registerCommand("footer", {
-		description: "Toggle custom footer",
+		description: "切换自定义页脚",
 		handler: async (_args, ctx) => {
 			enabled = !enabled;
 
@@ -47,17 +47,17 @@ export default function (pi: ExtensionAPI) {
 
 							const left = theme.fg("dim", `↑${fmt(input)} ↓${fmt(output)} $${cost.toFixed(3)}`);
 							const branchStr = branch ? ` (${branch})` : "";
-							const right = theme.fg("dim", `${ctx.model?.id || "no-model"}${branchStr}`);
+							const right = theme.fg("dim", `${ctx.model?.id || "无模型"}${branchStr}`);
 
 							const pad = " ".repeat(Math.max(1, width - visibleWidth(left) - visibleWidth(right)));
 							return [truncateToWidth(left + pad + right, width)];
 						},
 					};
 				});
-				ctx.ui.notify("Custom footer enabled", "info");
+				ctx.ui.notify("已启用自定义页脚", "info");
 			} else {
 				ctx.ui.setFooter(undefined);
-				ctx.ui.notify("Default footer restored", "info");
+				ctx.ui.notify("已恢复默认页脚", "info");
 			}
 		},
 	});

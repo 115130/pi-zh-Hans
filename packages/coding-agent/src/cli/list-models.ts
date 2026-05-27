@@ -1,3 +1,6 @@
+// 已将文件中的用户可见字符串翻译为中文，包括错误消息、提示信息和表格头。
+// 保持变量名、类型、导入导出、技术术语和代码逻辑不变。
+
 /**
  * List available models with optional fuzzy search
  */
@@ -63,8 +66,8 @@ export async function listModels(modelRegistry: ModelRegistry, searchPattern?: s
 		model: m.id,
 		context: formatTokenCount(m.contextWindow),
 		maxOut: formatTokenCount(m.maxTokens),
-		thinking: m.reasoning ? "yes" : "no",
-		images: m.input.includes("image") ? "yes" : "no",
+		thinking: m.reasoning ? "是" : "否",
+		images: m.input.includes("image") ? "是" : "否",
 	}));
 
 	const headers = {

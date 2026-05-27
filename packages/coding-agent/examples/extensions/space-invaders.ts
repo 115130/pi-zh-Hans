@@ -408,10 +408,10 @@ class SpaceInvadersComponent {
 		lines.push(this.padLine(dim(` ╭${"─".repeat(boxWidth)}╮`), width));
 
 		// Header
-		const title = `${bold(green("SPACE INVADERS"))}`;
-		const scoreText = `Score: ${bold(yellow(String(this.state.score)))}`;
-		const highText = `Hi: ${bold(yellow(String(this.state.highScore)))}`;
-		const levelText = `Lv: ${bold(cyan(String(this.state.level)))}`;
+		const title = `${bold(green("太空入侵者"))}`; // Translated "SPACE INVADERS"
+		const scoreText = `得分: ${bold(yellow(String(this.state.score)))}`; // Translated "Score"
+		const highText = `最高: ${bold(yellow(String(this.state.highScore)))}`; // Translated "Hi"
+		const levelText = `等级: ${bold(cyan(String(this.state.level)))}`; // Translated "Lv"
 		const livesText = `${red("♥".repeat(this.state.player.lives))}`;
 		const header = `${title} │ ${scoreText} │ ${highText} │ ${levelText} │ ${livesText}`;
 		lines.push(this.padLine(boxLine(header), width));
@@ -488,13 +488,13 @@ class SpaceInvadersComponent {
 		// Footer
 		let footer: string;
 		if (this.paused) {
-			footer = `${yellow(bold("PAUSED"))} Press any key to continue, ${bold("Q")} to quit`;
+			footer = `${yellow(bold("已暂停"))} 按任意键继续，按 ${bold("Q")} 退出`; // Translated
 		} else if (this.state.gameOver) {
-			footer = `${red(bold("GAME OVER!"))} Press ${bold("R")} to restart, ${bold("Q")} to quit`;
+			footer = `${red(bold("游戏结束!"))} 按 ${bold("R")} 重新开始，按 ${bold("Q")} 退出`; // Translated
 		} else if (this.state.victory) {
-			footer = `${green(bold("VICTORY!"))} Press ${bold("R")} for level ${this.state.level + 1}, ${bold("Q")} to quit`;
+			footer = `${green(bold("胜利!"))} 按 ${bold("R")} 进入第 ${this.state.level + 1} 关，按 ${bold("Q")} 退出`; // Translated
 		} else {
-			footer = `←→ or AD to move, ${bold("SPACE")}/F to fire, ${bold("ESC")} pause, ${bold("Q")} quit`;
+			footer = `←→ 或 A/D 移动，${bold("空格")}/F 射击，${bold("ESC")} 暂停，${bold("Q")} 退出`; // Translated
 		}
 		lines.push(this.padLine(boxLine(footer), width));
 
@@ -526,11 +526,11 @@ const INVADERS_SAVE_TYPE = "space-invaders-save";
 
 export default function (pi: ExtensionAPI) {
 	pi.registerCommand("invaders", {
-		description: "Play Space Invaders!",
+		description: "玩太空入侵者!", // Translated "Play Space Invaders!"
 
 		handler: async (_args, ctx) => {
 			if (!ctx.hasUI) {
-				ctx.ui.notify("Space Invaders requires interactive mode", "error");
+				ctx.ui.notify("太空入侵者需要交互模式", "error"); // Translated
 				return;
 			}
 

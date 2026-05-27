@@ -155,11 +155,9 @@ async function getDirectAccessToken(gitlabAccessToken: string): Promise<DirectAc
 	if (!response.ok) {
 		const errorText = await response.text();
 		if (response.status === 403) {
-			throw new Error(
-				`GitLab Duo access denied. Ensure GitLab Duo is enabled for your account. Error: ${errorText}`,
-			);
+			throw new Error(`GitLab Duo 访问被拒绝。请确保您的帐户已启用 GitLab Duo。错误: ${errorText}`);
 		}
-		throw new Error(`Failed to get direct access token: ${response.status} ${errorText}`);
+		throw new Error(`获取直接访问令牌失败: ${response.status} ${errorText}`);
 	}
 
 	const data = (await response.json()) as { token: string; headers: Record<string, string> };
@@ -203,9 +201,9 @@ async function loginGitLab(callbacks: OAuthLoginCallbacks): Promise<OAuthCredent
 	});
 
 	callbacks.onAuth({ url: `${GITLAB_COM_URL}/oauth/authorize?${authParams.toString()}` });
-	const callbackUrl = await callbacks.onPrompt({ message: "Paste the callback URL:" });
+	const callbackUrl = await callbacks.onPrompt({ message: "请粘贴回调URL:" });
 	const code = new URL(callbackUrl).searchParams.get("code");
-	if (!code) throw new Error("No authorization code found in callback URL");
+	if (!code) throw new Error("回调 URL 中未找到授权码");
 
 	const tokenResponse = await fetch(`${GITLAB_COM_URL}/oauth/token`, {
 		method: "POST",
@@ -219,7 +217,7 @@ async function loginGitLab(callbacks: OAuthLoginCallbacks): Promise<OAuthCredent
 		}).toString(),
 	});
 
-	if (!tokenResponse.ok) throw new Error(`Token exchange failed: ${await tokenResponse.text()}`);
+	if (!tokenResponse.ok) throw new Error(`令牌交换失败: ${await tokenResponse.text()}`);
 	const data = (await tokenResponse.json()) as {
 		access_token: string;
 		refresh_token: string;
@@ -244,7 +242,7 @@ async function refreshGitLabToken(credentials: OAuthCredentials): Promise<OAuthC
 			refresh_token: credentials.refresh,
 		}).toString(),
 	});
-	if (!response.ok) throw new Error(`Token refresh failed: ${await response.text()}`);
+	if (!response.ok) throw new Error(`令牌刷新失败: ${await response.text()}`);
 	const data = (await response.json()) as {
 		access_token: string;
 		refresh_token: string;
@@ -273,10 +271,10 @@ export function streamGitLabDuo(
 	(async () => {
 		try {
 			const gitlabAccessToken = options?.apiKey;
-			if (!gitlabAccessToken) throw new Error("No GitLab access token. Run /login gitlab-duo or set GITLAB_TOKEN");
+			if (!gitlabAccessToken) throw new Error("没有 GitLab 访问令牌。请运行 /login gitlab-duo 或设置 GITLAB_TOKEN");
 
 			const cfg = MODEL_MAP.get(model.id);
-			if (!cfg) throw new Error(`Unknown model: ${model.id}`);
+			if (!cfg) throw new Error(`未知模型: ${model.id}`);
 
 			const directAccess = await getDirectAccessToken(gitlabAccessToken);
 			const modelWithBaseUrl = { ...model, baseUrl: cfg.baseUrl };

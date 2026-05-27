@@ -1,65 +1,65 @@
-# Plan Mode Extension
+# 计划模式扩展
 
-Read-only exploration mode for safe code analysis.
+用于安全代码分析的只读探索模式。
 
-## Features
+## 功能特性
 
-- **Read-only tools**: Restricts available tools to read, bash, grep, find, ls, question
-- **Bash allowlist**: Only read-only bash commands are allowed
-- **Plan extraction**: Extracts numbered steps from `Plan:` sections
-- **Progress tracking**: Widget shows completion status during execution
-- **[DONE:n] markers**: Explicit step completion tracking
-- **Session persistence**: State survives session resume
+- **只读工具**：限制可用工具为读取、bash、grep、find、ls、question
+- **Bash 白名单**：仅允许只读的 bash 命令
+- **计划提取**：从 `Plan:` 部分提取带编号的步骤
+- **进度追踪**：小部件在执行期间显示完成状态
+- **[DONE:n] 标记**：显式步骤完成追踪
+- **会话持久性**：状态在会话恢复后依然保留
 
-## Commands
+## 命令
 
-- `/plan` - Toggle plan mode
-- `/todos` - Show current plan progress
-- `Ctrl+Alt+P` - Toggle plan mode (shortcut)
+- `/plan` - 切换计划模式
+- `/todos` - 显示当前计划进度
+- `Ctrl+Alt+P` - 切换计划模式（快捷键）
 
-## Usage
+## 使用方法
 
-1. Enable plan mode with `/plan` or `--plan` flag
-2. Ask the agent to analyze code and create a plan
-3. The agent should output a numbered plan under a `Plan:` header:
+1. 使用 `/plan` 或 `--plan` 标志启用计划模式
+2. 要求智能体分析代码并创建计划
+3. 智能体应在 `Plan:` 标题下输出带编号的计划：
 
 ```
 Plan:
-1. First step description
-2. Second step description
-3. Third step description
+1. 第一步描述
+2. 第二步描述
+3. 第三步描述
 ```
 
-4. Choose "Execute the plan" when prompted
-5. During execution, the agent marks steps complete with `[DONE:n]` tags
-6. Progress widget shows completion status
+4. 在提示时选择“执行计划”
+5. 执行期间，智能体使用 `[DONE:n]` 标签标记步骤完成
+6. 进度小部件显示完成状态
 
-## How It Works
+## 工作原理
 
-### Plan Mode (Read-Only)
-- Only read-only tools available
-- Bash commands filtered through allowlist
-- Agent creates a plan without making changes
+### 计划模式（只读）
+- 仅提供只读工具
+- Bash 命令通过白名单过滤
+- 智能体创建计划，但不做任何更改
 
-### Execution Mode
-- Full tool access restored
-- Agent executes steps in order
-- `[DONE:n]` markers track completion
-- Widget shows progress
+### 执行模式
+- 恢复全部工具访问权限
+- 智能体按顺序执行步骤
+- `[DONE:n]` 标记追踪完成情况
+- 小部件显示进度
 
-### Command Allowlist
+### 命令白名单
 
-Safe commands (allowed):
-- File inspection: `cat`, `head`, `tail`, `less`, `more`
-- Search: `grep`, `find`, `rg`, `fd`
-- Directory: `ls`, `pwd`, `tree`
-- Git read: `git status`, `git log`, `git diff`, `git branch`
-- Package info: `npm list`, `npm outdated`, `yarn info`
-- System info: `uname`, `whoami`, `date`, `uptime`
+安全命令（允许）：
+- 文件检查：`cat`、`head`、`tail`、`less`、`more`
+- 搜索：`grep`、`find`、`rg`、`fd`
+- 目录：`ls`、`pwd`、`tree`
+- Git 只读：`git status`、`git log`、`git diff`、`git branch`
+- 包信息：`npm list`、`npm outdated`、`yarn info`
+- 系统信息：`uname`、`whoami`、`date`、`uptime`
 
-Blocked commands:
-- File modification: `rm`, `mv`, `cp`, `mkdir`, `touch`
-- Git write: `git add`, `git commit`, `git push`
-- Package install: `npm install`, `yarn add`, `pip install`
-- System: `sudo`, `kill`, `reboot`
-- Editors: `vim`, `nano`, `code`
+禁止的命令：
+- 文件修改：`rm`、`mv`、`cp`、`mkdir`、`touch`
+- Git 写入：`git add`、`git commit`、`git push`
+- 包安装：`npm install`、`yarn add`、`pip install`
+- 系统：`sudo`、`kill`、`reboot`
+- 编辑器：`vim`、`nano`、`code`

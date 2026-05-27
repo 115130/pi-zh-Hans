@@ -42,7 +42,7 @@ function parseGitHubRepo(remoteUrl: string): string | undefined {
 async function resolveGitHubRepo(pi: ExtensionAPI, cwd: string): Promise<RepoResolution> {
 	const result = await pi.exec("git", ["remote", "-v"], { cwd, timeout: 5_000 });
 	if (result.code !== 0) {
-		return { ok: false, error: "github-issue-autocomplete: cwd is not a git repository" };
+		return { ok: false, error: "github-issue-autocomplete: 当前工作目录不是 git 仓库" };
 	}
 
 	for (const line of result.stdout.split("\n")) {
@@ -57,7 +57,7 @@ async function resolveGitHubRepo(pi: ExtensionAPI, cwd: string): Promise<RepoRes
 		}
 	}
 
-	return { ok: false, error: "github-issue-autocomplete: cwd is not a GitHub repository" };
+	return { ok: false, error: "github-issue-autocomplete: 当前工作目录不是 GitHub 仓库" };
 }
 
 function formatIssueItem(issue: GitHubIssue): AutocompleteItem {
@@ -161,7 +161,7 @@ export default function (pi: ExtensionAPI): void {
 					if (!loadErrorShown) {
 						loadErrorShown = true;
 						const details = result.stderr.trim() || `exit code ${result.code}`;
-						ctx.ui.notify(`github-issue-autocomplete: failed to load issues: ${details}`, "error");
+						ctx.ui.notify(`github-issue-autocomplete: 加载 issue 失败: ${details}`, "error");
 					}
 					return undefined;
 				}
@@ -171,7 +171,7 @@ export default function (pi: ExtensionAPI): void {
 				} catch {
 					if (!loadErrorShown) {
 						loadErrorShown = true;
-						ctx.ui.notify("github-issue-autocomplete: failed to parse gh issue list output", "error");
+						ctx.ui.notify("github-issue-autocomplete: 无法解析 gh issue 列表输出", "error");
 					}
 					return undefined;
 				}

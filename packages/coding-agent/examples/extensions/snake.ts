@@ -113,7 +113,7 @@ class SnakeComponent {
 				newHead = { x: head.x, y: head.y + 1 };
 				break;
 			case "left":
-				newHead = { x: head.x - 1, y: head.y };
+				newHead = { x: head.x, y: head.y - 1 };
 				break;
 			case "right":
 				newHead = { x: head.x + 1, y: head.y };
@@ -236,9 +236,9 @@ class SnakeComponent {
 		lines.push(this.padLine(dim(` ╭${"─".repeat(boxWidth)}╮`), width));
 
 		// Header with score
-		const scoreText = `Score: ${bold(yellow(String(this.state.score)))}`;
-		const highText = `High: ${bold(yellow(String(this.state.highScore)))}`;
-		const title = `${bold(green("SNAKE"))} │ ${scoreText} │ ${highText}`;
+		const scoreText = `分数: ${bold(yellow(String(this.state.score)))}`;
+		const highText = `最高: ${bold(yellow(String(this.state.highScore)))}`;
+		const title = `${bold(green("贪吃蛇"))} │ ${scoreText} │ ${highText}`;
 		lines.push(this.padLine(boxLine(title), width));
 
 		// Separator
@@ -271,11 +271,11 @@ class SnakeComponent {
 		// Footer
 		let footer: string;
 		if (this.paused) {
-			footer = `${yellow(bold("PAUSED"))} Press any key to continue, ${bold("Q")} to quit`;
+			footer = `${yellow(bold("暂停"))} 按任意键继续，按 ${bold("Q")} 退出`;
 		} else if (this.state.gameOver) {
-			footer = `${red(bold("GAME OVER!"))} Press ${bold("R")} to restart, ${bold("Q")} to quit`;
+			footer = `${red(bold("游戏结束！"))} 按 ${bold("R")} 重新开始，按 ${bold("Q")} 退出`;
 		} else {
-			footer = `↑↓←→ or WASD to move, ${bold("ESC")} pause, ${bold("Q")} quit`;
+			footer = `↑↓←→ 或 WASD 移动，按 ${bold("ESC")} 暂停，按 ${bold("Q")} 退出`;
 		}
 		lines.push(this.padLine(boxLine(footer), width));
 
@@ -308,11 +308,11 @@ const SNAKE_SAVE_TYPE = "snake-save";
 
 export default function (pi: ExtensionAPI) {
 	pi.registerCommand("snake", {
-		description: "Play Snake!",
+		description: "玩贪吃蛇！",
 
 		handler: async (_args, ctx) => {
 			if (!ctx.hasUI) {
-				ctx.ui.notify("Snake requires interactive mode", "error");
+				ctx.ui.notify("贪吃蛇需要交互模式", "error");
 				return;
 			}
 

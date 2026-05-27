@@ -7,18 +7,18 @@ export default function (pi: ExtensionAPI) {
 
 	const triggerCompaction = (ctx: ExtensionContext, customInstructions?: string) => {
 		if (ctx.hasUI) {
-			ctx.ui.notify("Compaction started", "info");
+			ctx.ui.notify("压缩已启动", "info");
 		}
 		ctx.compact({
 			customInstructions,
 			onComplete: () => {
 				if (ctx.hasUI) {
-					ctx.ui.notify("Compaction completed", "info");
+					ctx.ui.notify("压缩已完成", "info");
 				}
 			},
 			onError: (error) => {
 				if (ctx.hasUI) {
-					ctx.ui.notify(`Compaction failed: ${error.message}`, "error");
+					ctx.ui.notify(`压缩失败：${error.message}`, "error");
 				}
 			},
 		});
@@ -41,7 +41,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("trigger-compact", {
-		description: "Trigger compaction immediately",
+		description: "立即触发压缩",
 		handler: async (args, ctx) => {
 			const instructions = args.trim() || undefined;
 			triggerCompaction(ctx, instructions);

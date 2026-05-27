@@ -1,12 +1,12 @@
 /**
- * Shared utilities for compaction and branch summarization.
+ * 用于压缩和分支摘要的共享工具。
  */
 
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { Message } from "@earendil-works/pi-ai";
 
 // ============================================================================
-// File Operation Tracking
+// 文件操作跟踪
 // ============================================================================
 
 export interface FileOperations {
@@ -24,7 +24,7 @@ export function createFileOps(): FileOperations {
 }
 
 /**
- * Extract file operations from tool calls in an assistant message.
+ * 从助手消息中的工具调用提取文件操作。
  */
 export function extractFileOpsFromMessage(message: AgentMessage, fileOps: FileOperations): void {
 	if (message.role !== "assistant") return;
@@ -56,8 +56,8 @@ export function extractFileOpsFromMessage(message: AgentMessage, fileOps: FileOp
 }
 
 /**
- * Compute final file lists from file operations.
- * Returns readFiles (files only read, not modified) and modifiedFiles.
+ * 从文件操作计算最终文件列表。
+ * 返回 readFiles（只读取但未修改的文件）和 modifiedFiles。
  */
 export function computeFileLists(fileOps: FileOperations): { readFiles: string[]; modifiedFiles: string[] } {
 	const modified = new Set([...fileOps.edited, ...fileOps.written]);
@@ -67,7 +67,7 @@ export function computeFileLists(fileOps: FileOperations): { readFiles: string[]
 }
 
 /**
- * Format file operations as XML tags for summary.
+ * 将文件操作格式化为用于摘要的 XML 标签。
  */
 export function formatFileOperations(readFiles: string[], modifiedFiles: string[]): string {
 	const sections: string[] = [];
@@ -82,15 +82,15 @@ export function formatFileOperations(readFiles: string[], modifiedFiles: string[
 }
 
 // ============================================================================
-// Message Serialization
+// 消息序列化
 // ============================================================================
 
-/** Maximum characters for a tool result in serialized summaries. */
+/** 序列化摘要中工具结果的最大字符数。 */
 const TOOL_RESULT_MAX_CHARS = 2000;
 
 /**
- * Truncate text to a maximum character length for summarization.
- * Keeps the beginning and appends a truncation marker.
+ * 将文本截断至用于摘要的最大字符长度。
+ * 保留开头并附加截断标记。
  */
 function truncateForSummary(text: string, maxChars: number): string {
 	if (text.length <= maxChars) return text;
@@ -99,12 +99,12 @@ function truncateForSummary(text: string, maxChars: number): string {
 }
 
 /**
- * Serialize LLM messages to text for summarization.
- * This prevents the model from treating it as a conversation to continue.
- * Call convertToLlm() first to handle custom message types.
+ * 将 LLM 消息序列化为用于摘要的文本。
+ * 防止模型将其视为待继续的对话。
+ * 请先调用 convertToLlm() 处理自定义消息类型。
  *
- * Tool results are truncated to keep the summarization request within
- * reasonable token budgets. Full content is not needed for summarization.
+ * 工具结果会被截断，以保持摘要请求在合理的 token 预算内。
+ * 完整内容不需要用于摘要。
  */
 export function serializeConversation(messages: Message[]): string {
 	const parts: string[] = [];
@@ -162,7 +162,7 @@ export function serializeConversation(messages: Message[]): string {
 }
 
 // ============================================================================
-// Summarization System Prompt
+// 摘要系统提示词
 // ============================================================================
 
 export const SUMMARIZATION_SYSTEM_PROMPT = `你是一个上下文摘要助手。你的任务是阅读用户与AI编程助手之间的对话，然后按照指定的格式生成结构化摘要。

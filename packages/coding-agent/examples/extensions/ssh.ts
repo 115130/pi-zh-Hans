@@ -1,16 +1,16 @@
 /**
- * SSH Remote Execution Example
+ * SSH 远程执行示例
  *
- * Demonstrates delegating tool operations to a remote machine via SSH.
- * When --ssh is provided, read/write/edit/bash run on the remote.
+ * 演示如何通过 SSH 将工具操作委托给远程机器。
+ * 当提供 --ssh 时，read/write/edit/bash 在远程上运行。
  *
- * Usage:
+ * 用法：
  *   pi -e ./ssh.ts --ssh user@host
  *   pi -e ./ssh.ts --ssh user@host:/remote/path
  *
- * Requirements:
- *   - SSH key-based auth (no password prompts)
- *   - bash on remote
+ * 要求：
+ *   - 基于密钥的 SSH 认证（无密码提示）
+ *   - 远程机器上存在 bash
  */
 
 import { spawn } from "node:child_process";
@@ -36,7 +36,7 @@ function sshExec(remote: string, command: string): Promise<Buffer> {
 		child.on("error", reject);
 		child.on("close", (code) => {
 			if (code !== 0) {
-				reject(new Error(`SSH failed (${code}): ${Buffer.concat(errChunks).toString()}`));
+				reject(new Error(`SSH 失败 (${code}): ${Buffer.concat(errChunks).toString()}`));
 			} else {
 				resolve(Buffer.concat(chunks));
 			}
@@ -112,7 +112,7 @@ function createRemoteBashOps(remote: string, remoteCwd: string, localCwd: string
 }
 
 export default function (pi: ExtensionAPI) {
-	pi.registerFlag("ssh", { description: "SSH remote: user@host or user@host:/path", type: "string" });
+	pi.registerFlag("ssh", { description: "SSH 远程：user@host 或 user@host:/path", type: "string" });
 
 	const localCwd = process.cwd();
 	const localRead = createReadTool(localCwd);
@@ -120,7 +120,7 @@ export default function (pi: ExtensionAPI) {
 	const localEdit = createEditTool(localCwd);
 	const localBash = createBashTool(localCwd);
 
-	// Resolved lazily on session_start (CLI flags not available during factory)
+	// 在 session_start 时惰性解析（工厂函数期间 CLI 标志不可用）
 	let resolvedSsh: { remote: string; remoteCwd: string } | null = null;
 
 	const getSsh = () => resolvedSsh;
@@ -182,31 +182,31 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("session_start", async (_event, ctx) => {
-		// Resolve SSH config now that CLI flags are available
+		// 现在 CLI 标志可用，解析 SSH 配置
 		const arg = pi.getFlag("ssh") as string | undefined;
 		if (arg) {
 			if (arg.includes(":")) {
 				const [remote, path] = arg.split(":");
 				resolvedSsh = { remote, remoteCwd: path };
 			} else {
-				// No path given, evaluate pwd on remote
+				// 未提供路径，在远程上评估 pwd
 				const remote = arg;
 				const pwd = (await sshExec(remote, "pwd")).toString().trim();
 				resolvedSsh = { remote, remoteCwd: pwd };
 			}
 			ctx.ui.setStatus("ssh", ctx.ui.theme.fg("accent", `SSH: ${resolvedSsh.remote}:${resolvedSsh.remoteCwd}`));
-			ctx.ui.notify(`SSH mode: ${resolvedSsh.remote}:${resolvedSsh.remoteCwd}`, "info");
+			ctx.ui.notify(`SSH 模式：${resolvedSsh.remote}:${resolvedSsh.remoteCwd}`, "info");
 		}
 	});
 
-	// Handle user ! commands via SSH
+	// 通过 SSH 处理用户 ! 命令
 	pi.on("user_bash", (_event) => {
 		const ssh = getSsh();
-		if (!ssh) return; // No SSH, use local execution
+		if (!ssh) return; // 无 SSH，使用本地执行
 		return { operations: createRemoteBashOps(ssh.remote, ssh.remoteCwd, localCwd) };
 	});
 
-	// Replace local cwd with remote cwd in system prompt
+	// 将系统提示中的本地 cwd 替换为远程 cwd
 	pi.on("before_agent_start", async (event) => {
 		const ssh = getSsh();
 		if (ssh) {

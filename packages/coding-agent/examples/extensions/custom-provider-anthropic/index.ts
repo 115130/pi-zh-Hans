@@ -1,24 +1,24 @@
 /**
- * Custom Provider Example
+ * 自定义提供商示例
  *
- * Demonstrates registering a custom provider with:
- * - Custom API identifier ("custom-anthropic-api")
- * - Custom streamSimple implementation
- * - OAuth support for /login
- * - API key support via environment variable
- * - Two model definitions
+ * 演示如何注册一个自定义提供商，支持：
+ * - 自定义 API 标识符 ("custom-anthropic-api")
+ * - 自定义 streamSimple 实现
+ * - 支持 OAuth 登录 ( /login )
+ * - 通过环境变量支持 API 密钥
+ * - 两个模型定义
  *
- * Usage:
- *   # First install dependencies
+ * 用法：
+ *   # 首先安装依赖
  *   cd packages/coding-agent/examples/extensions/custom-provider && npm install
  *
- *   # With OAuth (run /login custom-anthropic first)
+ *   # 使用 OAuth (先运行 /login custom-anthropic)
  *   pi -e ./packages/coding-agent/examples/extensions/custom-provider
  *
- *   # With API key
+ *   # 使用 API 密钥
  *   CUSTOM_ANTHROPIC_API_KEY=sk-ant-... pi -e ./packages/coding-agent/examples/extensions/custom-provider
  *
- * Then use /model to select custom-anthropic/claude-sonnet-4-5
+ * 然后使用 /model 选择 custom-anthropic/claude-sonnet-4-5
  */
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -46,7 +46,7 @@ import {
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 // =============================================================================
-// OAuth Implementation (copied from packages/ai/src/utils/oauth/anthropic.ts)
+// OAuth 实现 (复制自 packages/ai/src/utils/oauth/anthropic.ts)
 // =============================================================================
 
 const decode = (s: string) => atob(s);
@@ -91,7 +91,7 @@ async function loginAnthropic(callbacks: OAuthLoginCallbacks): Promise<OAuthCred
 
 	callbacks.onAuth({ url: `${AUTHORIZE_URL}?${authParams.toString()}` });
 
-	const authCode = await callbacks.onPrompt({ message: "Paste the authorization code:" });
+	const authCode = await callbacks.onPrompt({ message: "粘贴授权码：" });
 	const [code, state] = authCode.split("#");
 
 	const tokenResponse = await fetch(TOKEN_URL, {
@@ -108,7 +108,7 @@ async function loginAnthropic(callbacks: OAuthLoginCallbacks): Promise<OAuthCred
 	});
 
 	if (!tokenResponse.ok) {
-		throw new Error(`Token exchange failed: ${await tokenResponse.text()}`);
+		throw new Error(`错误：令牌交换失败：${await tokenResponse.text()}`);
 	}
 
 	const data = (await tokenResponse.json()) as {
@@ -136,7 +136,7 @@ async function refreshAnthropicToken(credentials: OAuthCredentials): Promise<OAu
 	});
 
 	if (!response.ok) {
-		throw new Error(`Token refresh failed: ${await response.text()}`);
+		throw new Error(`错误：令牌刷新失败：${await response.text()}`);
 	}
 
 	const data = (await response.json()) as {
@@ -153,10 +153,10 @@ async function refreshAnthropicToken(credentials: OAuthCredentials): Promise<OAu
 }
 
 // =============================================================================
-// Streaming Implementation (simplified from packages/ai/src/providers/anthropic.ts)
+// 流式实现 (简化自 packages/ai/src/providers/anthropic.ts)
 // =============================================================================
 
-// Claude Code tool names for OAuth stealth mode
+// OAuth 隐身模式下使用的 Claude Code 工具名称
 const claudeCodeTools = [
 	"Read",
 	"Write",
@@ -208,7 +208,7 @@ function convertContentBlocks(
 	});
 
 	if (!blocks.some((b) => b.type === "text")) {
-		blocks.unshift({ type: "text" as const, text: "(see attached image)" });
+		blocks.unshift({ type: "text" as const, text: "(参见附件图片)" });
 	}
 
 	return blocks;
@@ -290,7 +290,7 @@ function convertMessages(messages: Message[], isOAuth: boolean, _tools?: Tool[])
 		}
 	}
 
-	// Add cache control to last user message
+	// 为最后一条用户消息添加缓存控制
 	if (params.length > 0) {
 		const last = params[params.length - 1];
 		if (last.role === "user" && Array.isArray(last.content)) {
@@ -361,7 +361,7 @@ function streamCustomAnthropic(
 			const apiKey = options?.apiKey ?? "";
 			const isOAuth = isOAuthToken(apiKey);
 
-			// Configure client based on auth type
+			// 根据认证类型配置客户端
 			const betaFeatures = ["fine-grained-tool-streaming-2025-05-14", "interleaved-thinking-2025-05-14"];
 			const clientOptions: any = {
 				baseURL: model.baseUrl,
@@ -389,7 +389,7 @@ function streamCustomAnthropic(
 
 			const client = new Anthropic(clientOptions);
 
-			// Build request params
+			// 构建请求参数
 			const params: MessageCreateParamsStreaming = {
 				model: model.id,
 				messages: convertMessages(context.messages, isOAuth, context.tools),
@@ -397,7 +397,7 @@ function streamCustomAnthropic(
 				stream: true,
 			};
 
-			// System prompt with Claude Code identity for OAuth
+			// 为 OAuth 添加带有 Claude Code 身份的系统提示
 			if (isOAuth) {
 				params.system = [
 					{
@@ -427,7 +427,7 @@ function streamCustomAnthropic(
 				params.tools = convertTools(context.tools, isOAuth);
 			}
 
-			// Handle thinking/reasoning
+			// 处理思考/推理
 			if (options?.reasoning && model.reasoning) {
 				const defaultBudgets: Record<string, number> = {
 					minimal: 1024,
@@ -544,7 +544,7 @@ function streamCustomAnthropic(
 			}
 
 			if (options?.signal?.aborted) {
-				throw new Error("Request was aborted");
+				throw new Error("请求已中止");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason as "stop" | "length" | "toolUse", message: output });
@@ -562,7 +562,7 @@ function streamCustomAnthropic(
 }
 
 // =============================================================================
-// Extension Entry Point
+// 扩展入口点
 // =============================================================================
 
 export default function (pi: ExtensionAPI) {
@@ -574,7 +574,7 @@ export default function (pi: ExtensionAPI) {
 		models: [
 			{
 				id: "claude-opus-4-5",
-				name: "Claude Opus 4.5 (Custom)",
+				name: "Claude Opus 4.5 (自定义)",
 				reasoning: true,
 				input: ["text", "image"],
 				cost: { input: 5, output: 25, cacheRead: 0.5, cacheWrite: 6.25 },
@@ -583,7 +583,7 @@ export default function (pi: ExtensionAPI) {
 			},
 			{
 				id: "claude-sonnet-4-5",
-				name: "Claude Sonnet 4.5 (Custom)",
+				name: "Claude Sonnet 4.5 (自定义)",
 				reasoning: true,
 				input: ["text", "image"],
 				cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 },
@@ -593,7 +593,7 @@ export default function (pi: ExtensionAPI) {
 		],
 
 		oauth: {
-			name: "Custom Anthropic (Claude Pro/Max)",
+			name: "自定义 Anthropic (Claude Pro/Max)",
 			login: loginAnthropic,
 			refreshToken: refreshAnthropicToken,
 			getApiKey: (cred) => cred.access,

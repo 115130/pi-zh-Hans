@@ -1,7 +1,7 @@
 /**
- * Prompt Templates
+ * 提示模板
  *
- * File-based templates that inject content when invoked with /templatename.
+ * 基于文件的模板，当使用 /templatename 调用时注入内容。
  */
 
 import {
@@ -13,17 +13,17 @@ import {
 	SessionManager,
 } from "@earendil-works/pi-coding-agent";
 
-// Define custom templates
+// 定义自定义模板
 const deployTemplate: PromptTemplate = {
 	name: "deploy",
-	description: "Deploy the application",
+	description: "部署应用程序",
 	filePath: "/virtual/prompts/deploy.md",
 	sourceInfo: createSyntheticSourceInfo("/virtual/prompts/deploy.md", { source: "sdk" }),
-	content: `# Deploy Instructions
+	content: `# 部署说明
 
-1. Build: npm run build
-2. Test: npm test
-3. Deploy: npm run deploy`,
+1. 构建: npm run build
+2. 测试: npm test
+3. 部署: npm run deploy`,
 };
 
 const loader = new DefaultResourceLoader({
@@ -36,9 +36,9 @@ const loader = new DefaultResourceLoader({
 });
 await loader.reload();
 
-// Discover templates from cwd/.pi/prompts/ and ~/.pi/agent/prompts/
+// 从 cwd/.pi/prompts/ 和 ~/.pi/agent/prompts/ 发现模板
 const discovered = loader.getPrompts().prompts;
-console.log("Discovered prompt templates:");
+console.log("发现的提示模板:");
 for (const template of discovered) {
 	console.log(`  /${template.name}: ${template.description}`);
 }
@@ -47,5 +47,5 @@ const { session } = await createAgentSession({
 	resourceLoader: loader,
 	sessionManager: SessionManager.inMemory(),
 });
-console.log(`Session created with ${discovered.length + 1} prompt templates`);
+console.log(`会话已创建，共有 ${discovered.length + 1} 个提示模板`);
 session.dispose();

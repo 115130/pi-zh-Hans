@@ -53,7 +53,7 @@ export default function (pi: ExtensionAPI) {
 					render(_width: number): string[] {
 						const mascotLines = getPiMascot(theme);
 						// Add a subtitle with hint
-						const subtitle = `${theme.fg("muted", "   shitty coding agent")}${theme.fg("dim", ` v${VERSION}`)}`;
+						const subtitle = `${theme.fg("muted", "   糟糕的编码助手")}${theme.fg("dim", ` v${VERSION}`)}`;
 						return [...mascotLines, subtitle];
 					},
 					invalidate() {},
@@ -64,10 +64,10 @@ export default function (pi: ExtensionAPI) {
 
 	// Command to restore built-in header
 	pi.registerCommand("builtin-header", {
-		description: "Restore built-in header with keybinding hints",
+		description: "恢复内置标题栏（含快捷键提示）",
 		handler: async (_args, ctx) => {
 			ctx.ui.setHeader(undefined);
-			ctx.ui.notify("Built-in header restored", "info");
+			ctx.ui.notify("已恢复内置标题栏", "info");
 		},
 	});
 }

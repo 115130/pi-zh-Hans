@@ -11,16 +11,16 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {
 	pi.registerCommand("session-name", {
-		description: "Set or show session name (usage: /session-name [new name])",
+		description: "设置或显示会话名称（用法：/session-name [新名称]）",
 		handler: async (args, ctx) => {
 			const name = args.trim();
 
 			if (name) {
 				pi.setSessionName(name);
-				ctx.ui.notify(`Session named: ${name}`, "info");
+				ctx.ui.notify(`会话已命名: ${name}`, "info");
 			} else {
 				const current = pi.getSessionName();
-				ctx.ui.notify(current ? `Session: ${current}` : "No session name set", "info");
+				ctx.ui.notify(current ? `当前会话: ${current}` : "尚未设置会话名称", "info");
 			}
 		},
 	});

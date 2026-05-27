@@ -33,24 +33,24 @@ async function checkDirtyRepo(
 	// Count changed files
 	const changedFiles = stdout.trim().split("\n").filter(Boolean).length;
 
-	const choice = await ctx.ui.select(`You have ${changedFiles} uncommitted file(s). ${action} anyway?`, [
-		"Yes, proceed anyway",
-		"No, let me commit first",
+	const choice = await ctx.ui.select(`您有 ${changedFiles} 个未提交的文件。仍要${action}吗？`, [
+		"是，继续执行",
+		"不，让我先提交",
 	]);
 
-	if (choice !== "Yes, proceed anyway") {
-		ctx.ui.notify("Commit your changes first", "warning");
+	if (choice !== "是，继续执行") {
+		ctx.ui.notify("请先提交您的更改", "warning");
 		return { cancel: true };
 	}
 }
 
 export default function (pi: ExtensionAPI) {
 	pi.on("session_before_switch", async (event, ctx) => {
-		const action = event.reason === "new" ? "new session" : "switch session";
+		const action = event.reason === "new" ? "新会话" : "切换会话";
 		return checkDirtyRepo(pi, ctx, action);
 	});
 
 	pi.on("session_before_fork", async (_event, ctx) => {
-		return checkDirtyRepo(pi, ctx, "fork");
+		return checkDirtyRepo(pi, ctx, "分支");
 	});
 }

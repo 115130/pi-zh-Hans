@@ -1,5 +1,5 @@
 /**
- * Process @file CLI arguments into text content and image attachments
+ * 处理 @file 参数为文本内容和图片附件
  */
 
 import { access, readFile, stat } from "node:fs/promises";
@@ -16,11 +16,11 @@ export interface ProcessedFiles {
 }
 
 export interface ProcessFileOptions {
-	/** Whether to auto-resize images to 2000x2000 max. Default: true */
+	/** 是否自动将图片最大尺寸调整为 2000x2000。默认值: true */
 	autoResizeImages?: boolean;
 }
 
-/** Process @file arguments into text content and image attachments */
+/** 处理 @file 参数为文本内容和图片附件 */
 export async function processFileArguments(fileArgs: string[], options?: ProcessFileOptions): Promise<ProcessedFiles> {
 	const autoResizeImages = options?.autoResizeImages ?? true;
 	let text = "";

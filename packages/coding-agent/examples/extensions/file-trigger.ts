@@ -22,7 +22,7 @@ export default function (pi: ExtensionAPI) {
 					pi.sendMessage(
 						{
 							customType: "file-trigger",
-							content: `External trigger: ${content}`,
+							content: `外部触发: ${content}`,
 							display: true,
 						},
 						{ triggerTurn: true }, // triggerTurn - get LLM to respond
@@ -35,7 +35,7 @@ export default function (pi: ExtensionAPI) {
 		});
 
 		if (ctx.hasUI) {
-			ctx.ui.notify(`Watching ${triggerFile}`, "info");
+			ctx.ui.notify(`正在监听 ${triggerFile}`, "info");
 		}
 	});
 }

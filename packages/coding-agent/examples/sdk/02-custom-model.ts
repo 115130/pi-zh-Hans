@@ -14,19 +14,19 @@ const modelRegistry = ModelRegistry.create(authStorage);
 // Option 1: Find a specific built-in model by provider/id
 const opus = getModel("anthropic", "claude-opus-4-5");
 if (opus) {
-	console.log(`Found model: ${opus.provider}/${opus.id}`);
+	console.log(`发现模型：${opus.provider}/${opus.id}`);
 }
 
 // Option 2: Find model via registry (includes custom models from models.json)
 const customModel = modelRegistry.find("my-provider", "my-model");
 if (customModel) {
-	console.log(`Found custom model: ${customModel.provider}/${customModel.id}`);
+	console.log(`发现自定义模型：${customModel.provider}/${customModel.id}`);
 }
 
 // Option 3: Pick from available models (have valid API keys)
 const available = await modelRegistry.getAvailable();
 console.log(
-	"Available models:",
+	"可用模型：",
 	available.map((m) => `${m.provider}/${m.id}`),
 );
 
@@ -45,7 +45,7 @@ if (available.length > 0) {
 			}
 		});
 
-		await session.prompt("Say hello in one sentence.");
+		await session.prompt("用一句话说你好。");
 		console.log();
 	} finally {
 		session.dispose();

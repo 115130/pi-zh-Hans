@@ -156,7 +156,7 @@ function formatCompactReadCall(
 	}
 
 	return (
-		theme.fg("toolTitle", theme.bold(`读取 ${classification.kind}`)) +
+		theme.fg("toolTitle", theme.bold(`读取 ${classification.kind === "docs" ? "文档" : "资源"}`)) +
 		" " +
 		theme.fg("accent", classification.label) +
 		formatReadLineRange(args, theme) +

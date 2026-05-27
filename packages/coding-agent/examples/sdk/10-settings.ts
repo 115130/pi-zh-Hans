@@ -1,18 +1,18 @@
 /**
- * Settings Configuration
+ * 设置配置
  *
- * Override settings using SettingsManager.
+ * 使用 SettingsManager 覆盖设置。
  */
 
 import { createAgentSession, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 
 const cwd = process.cwd();
 
-// Load current settings (merged global + project)
+// 加载当前设置（合并全局和项目）
 const settingsManagerFromDisk = SettingsManager.create(cwd);
-console.log("Current settings:", JSON.stringify(settingsManagerFromDisk.getGlobalSettings(), null, 2));
+console.log("当前设置：", JSON.stringify(settingsManagerFromDisk.getGlobalSettings(), null, 2));
 
-// Override specific settings
+// 覆盖特定设置
 const settingsManager = SettingsManager.create(cwd);
 settingsManager.applyOverrides({
 	compaction: { enabled: false },
@@ -23,23 +23,23 @@ const { session: customSettingsSession } = await createAgentSession({
 	settingsManager,
 	sessionManager: SessionManager.inMemory(),
 });
-console.log("Session created with custom settings");
+console.log("已使用自定义设置创建会话");
 customSettingsSession.dispose();
 
-// Setters update memory immediately and queue persistence writes.
-// Call flush() when you need a durability boundary.
+// 设置器立即更新内存并排队持久化写入。
+// 需要在持久性边界时调用 flush()。
 settingsManager.setDefaultThinkingLevel("low");
 await settingsManager.flush();
 
-// Surface settings I/O errors at the app layer.
+// 在应用层暴露设置 I/O 错误。
 const settingsErrors = settingsManager.drainErrors();
 if (settingsErrors.length > 0) {
 	for (const { scope, error } of settingsErrors) {
-		console.warn(`Warning (${scope} settings): ${error.message}`);
+		console.warn(`警告 (${scope} 设置): ${error.message}`);
 	}
 }
 
-// For testing without file I/O:
+// 无需文件 I/O 的测试：
 const inMemorySettings = SettingsManager.inMemory({
 	compaction: { enabled: false },
 	retry: { enabled: false },
@@ -49,5 +49,5 @@ const { session: testSession } = await createAgentSession({
 	settingsManager: inMemorySettings,
 	sessionManager: SessionManager.inMemory(),
 });
-console.log("Test session created with in-memory settings");
+console.log("已使用内存设置创建测试会话");
 testSession.dispose();

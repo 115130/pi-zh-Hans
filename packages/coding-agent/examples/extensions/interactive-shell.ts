@@ -148,7 +148,7 @@ export default function (pi: ExtensionAPI) {
 		// No UI available (print mode, RPC, etc.)
 		if (!ctx.hasUI) {
 			return {
-				result: { output: "(interactive commands require TUI)", exitCode: 1, cancelled: false, truncated: false },
+				result: { output: "（交互命令需要终端用户界面）", exitCode: 1, cancelled: false, truncated: false },
 			};
 		}
 
@@ -179,10 +179,7 @@ export default function (pi: ExtensionAPI) {
 		});
 
 		// Return result to prevent default bash handling
-		const output =
-			exitCode === 0
-				? "(interactive command completed successfully)"
-				: `(interactive command exited with code ${exitCode})`;
+		const output = exitCode === 0 ? "（交互命令已成功完成）" : `（交互命令以代码 ${exitCode} 退出）`;
 
 		return {
 			result: {

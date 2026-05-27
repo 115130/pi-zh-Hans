@@ -42,25 +42,25 @@ interface QuestionnaireResult {
 
 // Schema
 const QuestionOptionSchema = Type.Object({
-	value: Type.String({ description: "The value returned when selected" }),
-	label: Type.String({ description: "Display label for the option" }),
-	description: Type.Optional(Type.String({ description: "Optional description shown below label" })),
+	value: Type.String({ description: "选中时返回的值" }),
+	label: Type.String({ description: "选项的显示标签" }),
+	description: Type.Optional(Type.String({ description: "可选描述，显示在标签下方" })),
 });
 
 const QuestionSchema = Type.Object({
-	id: Type.String({ description: "Unique identifier for this question" }),
+	id: Type.String({ description: "该问题的唯一标识符" }),
 	label: Type.Optional(
 		Type.String({
-			description: "Short contextual label for tab bar, e.g. 'Scope', 'Priority' (defaults to Q1, Q2)",
+			description: "标签栏的简短上下文标签，例如「范围」「优先级」（默认为 Q1、Q2）",
 		}),
 	),
-	prompt: Type.String({ description: "The full question text to display" }),
-	options: Type.Array(QuestionOptionSchema, { description: "Available options to choose from" }),
-	allowOther: Type.Optional(Type.Boolean({ description: "Allow 'Type something' option (default: true)" })),
+	prompt: Type.String({ description: "要显示的问题完整文本" }),
+	options: Type.Array(QuestionOptionSchema, { description: "可供选择的选项" }),
+	allowOther: Type.Optional(Type.Boolean({ description: "是否允许「输入其他」选项（默认：true）" })),
 });
 
 const QuestionnaireParams = Type.Object({
-	questions: Type.Array(QuestionSchema, { description: "Questions to ask the user" }),
+	questions: Type.Array(QuestionSchema, { description: "要向用户提出的问题" }),
 });
 
 function errorResult(
@@ -76,17 +76,17 @@ function errorResult(
 export default function questionnaire(pi: ExtensionAPI) {
 	pi.registerTool({
 		name: "questionnaire",
-		label: "Questionnaire",
+		label: "问卷",
 		description:
-			"Ask the user one or more questions. Use for clarifying requirements, getting preferences, or confirming decisions. For single questions, shows a simple option list. For multiple questions, shows a tab-based interface.",
+			"向用户提出一个或多个问题。用于澄清需求、获取偏好或确认决策。单个问题时显示简单的选项列表；多个问题时显示基于标签的界面。",
 		parameters: QuestionnaireParams,
 
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			if (!ctx.hasUI) {
-				return errorResult("Error: UI not available (running in non-interactive mode)");
+				return errorResult("错误：UI 不可用（在非交互模式下运行）");
 			}
 			if (params.questions.length === 0) {
-				return errorResult("Error: No questions provided");
+				return errorResult("错误：未提供问题");
 			}
 
 			// Normalize questions with defaults
@@ -140,7 +140,7 @@ export default function questionnaire(pi: ExtensionAPI) {
 					if (!q) return [];
 					const opts: RenderOption[] = [...q.options];
 					if (q.allowOther) {
-						opts.push({ value: "__other__", label: "Type something.", isOther: true });
+						opts.push({ value: "__other__", label: "输入其他...", isOther: true });
 					}
 					return opts;
 				}
@@ -170,7 +170,7 @@ export default function questionnaire(pi: ExtensionAPI) {
 				// Editor submit callback
 				editor.onSubmit = (value) => {
 					if (!inputQuestionId) return;
-					const trimmed = value.trim() || "(no response)";
+					const trimmed = value.trim() || "(无响应)";
 					saveAnswer(inputQuestionId, trimmed, trimmed, true);
 					inputMode = false;
 					inputQuestionId = null;
@@ -282,7 +282,7 @@ export default function questionnaire(pi: ExtensionAPI) {
 						}
 						const canSubmit = allAnswered();
 						const isSubmitTab = currentTab === questions.length;
-						const submitText = " ✓ Submit ";
+						const submitText = " ✓ 提交 ";
 						const submitStyled = isSubmitTab
 							? theme.bg("selectedBg", theme.fg("text", submitText))
 							: theme.fg(canSubmit ? "success" : "dim", submitText);
@@ -318,31 +318,31 @@ export default function questionnaire(pi: ExtensionAPI) {
 						// Show options for reference
 						renderOptions();
 						lines.push("");
-						add(theme.fg("muted", " Your answer:"));
+						add(theme.fg("muted", " 你的回答："));
 						for (const line of editor.render(width - 2)) {
 							add(` ${line}`);
 						}
 						lines.push("");
-						add(theme.fg("dim", " Enter to submit • Esc to cancel"));
+						add(theme.fg("dim", " 按 Enter 提交 • 按 Esc 取消"));
 					} else if (currentTab === questions.length) {
-						add(theme.fg("accent", theme.bold(" Ready to submit")));
+						add(theme.fg("accent", theme.bold(" 准备提交")));
 						lines.push("");
 						for (const question of questions) {
 							const answer = answers.get(question.id);
 							if (answer) {
-								const prefix = answer.wasCustom ? "(wrote) " : "";
+								const prefix = answer.wasCustom ? "(输入) " : "";
 								add(`${theme.fg("muted", ` ${question.label}: `)}${theme.fg("text", prefix + answer.label)}`);
 							}
 						}
 						lines.push("");
 						if (allAnswered()) {
-							add(theme.fg("success", " Press Enter to submit"));
+							add(theme.fg("success", " 按 Enter 提交"));
 						} else {
 							const missing = questions
 								.filter((q) => !answers.has(q.id))
 								.map((q) => q.label)
 								.join(", ");
-							add(theme.fg("warning", ` Unanswered: ${missing}`));
+							add(theme.fg("warning", ` 未回答：${missing}`));
 						}
 					} else if (q) {
 						add(theme.fg("text", ` ${q.prompt}`));
@@ -353,8 +353,8 @@ export default function questionnaire(pi: ExtensionAPI) {
 					lines.push("");
 					if (!inputMode) {
 						const help = isMulti
-							? " Tab/←→ navigate • ↑↓ select • Enter confirm • Esc cancel"
-							: " ↑↓ navigate • Enter select • Esc cancel";
+							? " Tab/←→ 导航 • ↑↓ 选择 • Enter 确认 • Esc 取消"
+							: " ↑↓ 导航 • Enter 选择 • Esc 取消";
 						add(theme.fg("dim", help));
 					}
 					add(theme.fg("accent", "─".repeat(width)));
@@ -374,7 +374,7 @@ export default function questionnaire(pi: ExtensionAPI) {
 
 			if (result.cancelled) {
 				return {
-					content: [{ type: "text", text: "User cancelled the questionnaire" }],
+					content: [{ type: "text", text: "用户取消了问卷" }],
 					details: result,
 				};
 			}
@@ -382,9 +382,9 @@ export default function questionnaire(pi: ExtensionAPI) {
 			const answerLines = result.answers.map((a) => {
 				const qLabel = questions.find((q) => q.id === a.id)?.label || a.id;
 				if (a.wasCustom) {
-					return `${qLabel}: user wrote: ${a.label}`;
+					return `${qLabel}：用户输入了：${a.label}`;
 				}
-				return `${qLabel}: user selected: ${a.index}. ${a.label}`;
+				return `${qLabel}：用户选择了：${a.index}. ${a.label}`;
 			});
 
 			return {
@@ -397,8 +397,8 @@ export default function questionnaire(pi: ExtensionAPI) {
 			const qs = (args.questions as Question[]) || [];
 			const count = qs.length;
 			const labels = qs.map((q) => q.label || q.id).join(", ");
-			let text = theme.fg("toolTitle", theme.bold("questionnaire "));
-			text += theme.fg("muted", `${count} question${count !== 1 ? "s" : ""}`);
+			let text = theme.fg("toolTitle", theme.bold("问卷 "));
+			text += theme.fg("muted", `${count} 个问题`);
 			if (labels) {
 				text += theme.fg("dim", ` (${truncateToWidth(labels, 40)})`);
 			}
@@ -412,11 +412,11 @@ export default function questionnaire(pi: ExtensionAPI) {
 				return new Text(text?.type === "text" ? text.text : "", 0, 0);
 			}
 			if (details.cancelled) {
-				return new Text(theme.fg("warning", "Cancelled"), 0, 0);
+				return new Text(theme.fg("warning", "已取消"), 0, 0);
 			}
 			const lines = details.answers.map((a) => {
 				if (a.wasCustom) {
-					return `${theme.fg("success", "✓ ")}${theme.fg("accent", a.id)}: ${theme.fg("muted", "(wrote) ")}${a.label}`;
+					return `${theme.fg("success", "✓ ")}${theme.fg("accent", a.id)}: ${theme.fg("muted", "(输入) ")}${a.label}`;
 				}
 				const display = a.index ? `${a.index}. ${a.label}` : a.label;
 				return `${theme.fg("success", "✓ ")}${theme.fg("accent", a.id)}: ${display}`;

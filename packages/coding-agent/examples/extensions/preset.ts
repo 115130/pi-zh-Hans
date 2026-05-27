@@ -112,7 +112,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 
 	// Register --preset CLI flag
 	pi.registerFlag("preset", {
-		description: "Preset configuration to use",
+		description: "要使用的预设配置",
 		type: "string",
 	});
 
@@ -135,10 +135,10 @@ export default function presetExtension(pi: ExtensionAPI) {
 			if (model) {
 				const success = await pi.setModel(model);
 				if (!success) {
-					ctx.ui.notify(`Preset "${name}": No API key for ${preset.provider}/${preset.model}`, "warning");
+					ctx.ui.notify(`预设 "${name}"：缺少 ${preset.provider}/${preset.model} 的 API 密钥`, "warning");
 				}
 			} else {
-				ctx.ui.notify(`Preset "${name}": Model ${preset.provider}/${preset.model} not found`, "warning");
+				ctx.ui.notify(`预设 "${name}"：模型 ${preset.provider}/${preset.model} 未找到`, "warning");
 			}
 		}
 
@@ -154,7 +154,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 			const invalidTools = preset.tools.filter((t) => !allToolNames.includes(t));
 
 			if (invalidTools.length > 0) {
-				ctx.ui.notify(`Preset "${name}": Unknown tools: ${invalidTools.join(", ")}`, "warning");
+				ctx.ui.notify(`预设 "${name}"：未知工具：${invalidTools.join(", ")}`, "warning");
 			}
 
 			if (validTools.length > 0) {
@@ -200,7 +200,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 		const presetNames = Object.keys(presets);
 
 		if (presetNames.length === 0) {
-			ctx.ui.notify("No presets defined. Add presets to ~/.pi/agent/presets.json or .pi/presets.json", "warning");
+			ctx.ui.notify("未定义预设。请在 ~/.pi/agent/presets.json 或 .pi/presets.json 中添加预设", "warning");
 			return;
 		}
 
@@ -210,7 +210,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 			const isActive = name === activePresetName;
 			return {
 				value: name,
-				label: isActive ? `${name} (active)` : name,
+				label: isActive ? `${name} (当前)` : name,
 				description: buildPresetDescription(preset),
 			};
 		});
@@ -218,8 +218,8 @@ export default function presetExtension(pi: ExtensionAPI) {
 		// Add "None" option to clear preset
 		items.push({
 			value: "(none)",
-			label: "(none)",
-			description: "Clear active preset, restore defaults",
+			label: "(无)",
+			description: "清除当前预设，恢复默认设置",
 		});
 
 		const result = await ctx.ui.custom<string | null>((tui, theme, _kb, done) => {
@@ -227,7 +227,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 			container.addChild(new DynamicBorder((str) => theme.fg("accent", str)));
 
 			// Header
-			container.addChild(new Text(theme.fg("accent", theme.bold("Select Preset"))));
+			container.addChild(new Text(theme.fg("accent", theme.bold("选择预设"))));
 
 			// SelectList with themed styling
 			const selectList = new SelectList(items, Math.min(items.length, 10), {
@@ -244,7 +244,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 			container.addChild(selectList);
 
 			// Footer hint
-			container.addChild(new Text(theme.fg("dim", "↑↓ navigate • enter select • esc cancel")));
+			container.addChild(new Text(theme.fg("dim", "↑↓ 导航 • 回车选择 • Esc 取消")));
 
 			container.addChild(new DynamicBorder((str) => theme.fg("accent", str)));
 
@@ -277,7 +277,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 			} else {
 				pi.setActiveTools(["read", "bash", "edit", "write"]);
 			}
-			ctx.ui.notify("Preset cleared, defaults restored", "info");
+			ctx.ui.notify("预设已清除，默认设置已恢复", "info");
 			updateStatus(ctx);
 			return;
 		}
@@ -285,7 +285,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 		const preset = presets[result];
 		if (preset) {
 			await applyPreset(result, preset, ctx);
-			ctx.ui.notify(`Preset "${result}" activated`, "info");
+			ctx.ui.notify(`预设 "${result}" 已激活`, "info");
 			updateStatus(ctx);
 		}
 	}
@@ -308,7 +308,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 	async function cyclePreset(ctx: ExtensionContext): Promise<void> {
 		const presetNames = getPresetOrder();
 		if (presetNames.length === 0) {
-			ctx.ui.notify("No presets defined. Add presets to ~/.pi/agent/presets.json or .pi/presets.json", "warning");
+			ctx.ui.notify("未定义预设。请在 ~/.pi/agent/presets.json 或 .pi/presets.json 中添加预设", "warning");
 			return;
 		}
 
@@ -330,7 +330,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 			} else {
 				pi.setActiveTools(["read", "bash", "edit", "write"]);
 			}
-			ctx.ui.notify("Preset cleared, defaults restored", "info");
+			ctx.ui.notify("预设已清除，默认设置已恢复", "info");
 			updateStatus(ctx);
 			return;
 		}
@@ -339,12 +339,12 @@ export default function presetExtension(pi: ExtensionAPI) {
 		if (!preset) return;
 
 		await applyPreset(nextName, preset, ctx);
-		ctx.ui.notify(`Preset "${nextName}" activated`, "info");
+		ctx.ui.notify(`预设 "${nextName}" 已激活`, "info");
 		updateStatus(ctx);
 	}
 
 	pi.registerShortcut(Key.ctrlShift("u"), {
-		description: "Cycle presets",
+		description: "循环切换预设",
 		handler: async (ctx) => {
 			await cyclePreset(ctx);
 		},
@@ -352,7 +352,7 @@ export default function presetExtension(pi: ExtensionAPI) {
 
 	// Register /preset command
 	pi.registerCommand("preset", {
-		description: "Switch preset configuration",
+		description: "切换预设配置",
 		handler: async (args, ctx) => {
 			// If preset name provided, apply directly
 			if (args?.trim()) {
@@ -361,12 +361,12 @@ export default function presetExtension(pi: ExtensionAPI) {
 
 				if (!preset) {
 					const available = Object.keys(presets).join(", ") || "(none defined)";
-					ctx.ui.notify(`Unknown preset "${name}". Available: ${available}`, "error");
+					ctx.ui.notify(`未知预设 "${name}"。可用的有：${available}`, "error");
 					return;
 				}
 
 				await applyPreset(name, preset, ctx);
-				ctx.ui.notify(`Preset "${name}" activated`, "info");
+				ctx.ui.notify(`预设 "${name}" 已激活`, "info");
 				updateStatus(ctx);
 				return;
 			}
@@ -396,10 +396,10 @@ export default function presetExtension(pi: ExtensionAPI) {
 			const preset = presets[presetFlag];
 			if (preset) {
 				await applyPreset(presetFlag, preset, ctx);
-				ctx.ui.notify(`Preset "${presetFlag}" activated`, "info");
+				ctx.ui.notify(`预设 "${presetFlag}" 已激活`, "info");
 			} else {
 				const available = Object.keys(presets).join(", ") || "(none defined)";
-				ctx.ui.notify(`Unknown preset "${presetFlag}". Available: ${available}`, "warning");
+				ctx.ui.notify(`未知预设 "${presetFlag}"。可用的有：${available}`, "warning");
 			}
 		}
 

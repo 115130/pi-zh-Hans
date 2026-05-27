@@ -70,9 +70,9 @@ export default function (pi: ExtensionAPI) {
 	// =========================================================================
 	pi.registerTool({
 		name: "read",
-		label: "read",
+		label: "读取",
 		description:
-			"Read the contents of a file. Supports text files and images (jpg, png, gif, webp). Images are sent as attachments. For text files, output is truncated to 2000 lines or 50KB (whichever is hit first). Use offset/limit for large files.",
+			"读取文件的内容。支持文本文件和图片（jpg, png, gif, webp）。图片作为附件发送。对于文本文件，输出被截断为2000行或50KB（以先达到者为准）。对于大文件，请使用 offset/limit 参数。",
 		parameters: getBuiltInTools(process.cwd()).read.parameters,
 
 		async execute(toolCallId, params, signal, onUpdate, ctx) {
@@ -91,7 +91,7 @@ export default function (pi: ExtensionAPI) {
 				pathDisplay += theme.fg("warning", `:${startLine}${endLine ? `-${endLine}` : ""}`);
 			}
 
-			return new Text(`${theme.fg("toolTitle", theme.bold("read"))} ${pathDisplay}`, 0, 0);
+			return new Text(`${theme.fg("toolTitle", theme.bold("读取"))} ${pathDisplay}`, 0, 0);
 		},
 
 		renderResult(result, { expanded }, theme, _context) {
@@ -117,9 +117,9 @@ export default function (pi: ExtensionAPI) {
 	// =========================================================================
 	pi.registerTool({
 		name: "bash",
-		label: "bash",
+		label: "Bash",
 		description:
-			"Execute a bash command in the current working directory. Returns stdout and stderr. Output is truncated to last 2000 lines or 50KB (whichever is hit first).",
+			"在当前工作目录中执行 bash 命令。返回 stdout 和 stderr。输出被截断为最后2000行或50KB（以先达到者为准）。",
 		parameters: getBuiltInTools(process.cwd()).bash.parameters,
 
 		async execute(toolCallId, params, signal, onUpdate, ctx) {
@@ -130,7 +130,7 @@ export default function (pi: ExtensionAPI) {
 		renderCall(args, theme, _context) {
 			const command = args.command || "...";
 			const timeout = args.timeout as number | undefined;
-			const timeoutSuffix = timeout ? theme.fg("muted", ` (timeout ${timeout}s)`) : "";
+			const timeoutSuffix = timeout ? theme.fg("muted", ` (超时 ${timeout}秒)`) : "";
 
 			return new Text(theme.fg("toolTitle", theme.bold(`$ ${command}`)) + timeoutSuffix, 0, 0);
 		},
@@ -166,9 +166,8 @@ export default function (pi: ExtensionAPI) {
 	// =========================================================================
 	pi.registerTool({
 		name: "write",
-		label: "write",
-		description:
-			"Write content to a file. Creates the file if it doesn't exist, overwrites if it does. Automatically creates parent directories.",
+		label: "写入",
+		description: "将内容写入文件。如果文件不存在则创建，存在则覆盖。自动创建父目录。",
 		parameters: getBuiltInTools(process.cwd()).write.parameters,
 
 		async execute(toolCallId, params, signal, onUpdate, ctx) {
@@ -180,9 +179,9 @@ export default function (pi: ExtensionAPI) {
 			const path = shortenPath(args.path || "");
 			const pathDisplay = path ? theme.fg("accent", path) : theme.fg("toolOutput", "...");
 			const lineCount = args.content ? args.content.split("\n").length : 0;
-			const lineInfo = lineCount > 0 ? theme.fg("muted", ` (${lineCount} lines)`) : "";
+			const lineInfo = lineCount > 0 ? theme.fg("muted", ` (${lineCount} 行)`) : "";
 
-			return new Text(`${theme.fg("toolTitle", theme.bold("write"))} ${pathDisplay}${lineInfo}`, 0, 0);
+			return new Text(`${theme.fg("toolTitle", theme.bold("写入"))} ${pathDisplay}${lineInfo}`, 0, 0);
 		},
 
 		renderResult(result, { expanded }, theme, _context) {
@@ -208,9 +207,8 @@ export default function (pi: ExtensionAPI) {
 	// =========================================================================
 	pi.registerTool({
 		name: "edit",
-		label: "edit",
-		description:
-			"Edit a file by replacing exact text. The oldText must match exactly (including whitespace). Use this for precise, surgical edits.",
+		label: "编辑",
+		description: "通过替换精确文本来编辑文件。oldText 必须完全匹配（包括空白符）。适用于精确的、手术式的编辑。",
 		parameters: getBuiltInTools(process.cwd()).edit.parameters,
 
 		async execute(toolCallId, params, signal, onUpdate, ctx) {
@@ -222,7 +220,7 @@ export default function (pi: ExtensionAPI) {
 			const path = shortenPath(args.path || "");
 			const pathDisplay = path ? theme.fg("accent", path) : theme.fg("toolOutput", "...");
 
-			return new Text(`${theme.fg("toolTitle", theme.bold("edit"))} ${pathDisplay}`, 0, 0);
+			return new Text(`${theme.fg("toolTitle", theme.bold("编辑"))} ${pathDisplay}`, 0, 0);
 		},
 
 		renderResult(result, { expanded }, theme, _context) {
@@ -253,9 +251,8 @@ export default function (pi: ExtensionAPI) {
 	// =========================================================================
 	pi.registerTool({
 		name: "find",
-		label: "find",
-		description:
-			"Find files by name pattern (glob). Searches recursively from the specified path. Output limited to 200 results.",
+		label: "查找",
+		description: "通过名称模式（glob）查找文件。从指定路径递归搜索。输出限制为200个结果。",
 		parameters: getBuiltInTools(process.cwd()).find.parameters,
 
 		async execute(toolCallId, params, signal, onUpdate, ctx) {
@@ -268,10 +265,10 @@ export default function (pi: ExtensionAPI) {
 			const path = shortenPath(args.path || ".");
 			const limit = args.limit;
 
-			let text = `${theme.fg("toolTitle", theme.bold("find"))} ${theme.fg("accent", pattern)}`;
-			text += theme.fg("toolOutput", ` in ${path}`);
+			let text = `${theme.fg("toolTitle", theme.bold("查找"))} ${theme.fg("accent", pattern)}`;
+			text += theme.fg("toolOutput", ` 在 ${path} 中`);
 			if (limit !== undefined) {
-				text += theme.fg("toolOutput", ` (limit ${limit})`);
+				text += theme.fg("toolOutput", ` (限制 ${limit})`);
 			}
 
 			return new Text(text, 0, 0);
@@ -284,7 +281,7 @@ export default function (pi: ExtensionAPI) {
 				if (textContent?.type === "text") {
 					const count = textContent.text.trim().split("\n").filter(Boolean).length;
 					if (count > 0) {
-						return new Text(theme.fg("muted", ` → ${count} files`), 0, 0);
+						return new Text(theme.fg("muted", ` → ${count} 个文件`), 0, 0);
 					}
 				}
 				return new Text("", 0, 0);
@@ -311,9 +308,8 @@ export default function (pi: ExtensionAPI) {
 	// =========================================================================
 	pi.registerTool({
 		name: "grep",
-		label: "grep",
-		description:
-			"Search file contents by regex pattern. Uses ripgrep for fast searching. Output limited to 200 matches.",
+		label: "搜索",
+		description: "通过正则表达式模式搜索文件内容。使用 ripgrep 快速搜索。输出限制为200个匹配。",
 		parameters: getBuiltInTools(process.cwd()).grep.parameters,
 
 		async execute(toolCallId, params, signal, onUpdate, ctx) {
@@ -327,13 +323,13 @@ export default function (pi: ExtensionAPI) {
 			const glob = args.glob;
 			const limit = args.limit;
 
-			let text = `${theme.fg("toolTitle", theme.bold("grep"))} ${theme.fg("accent", `/${pattern}/`)}`;
-			text += theme.fg("toolOutput", ` in ${path}`);
+			let text = `${theme.fg("toolTitle", theme.bold("搜索"))} ${theme.fg("accent", `/${pattern}/`)}`;
+			text += theme.fg("toolOutput", ` 在 ${path} 中`);
 			if (glob) {
 				text += theme.fg("toolOutput", ` (${glob})`);
 			}
 			if (limit !== undefined) {
-				text += theme.fg("toolOutput", ` limit ${limit}`);
+				text += theme.fg("toolOutput", ` 限制 ${limit}`);
 			}
 
 			return new Text(text, 0, 0);
@@ -346,7 +342,7 @@ export default function (pi: ExtensionAPI) {
 				if (textContent?.type === "text") {
 					const count = textContent.text.trim().split("\n").filter(Boolean).length;
 					if (count > 0) {
-						return new Text(theme.fg("muted", ` → ${count} matches`), 0, 0);
+						return new Text(theme.fg("muted", ` → ${count} 个匹配`), 0, 0);
 					}
 				}
 				return new Text("", 0, 0);
@@ -373,9 +369,8 @@ export default function (pi: ExtensionAPI) {
 	// =========================================================================
 	pi.registerTool({
 		name: "ls",
-		label: "ls",
-		description:
-			"List directory contents with file sizes. Shows files and directories with their sizes. Output limited to 500 entries.",
+		label: "列出",
+		description: "列出目录内容及文件大小。显示文件和目录及其大小。输出限制为500条记录。",
 		parameters: getBuiltInTools(process.cwd()).ls.parameters,
 
 		async execute(toolCallId, params, signal, onUpdate, ctx) {
@@ -387,9 +382,9 @@ export default function (pi: ExtensionAPI) {
 			const path = shortenPath(args.path || ".");
 			const limit = args.limit;
 
-			let text = `${theme.fg("toolTitle", theme.bold("ls"))} ${theme.fg("accent", path)}`;
+			let text = `${theme.fg("toolTitle", theme.bold("列出"))} ${theme.fg("accent", path)}`;
 			if (limit !== undefined) {
-				text += theme.fg("toolOutput", ` (limit ${limit})`);
+				text += theme.fg("toolOutput", ` (限制 ${limit})`);
 			}
 
 			return new Text(text, 0, 0);
@@ -402,7 +397,7 @@ export default function (pi: ExtensionAPI) {
 				if (textContent?.type === "text") {
 					const count = textContent.text.trim().split("\n").filter(Boolean).length;
 					if (count > 0) {
-						return new Text(theme.fg("muted", ` → ${count} entries`), 0, 0);
+						return new Text(theme.fg("muted", ` → ${count} 个条目`), 0, 0);
 					}
 				}
 				return new Text("", 0, 0);

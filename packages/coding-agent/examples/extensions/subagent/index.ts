@@ -179,9 +179,9 @@ function isFailedResult(result: SingleResult): boolean {
 
 function getResultOutput(result: SingleResult): string {
 	if (isFailedResult(result)) {
-		return result.errorMessage || result.stderr || getFinalOutput(result.messages) || "(no output)";
+		return result.errorMessage || result.stderr || getFinalOutput(result.messages) || "(无输出)";
 	}
-	return getFinalOutput(result.messages) || "(no output)";
+	return getFinalOutput(result.messages) || "(无输出)";
 }
 
 function truncateParallelOutput(output: string): string {
@@ -192,7 +192,7 @@ function truncateParallelOutput(output: string): string {
 	while (Buffer.byteLength(truncated, "utf8") > PER_TASK_OUTPUT_CAP) {
 		truncated = truncated.slice(0, -1);
 	}
-	return `${truncated}\n\n[Output truncated: ${byteLength - Buffer.byteLength(truncated, "utf8")} bytes omitted. Full output preserved in tool details.]`;
+	return `${truncated}\n\n[输出已截断：省略 ${byteLength - Buffer.byteLength(truncated, "utf8")} 字节。完整输出保留在工具详情中。]`;
 }
 
 type DisplayItem = { type: "text"; text: string } | { type: "toolCall"; name: string; args: Record<string, any> };
@@ -279,7 +279,7 @@ async function runSingleAgent(
 			task,
 			exitCode: 1,
 			messages: [],
-			stderr: `Unknown agent: "${agentName}". Available agents: ${available}.`,
+			stderr: `未知代理："${agentName}"。可用代理：${available}。`,
 			usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, contextTokens: 0, turns: 0 },
 			step,
 		};
@@ -307,7 +307,7 @@ async function runSingleAgent(
 	const emitUpdate = () => {
 		if (onUpdate) {
 			onUpdate({
-				content: [{ type: "text", text: getFinalOutput(currentResult.messages) || "(running...)" }],
+				content: [{ type: "text", text: getFinalOutput(currentResult.messages) || "(运行中...)" }],
 				details: makeDetails([currentResult]),
 			});
 		}
@@ -321,7 +321,7 @@ async function runSingleAgent(
 			args.push("--append-system-prompt", tmpPromptPath);
 		}
 
-		args.push(`Task: ${task}`);
+		args.push(`任务：${task}`);
 		let wasAborted = false;
 
 		const exitCode = await new Promise<number>((resolve) => {
@@ -404,7 +404,7 @@ async function runSingleAgent(
 		});
 
 		currentResult.exitCode = exitCode;
-		if (wasAborted) throw new Error("Subagent was aborted");
+		if (wasAborted) throw new Error("子代理被终止");
 		return currentResult;
 	} finally {
 		if (tmpPromptPath)
@@ -423,43 +423,43 @@ async function runSingleAgent(
 }
 
 const TaskItem = Type.Object({
-	agent: Type.String({ description: "Name of the agent to invoke" }),
-	task: Type.String({ description: "Task to delegate to the agent" }),
-	cwd: Type.Optional(Type.String({ description: "Working directory for the agent process" })),
+	agent: Type.String({ description: "要调用的代理名称" }),
+	task: Type.String({ description: "要委托给代理的任务" }),
+	cwd: Type.Optional(Type.String({ description: "代理进程的工作目录" })),
 });
 
 const ChainItem = Type.Object({
-	agent: Type.String({ description: "Name of the agent to invoke" }),
-	task: Type.String({ description: "Task with optional {previous} placeholder for prior output" }),
-	cwd: Type.Optional(Type.String({ description: "Working directory for the agent process" })),
+	agent: Type.String({ description: "要调用的代理名称" }),
+	task: Type.String({ description: "包含可选 {previous} 占位符的任务，表示上一个输出" }),
+	cwd: Type.Optional(Type.String({ description: "代理进程的工作目录" })),
 });
 
 const AgentScopeSchema = StringEnum(["user", "project", "both"] as const, {
-	description: 'Which agent directories to use. Default: "user". Use "both" to include project-local agents.',
+	description: '要使用的代理目录范围。默认："user"。使用 "both" 可包含项目本地代理。',
 	default: "user",
 });
 
 const SubagentParams = Type.Object({
-	agent: Type.Optional(Type.String({ description: "Name of the agent to invoke (for single mode)" })),
-	task: Type.Optional(Type.String({ description: "Task to delegate (for single mode)" })),
-	tasks: Type.Optional(Type.Array(TaskItem, { description: "Array of {agent, task} for parallel execution" })),
-	chain: Type.Optional(Type.Array(ChainItem, { description: "Array of {agent, task} for sequential execution" })),
+	agent: Type.Optional(Type.String({ description: "要调用的代理名称（单模式）" })),
+	task: Type.Optional(Type.String({ description: "要委托的任务（单模式）" })),
+	tasks: Type.Optional(Type.Array(TaskItem, { description: "用于并行执行的 {agent, task} 数组" })),
+	chain: Type.Optional(Type.Array(ChainItem, { description: "用于顺序执行的 {agent, task} 数组" })),
 	agentScope: Type.Optional(AgentScopeSchema),
 	confirmProjectAgents: Type.Optional(
-		Type.Boolean({ description: "Prompt before running project-local agents. Default: true.", default: true }),
+		Type.Boolean({ description: "运行项目本地代理前进行确认。默认：true。", default: true }),
 	),
-	cwd: Type.Optional(Type.String({ description: "Working directory for the agent process (single mode)" })),
+	cwd: Type.Optional(Type.String({ description: "代理进程的工作目录（单模式）" })),
 });
 
 export default function (pi: ExtensionAPI) {
 	pi.registerTool({
 		name: "subagent",
-		label: "Subagent",
+		label: "子代理",
 		description: [
-			"Delegate tasks to specialized subagents with isolated context.",
-			"Modes: single (agent + task), parallel (tasks array), chain (sequential with {previous} placeholder).",
-			'Default agent scope is "user" (from ~/.pi/agent/agents).',
-			'To enable project-local agents in .pi/agents, set agentScope: "both" (or "project").',
+			"将任务委派给具有隔离上下文的专用子代理。",
+			"模式：单（agent + task）、并行（tasks 数组）、链（带 {previous} 占位符的顺序执行）。",
+			'默认代理范围为 "user"（来自 ~/.pi/agent/agents）。',
+			'要启用 .pi/agents 中的项目本地代理，请设置 agentScope: "both"（或 "project"）。',
 		].join(" "),
 		parameters: SubagentParams,
 
@@ -489,7 +489,7 @@ export default function (pi: ExtensionAPI) {
 					content: [
 						{
 							type: "text",
-							text: `Invalid parameters. Provide exactly one mode.\nAvailable agents: ${available}`,
+							text: `参数无效。请提供恰好一种模式。\n可用代理：${available}`,
 						},
 					],
 					details: makeDetails("single")([]),
@@ -508,14 +508,14 @@ export default function (pi: ExtensionAPI) {
 
 				if (projectAgentsRequested.length > 0) {
 					const names = projectAgentsRequested.map((a) => a.name).join(", ");
-					const dir = discovery.projectAgentsDir ?? "(unknown)";
+					const dir = discovery.projectAgentsDir ?? "(未知)";
 					const ok = await ctx.ui.confirm(
-						"Run project-local agents?",
-						`Agents: ${names}\nSource: ${dir}\n\nProject agents are repo-controlled. Only continue for trusted repositories.`,
+						"运行项目本地代理？",
+						`代理：${names}\n来源：${dir}\n\n项目代理由仓库控制。仅在受信任的仓库中继续。`,
 					);
 					if (!ok)
 						return {
-							content: [{ type: "text", text: "Canceled: project-local agents not approved." }],
+							content: [{ type: "text", text: "已取消：未批准项目本地代理。" }],
 							details: makeDetails(hasChain ? "chain" : hasTasks ? "parallel" : "single")([]),
 						};
 				}
@@ -561,7 +561,7 @@ export default function (pi: ExtensionAPI) {
 					if (isError) {
 						const errorMsg = getResultOutput(result);
 						return {
-							content: [{ type: "text", text: `Chain stopped at step ${i + 1} (${step.agent}): ${errorMsg}` }],
+							content: [{ type: "text", text: `链在第 ${i + 1} 步停止（${step.agent}）：${errorMsg}` }],
 							details: makeDetails("chain")(results),
 							isError: true,
 						};
@@ -569,7 +569,7 @@ export default function (pi: ExtensionAPI) {
 					previousOutput = getFinalOutput(result.messages);
 				}
 				return {
-					content: [{ type: "text", text: getFinalOutput(results[results.length - 1].messages) || "(no output)" }],
+					content: [{ type: "text", text: getFinalOutput(results[results.length - 1].messages) || "(无输出)" }],
 					details: makeDetails("chain")(results),
 				};
 			}
@@ -580,7 +580,7 @@ export default function (pi: ExtensionAPI) {
 						content: [
 							{
 								type: "text",
-								text: `Too many parallel tasks (${params.tasks.length}). Max is ${MAX_PARALLEL_TASKS}.`,
+								text: `并行任务过多（${params.tasks.length}）。最大值为 ${MAX_PARALLEL_TASKS}。`,
 							},
 						],
 						details: makeDetails("parallel")([]),
@@ -607,9 +607,7 @@ export default function (pi: ExtensionAPI) {
 						const running = allResults.filter((r) => r.exitCode === -1).length;
 						const done = allResults.filter((r) => r.exitCode !== -1).length;
 						onUpdate({
-							content: [
-								{ type: "text", text: `Parallel: ${done}/${allResults.length} done, ${running} running...` },
-							],
+							content: [{ type: "text", text: `并行：${done}/${allResults.length} 完成，${running} 运行中...` }],
 							details: makeDetails("parallel")([...allResults]),
 						});
 					}
@@ -642,15 +640,15 @@ export default function (pi: ExtensionAPI) {
 				const summaries = results.map((r) => {
 					const output = truncateParallelOutput(getResultOutput(r));
 					const status = isFailedResult(r)
-						? `failed${r.stopReason && r.stopReason !== "end" ? ` (${r.stopReason})` : ""}`
-						: "completed";
+						? `失败${r.stopReason && r.stopReason !== "end" ? ` (${r.stopReason})` : ""}`
+						: "完成";
 					return `### [${r.agent}] ${status}\n\n${output}`;
 				});
 				return {
 					content: [
 						{
 							type: "text",
-							text: `Parallel: ${successCount}/${results.length} succeeded\n\n${summaries.join("\n\n---\n\n")}`,
+							text: `并行：${successCount}/${results.length} 成功\n\n${summaries.join("\n\n---\n\n")}`,
 						},
 					],
 					details: makeDetails("parallel")(results),
@@ -673,20 +671,20 @@ export default function (pi: ExtensionAPI) {
 				if (isError) {
 					const errorMsg = getResultOutput(result);
 					return {
-						content: [{ type: "text", text: `Agent ${result.stopReason || "failed"}: ${errorMsg}` }],
+						content: [{ type: "text", text: `代理 ${result.stopReason || "失败"}：${errorMsg}` }],
 						details: makeDetails("single")([result]),
 						isError: true,
 					};
 				}
 				return {
-					content: [{ type: "text", text: getFinalOutput(result.messages) || "(no output)" }],
+					content: [{ type: "text", text: getFinalOutput(result.messages) || "(无输出)" }],
 					details: makeDetails("single")([result]),
 				};
 			}
 
 			const available = agents.map((a) => `${a.name} (${a.source})`).join(", ") || "none";
 			return {
-				content: [{ type: "text", text: `Invalid parameters. Available agents: ${available}` }],
+				content: [{ type: "text", text: `参数无效。可用代理：${available}` }],
 				details: makeDetails("single")([]),
 			};
 		},
@@ -695,8 +693,8 @@ export default function (pi: ExtensionAPI) {
 			const scope: AgentScope = args.agentScope ?? "user";
 			if (args.chain && args.chain.length > 0) {
 				let text =
-					theme.fg("toolTitle", theme.bold("subagent ")) +
-					theme.fg("accent", `chain (${args.chain.length} steps)`) +
+					theme.fg("toolTitle", theme.bold("子代理 ")) +
+					theme.fg("accent", `链（${args.chain.length} 步）`) +
 					theme.fg("muted", ` [${scope}]`);
 				for (let i = 0; i < Math.min(args.chain.length, 3); i++) {
 					const step = args.chain[i];
@@ -710,25 +708,25 @@ export default function (pi: ExtensionAPI) {
 						theme.fg("accent", step.agent) +
 						theme.fg("dim", ` ${preview}`);
 				}
-				if (args.chain.length > 3) text += `\n  ${theme.fg("muted", `... +${args.chain.length - 3} more`)}`;
+				if (args.chain.length > 3) text += `\n  ${theme.fg("muted", `... +${args.chain.length - 3} 更多`)}`;
 				return new Text(text, 0, 0);
 			}
 			if (args.tasks && args.tasks.length > 0) {
 				let text =
-					theme.fg("toolTitle", theme.bold("subagent ")) +
-					theme.fg("accent", `parallel (${args.tasks.length} tasks)`) +
+					theme.fg("toolTitle", theme.bold("子代理 ")) +
+					theme.fg("accent", `并行（${args.tasks.length} 个任务）`) +
 					theme.fg("muted", ` [${scope}]`);
 				for (const t of args.tasks.slice(0, 3)) {
 					const preview = t.task.length > 40 ? `${t.task.slice(0, 40)}...` : t.task;
 					text += `\n  ${theme.fg("accent", t.agent)}${theme.fg("dim", ` ${preview}`)}`;
 				}
-				if (args.tasks.length > 3) text += `\n  ${theme.fg("muted", `... +${args.tasks.length - 3} more`)}`;
+				if (args.tasks.length > 3) text += `\n  ${theme.fg("muted", `... +${args.tasks.length - 3} 更多`)}`;
 				return new Text(text, 0, 0);
 			}
 			const agentName = args.agent || "...";
 			const preview = args.task ? (args.task.length > 60 ? `${args.task.slice(0, 60)}...` : args.task) : "...";
 			let text =
-				theme.fg("toolTitle", theme.bold("subagent ")) +
+				theme.fg("toolTitle", theme.bold("子代理 ")) +
 				theme.fg("accent", agentName) +
 				theme.fg("muted", ` [${scope}]`);
 			text += `\n  ${theme.fg("dim", preview)}`;
@@ -739,7 +737,7 @@ export default function (pi: ExtensionAPI) {
 			const details = result.details as SubagentDetails | undefined;
 			if (!details || details.results.length === 0) {
 				const text = result.content[0];
-				return new Text(text?.type === "text" ? text.text : "(no output)", 0, 0);
+				return new Text(text?.type === "text" ? text.text : "(无输出)", 0, 0);
 			}
 
 			const mdTheme = getMarkdownTheme();
@@ -748,7 +746,7 @@ export default function (pi: ExtensionAPI) {
 				const toShow = limit ? items.slice(-limit) : items;
 				const skipped = limit && items.length > limit ? items.length - limit : 0;
 				let text = "";
-				if (skipped > 0) text += theme.fg("muted", `... ${skipped} earlier items\n`);
+				if (skipped > 0) text += theme.fg("muted", `... ${skipped} 个早期项\n`);
 				for (const item of toShow) {
 					if (item.type === "text") {
 						const preview = expanded ? item.text : item.text.split("\n").slice(0, 3).join("\n");
@@ -773,14 +771,14 @@ export default function (pi: ExtensionAPI) {
 					if (isError && r.stopReason) header += ` ${theme.fg("error", `[${r.stopReason}]`)}`;
 					container.addChild(new Text(header, 0, 0));
 					if (isError && r.errorMessage)
-						container.addChild(new Text(theme.fg("error", `Error: ${r.errorMessage}`), 0, 0));
+						container.addChild(new Text(theme.fg("error", `错误：${r.errorMessage}`), 0, 0));
 					container.addChild(new Spacer(1));
-					container.addChild(new Text(theme.fg("muted", "─── Task ───"), 0, 0));
+					container.addChild(new Text(theme.fg("muted", "─── 任务 ───"), 0, 0));
 					container.addChild(new Text(theme.fg("dim", r.task), 0, 0));
 					container.addChild(new Spacer(1));
-					container.addChild(new Text(theme.fg("muted", "─── Output ───"), 0, 0));
+					container.addChild(new Text(theme.fg("muted", "─── 输出 ───"), 0, 0));
 					if (displayItems.length === 0 && !finalOutput) {
-						container.addChild(new Text(theme.fg("muted", "(no output)"), 0, 0));
+						container.addChild(new Text(theme.fg("muted", "(无输出)"), 0, 0));
 					} else {
 						for (const item of displayItems) {
 							if (item.type === "toolCall")
@@ -807,11 +805,11 @@ export default function (pi: ExtensionAPI) {
 
 				let text = `${icon} ${theme.fg("toolTitle", theme.bold(r.agent))}${theme.fg("muted", ` (${r.agentSource})`)}`;
 				if (isError && r.stopReason) text += ` ${theme.fg("error", `[${r.stopReason}]`)}`;
-				if (isError && r.errorMessage) text += `\n${theme.fg("error", `Error: ${r.errorMessage}`)}`;
-				else if (displayItems.length === 0) text += `\n${theme.fg("muted", "(no output)")}`;
+				if (isError && r.errorMessage) text += `\n${theme.fg("error", `错误：${r.errorMessage}`)}`;
+				else if (displayItems.length === 0) text += `\n${theme.fg("muted", "(无输出)")}`;
 				else {
 					text += `\n${renderDisplayItems(displayItems, COLLAPSED_ITEM_COUNT)}`;
-					if (displayItems.length > COLLAPSED_ITEM_COUNT) text += `\n${theme.fg("muted", "(Ctrl+O to expand)")}`;
+					if (displayItems.length > COLLAPSED_ITEM_COUNT) text += `\n${theme.fg("muted", "(Ctrl+O 展开)")}`;
 				}
 				const usageStr = formatUsageStats(r.usage, r.model);
 				if (usageStr) text += `\n${theme.fg("dim", usageStr)}`;
@@ -841,8 +839,8 @@ export default function (pi: ExtensionAPI) {
 						new Text(
 							icon +
 								" " +
-								theme.fg("toolTitle", theme.bold("chain ")) +
-								theme.fg("accent", `${successCount}/${details.results.length} steps`),
+								theme.fg("toolTitle", theme.bold("链 ")) +
+								theme.fg("accent", `${successCount}/${details.results.length} 步`),
 							0,
 							0,
 						),
@@ -856,12 +854,12 @@ export default function (pi: ExtensionAPI) {
 						container.addChild(new Spacer(1));
 						container.addChild(
 							new Text(
-								`${theme.fg("muted", `─── Step ${r.step}: `) + theme.fg("accent", r.agent)} ${rIcon}`,
+								`${theme.fg("muted", `─── 第 ${r.step} 步：`) + theme.fg("accent", r.agent)} ${rIcon}`,
 								0,
 								0,
 							),
 						);
-						container.addChild(new Text(theme.fg("muted", "Task: ") + theme.fg("dim", r.task), 0, 0));
+						container.addChild(new Text(theme.fg("muted", "任务：") + theme.fg("dim", r.task), 0, 0));
 
 						// Show tool calls
 						for (const item of displayItems) {
@@ -889,7 +887,7 @@ export default function (pi: ExtensionAPI) {
 					const usageStr = formatUsageStats(aggregateUsage(details.results));
 					if (usageStr) {
 						container.addChild(new Spacer(1));
-						container.addChild(new Text(theme.fg("dim", `Total: ${usageStr}`), 0, 0));
+						container.addChild(new Text(theme.fg("dim", `总计：${usageStr}`), 0, 0));
 					}
 					return container;
 				}
@@ -898,18 +896,18 @@ export default function (pi: ExtensionAPI) {
 				let text =
 					icon +
 					" " +
-					theme.fg("toolTitle", theme.bold("chain ")) +
-					theme.fg("accent", `${successCount}/${details.results.length} steps`);
+					theme.fg("toolTitle", theme.bold("链 ")) +
+					theme.fg("accent", `${successCount}/${details.results.length} 步`);
 				for (const r of details.results) {
 					const rIcon = r.exitCode === 0 ? theme.fg("success", "✓") : theme.fg("error", "✗");
 					const displayItems = getDisplayItems(r.messages);
-					text += `\n\n${theme.fg("muted", `─── Step ${r.step}: `)}${theme.fg("accent", r.agent)} ${rIcon}`;
-					if (displayItems.length === 0) text += `\n${theme.fg("muted", "(no output)")}`;
+					text += `\n\n${theme.fg("muted", `─── 第 ${r.step} 步：`)}${theme.fg("accent", r.agent)} ${rIcon}`;
+					if (displayItems.length === 0) text += `\n${theme.fg("muted", "(无输出)")}`;
 					else text += `\n${renderDisplayItems(displayItems, 5)}`;
 				}
 				const usageStr = formatUsageStats(aggregateUsage(details.results));
-				if (usageStr) text += `\n\n${theme.fg("dim", `Total: ${usageStr}`)}`;
-				text += `\n${theme.fg("muted", "(Ctrl+O to expand)")}`;
+				if (usageStr) text += `\n\n${theme.fg("dim", `总计：${usageStr}`)}`;
+				text += `\n${theme.fg("muted", "(Ctrl+O 展开)")}`;
 				return new Text(text, 0, 0);
 			}
 
@@ -924,17 +922,13 @@ export default function (pi: ExtensionAPI) {
 						? theme.fg("warning", "◐")
 						: theme.fg("success", "✓");
 				const status = isRunning
-					? `${successCount + failCount}/${details.results.length} done, ${running} running`
-					: `${successCount}/${details.results.length} tasks`;
+					? `${successCount + failCount}/${details.results.length} 完成，${running} 运行中`
+					: `${successCount}/${details.results.length} 个任务`;
 
 				if (expanded && !isRunning) {
 					const container = new Container();
 					container.addChild(
-						new Text(
-							`${icon} ${theme.fg("toolTitle", theme.bold("parallel "))}${theme.fg("accent", status)}`,
-							0,
-							0,
-						),
+						new Text(`${icon} ${theme.fg("toolTitle", theme.bold("并行 "))}${theme.fg("accent", status)}`, 0, 0),
 					);
 
 					for (const r of details.results) {
@@ -946,7 +940,7 @@ export default function (pi: ExtensionAPI) {
 						container.addChild(
 							new Text(`${theme.fg("muted", "─── ") + theme.fg("accent", r.agent)} ${rIcon}`, 0, 0),
 						);
-						container.addChild(new Text(theme.fg("muted", "Task: ") + theme.fg("dim", r.task), 0, 0));
+						container.addChild(new Text(theme.fg("muted", "任务：") + theme.fg("dim", r.task), 0, 0));
 
 						// Show tool calls
 						for (const item of displayItems) {
@@ -974,13 +968,13 @@ export default function (pi: ExtensionAPI) {
 					const usageStr = formatUsageStats(aggregateUsage(details.results));
 					if (usageStr) {
 						container.addChild(new Spacer(1));
-						container.addChild(new Text(theme.fg("dim", `Total: ${usageStr}`), 0, 0));
+						container.addChild(new Text(theme.fg("dim", `总计：${usageStr}`), 0, 0));
 					}
 					return container;
 				}
 
 				// Collapsed view (or still running)
-				let text = `${icon} ${theme.fg("toolTitle", theme.bold("parallel "))}${theme.fg("accent", status)}`;
+				let text = `${icon} ${theme.fg("toolTitle", theme.bold("并行 "))}${theme.fg("accent", status)}`;
 				for (const r of details.results) {
 					const rIcon =
 						r.exitCode === -1
@@ -991,19 +985,19 @@ export default function (pi: ExtensionAPI) {
 					const displayItems = getDisplayItems(r.messages);
 					text += `\n\n${theme.fg("muted", "─── ")}${theme.fg("accent", r.agent)} ${rIcon}`;
 					if (displayItems.length === 0)
-						text += `\n${theme.fg("muted", r.exitCode === -1 ? "(running...)" : "(no output)")}`;
+						text += `\n${theme.fg("muted", r.exitCode === -1 ? "(运行中...)" : "(无输出)")}`;
 					else text += `\n${renderDisplayItems(displayItems, 5)}`;
 				}
 				if (!isRunning) {
 					const usageStr = formatUsageStats(aggregateUsage(details.results));
-					if (usageStr) text += `\n\n${theme.fg("dim", `Total: ${usageStr}`)}`;
+					if (usageStr) text += `\n\n${theme.fg("dim", `总计：${usageStr}`)}`;
 				}
-				if (!expanded) text += `\n${theme.fg("muted", "(Ctrl+O to expand)")}`;
+				if (!expanded) text += `\n${theme.fg("muted", "(Ctrl+O 展开)")}`;
 				return new Text(text, 0, 0);
 			}
 
 			const text = result.content[0];
-			return new Text(text?.type === "text" ? text.text : "(no output)", 0, 0);
+			return new Text(text?.type === "text" ? text.text : "(无输出)", 0, 0);
 		},
 	});
 }

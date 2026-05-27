@@ -14,7 +14,7 @@ import type { ExtensionAPI, SlashCommandInfo } from "@earendil-works/pi-coding-a
 
 export default function commandsExtension(pi: ExtensionAPI) {
 	pi.registerCommand("commands", {
-		description: "List available slash commands",
+		description: "列出可用的斜杠命令",
 		getArgumentCompletions: (prefix) => {
 			const sources = ["extension", "prompt", "skill"];
 			const filtered = sources.filter((s) => s.startsWith(prefix));
@@ -28,7 +28,7 @@ export default function commandsExtension(pi: ExtensionAPI) {
 			const filtered = sourceFilter ? commands.filter((c) => c.source === sourceFilter) : commands;
 
 			if (filtered.length === 0) {
-				ctx.ui.notify(sourceFilter ? `No ${sourceFilter} commands found` : "No commands found", "info");
+				ctx.ui.notify(sourceFilter ? `没有找到 ${sourceFilter} 命令` : "没有找到命令", "info");
 				return;
 			}
 
@@ -40,9 +40,9 @@ export default function commandsExtension(pi: ExtensionAPI) {
 
 			const items: string[] = [];
 			const sources: Array<{ key: "extension" | "prompt" | "skill"; label: string }> = [
-				{ key: "extension", label: "Extensions" },
-				{ key: "prompt", label: "Prompts" },
-				{ key: "skill", label: "Skills" },
+				{ key: "extension", label: "扩展" },
+				{ key: "prompt", label: "提示" },
+				{ key: "skill", label: "技能" },
 			];
 
 			for (const { key, label } of sources) {
@@ -54,14 +54,14 @@ export default function commandsExtension(pi: ExtensionAPI) {
 			}
 
 			// Show in a selector (user can scroll and see all commands)
-			const selected = await ctx.ui.select("Available Commands", items);
+			const selected = await ctx.ui.select("可用命令", items);
 
 			// If user selected a command (not a header), offer to show its path
 			if (selected && !selected.startsWith("---")) {
 				const cmdName = selected.split(" - ")[0].slice(1); // Remove leading /
 				const cmd = commands.find((c) => c.name === cmdName);
 				if (cmd?.sourceInfo.path) {
-					const showPath = await ctx.ui.confirm(cmd.name, `View source path?\n${cmd.sourceInfo.path}`);
+					const showPath = await ctx.ui.confirm(cmd.name, `查看源路径？\n${cmd.sourceInfo.path}`);
 					if (showPath) {
 						ctx.ui.notify(cmd.sourceInfo.path, "info");
 					}

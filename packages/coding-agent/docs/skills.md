@@ -1,48 +1,48 @@
-> pi can create skills. Ask it to build one for your use case.
+> pi 可以创建技能。让它为您构建一个技能。
 
-# Skills
+# 技能
 
-Skills are self-contained capability packages that the agent loads on-demand. A skill provides specialized workflows, setup instructions, helper scripts, and reference documentation for specific tasks.
+技能是自包含的能力包，代理会根据需要按需加载。一个技能为特定任务提供专门的工作流程、设置说明、辅助脚本和参考文档。
 
-Pi implements the [Agent Skills standard](https://agentskills.io/specification), warning about most violations but remaining lenient. Pi allows skill names to differ from their parent directory even though the standard disallows it; that rule is suboptimal for shared skill directories used across multiple agent harnesses.
+Pi 实现了 [Agent Skills 标准](https://agentskills.io/specification)，对大多数违规行为发出警告但保持宽容。Pi 允许技能名称与父目录不同，即使标准禁止这样做；该规则对于跨多个代理框架使用的共享技能目录来说并不理想。
 
-## Table of Contents
+## 目录
 
-- [Locations](#locations)
-- [How Skills Work](#how-skills-work)
-- [Skill Commands](#skill-commands)
-- [Skill Structure](#skill-structure)
-- [Frontmatter](#frontmatter)
-- [Validation](#validation)
-- [Example](#example)
-- [Skill Repositories](#skill-repositories)
+- [位置](#位置)
+- [技能如何工作](#技能如何工作)
+- [技能命令](#技能命令)
+- [技能结构](#技能结构)
+- [前置元数据](#前置元数据)
+- [验证](#验证)
+- [示例](#示例)
+- [技能仓库](#技能仓库)
 
-## Locations
+## 位置
 
-> **Security:** Skills can instruct the model to perform any action and may include executable code the model invokes. Review skill content before use.
+> **安全：** 技能可以指示模型执行任何操作，并可能包含模型调用的可执行代码。使用前请检查技能内容。
 
-Pi loads skills from:
+Pi 从以下位置加载技能：
 
-- Global:
+- 全局：
   - `~/.pi/agent/skills/`
   - `~/.agents/skills/`
-- Project:
+- 项目：
   - `.pi/skills/`
-  - `.agents/skills/` in `cwd` and ancestor directories (up to git repo root, or filesystem root when not in a repo)
-- Packages: `skills/` directories or `pi.skills` entries in `package.json`
-- Settings: `skills` array with files or directories
-- CLI: `--skill <path>` (repeatable, additive even with `--no-skills`)
+  - `cwd` 及其父目录中的 `.agents/skills/`（直到 git 仓库根目录，若不在仓库中则到文件系统根目录）
+- 包：`skills/` 目录或 `package.json` 中的 `pi.skills` 条目
+- 设置：包含文件或目录的 `skills` 数组
+- CLI：`--skill <路径>`（可重复，即使使用 `--no-skills` 也会叠加）
 
-Discovery rules:
-- In `~/.pi/agent/skills/` and `.pi/skills/`, direct root `.md` files are discovered as individual skills
-- In all skill locations, directories containing `SKILL.md` are discovered recursively
-- In `~/.agents/skills/` and project `.agents/skills/`, root `.md` files are ignored
+发现规则：
+- 在 `~/.pi/agent/skills/` 和 `.pi/skills/` 中，直接的根目录 `.md` 文件作为单个技能被发现
+- 在所有技能位置，包含 `SKILL.md` 的目录会被递归发现
+- 在 `~/.agents/skills/` 和项目 `.agents/skills/` 中，根目录的 `.md` 文件被忽略
 
-Disable discovery with `--no-skills` (explicit `--skill` paths still load).
+使用 `--no-skills` 禁用手动发现（明确通过 `--skill` 指定的路径仍会加载）。
 
-### Using Skills from Other Harnesses
+### 使用其他框架的技能
 
-To use skills from Claude Code or OpenAI Codex, add their directories to settings:
+要使用来自 Claude Code 或 OpenAI Codex 的技能，将其目录添加到设置中：
 
 ```json
 {
@@ -53,7 +53,7 @@ To use skills from Claude Code or OpenAI Codex, add their directories to setting
 }
 ```
 
-For project-level Claude Code skills, add to `.pi/settings.json`:
+对于项目级别的 Claude Code 技能，添加到 `.pi/settings.json`：
 
 ```json
 {
@@ -61,27 +61,27 @@ For project-level Claude Code skills, add to `.pi/settings.json`:
 }
 ```
 
-## How Skills Work
+## 技能如何工作
 
-1. At startup, pi scans skill locations and extracts names and descriptions
-2. The system prompt includes available skills in XML format per the [specification](https://agentskills.io/integrate-skills)
-3. When a task matches, the agent uses `read` to load the full SKILL.md (models don't always do this; use prompting or `/skill:name` to force it)
-4. The agent follows the instructions, using relative paths to reference scripts and assets
+1. 启动时，pi 扫描技能位置并提取名称和描述
+2. 系统提示包含可用技能，以 XML 格式呈现，符合[规范](https://agentskills.io/integrate-skills)
+3. 当任务匹配时，代理使用 `read` 加载完整的 SKILL.md（模型并不总是这样做；使用提示或 `/skill:name` 来强制执行）
+4. 代理遵循说明，使用相对路径引用脚本和资源
 
-This is progressive disclosure: only descriptions are always in context, full instructions load on-demand.
+这是渐进式披露：只有描述始终在上下文内，完整说明按需加载。
 
-## Skill Commands
+## 技能命令
 
-Skills register as `/skill:name` commands:
+技能注册为 `/skill:name` 命令：
 
 ```bash
-/skill:brave-search           # Load and execute the skill
-/skill:pdf-tools extract      # Load skill with arguments
+/skill:brave-search           # 加载并执行技能
+/skill:pdf-tools extract      # 加载技能并带参数
 ```
 
-Arguments after the command are appended to the skill content as `User: <args>`.
+命令后的参数会作为 `User: <参数>` 附加到技能内容中。
 
-Toggle skill commands via `/settings` in interactive mode or in `settings.json`:
+在交互模式或 `settings.json` 中通过 `/settings` 切换技能命令：
 
 ```json
 {
@@ -89,105 +89,105 @@ Toggle skill commands via `/settings` in interactive mode or in `settings.json`:
 }
 ```
 
-## Skill Structure
+## 技能结构
 
-A skill is a directory with a `SKILL.md` file. Everything else is freeform.
+一个技能是一个包含 `SKILL.md` 文件的目录。其他一切自由发挥。
 
 ```
 my-skill/
-├── SKILL.md              # Required: frontmatter + instructions
-├── scripts/              # Helper scripts
+├── SKILL.md              # 必需：前置元数据 + 说明
+├── scripts/              # 辅助脚本
 │   └── process.sh
-├── references/           # Detailed docs loaded on-demand
+├── references/            # 按需加载的详细文档
 │   └── api-reference.md
 └── assets/
     └── template.json
 ```
 
-### SKILL.md Format
+### SKILL.md 格式
 
 ````markdown
 ---
 name: my-skill
-description: What this skill does and when to use it. Be specific.
+description: 该技能的作用及何时使用。请具体描述。
 ---
 
-# My Skill
+# 我的技能
 
-## Setup
+## 设置
 
-Run once before first use:
+首次使用前运行一次：
 ```bash
 cd /path/to/skill && npm install
 ```
 
-## Usage
+## 用法
 
 ```bash
-./scripts/process.sh <input>
+./scripts/process.sh <输入>
 ```
 ````
 
-Use relative paths from the skill directory:
+使用技能目录的相对路径：
 
 ```markdown
-See [the reference guide](references/REFERENCE.md) for details.
+详见[参考指南](references/REFERENCE.md)。
 ```
 
-## Frontmatter
+## 前置元数据
 
-Per the [Agent Skills specification](https://agentskills.io/specification#frontmatter-required):
+根据 [Agent Skills 规范](https://agentskills.io/specification#frontmatter-required)：
 
-| Field | Required | Description |
+| 字段 | 必需 | 描述 |
 |-------|----------|-------------|
-| `name` | Yes | Max 64 chars. Lowercase a-z, 0-9, hyphens. Unlike the standard, Pi does not require this to match the parent directory because that standard requirement is suboptimal for shared skill directories. |
-| `description` | Yes | Max 1024 chars. What the skill does and when to use it. |
-| `license` | No | License name or reference to bundled file. |
-| `compatibility` | No | Max 500 chars. Environment requirements. |
-| `metadata` | No | Arbitrary key-value mapping. |
-| `allowed-tools` | No | Space-delimited list of pre-approved tools (experimental). |
-| `disable-model-invocation` | No | When `true`, skill is hidden from system prompt. Users must use `/skill:name`. |
+| `name` | 是 | 最多64个字符。仅限小写字母a-z、数字0-9、连字符。与标准不同，Pi 不要求与父目录名称匹配，因为该标准对于共享技能目录而言并不理想。 |
+| `description` | 是 | 最多1024个字符。技能的作用及何时使用。 |
+| `license` | 否 | 许可证名称或对打包文件的引用。 |
+| `compatibility` | 否 | 最多500个字符。环境要求。 |
+| `metadata` | 否 | 任意键值映射。 |
+| `allowed-tools` | 否 | 空格分隔的预批准工具列表（实验性）。 |
+| `disable-model-invocation` | 否 | 当设置为 `true` 时，技能对系统提示隐藏。用户必须使用 `/skill:name`。 |
 
-### Name Rules
+### 名称规则
 
-- 1-64 characters
-- Lowercase letters, numbers, hyphens only
-- No leading/trailing hyphens
-- No consecutive hyphens
-Pi does not require the name to match the parent directory. The Agent Skills standard does, but that requirement is suboptimal for shared skill directories used by multiple tools.
+- 1-64 个字符
+- 仅限小写字母、数字和连字符
+- 无前导或尾随连字符
+- 无连续连字符
+Pi 不要求名称与父目录匹配。Agent Skills 标准要求如此，但对于多个工具使用的共享技能目录来说，这一要求并不理想。
 
-Valid: `pdf-processing`, `data-analysis`, `code-review`
-Invalid: `PDF-Processing`, `-pdf`, `pdf--processing`
+有效：`pdf-processing`、`data-analysis`、`code-review`
+无效：`PDF-Processing`、`-pdf`、`pdf--processing`
 
-### Description Best Practices
+### 描述最佳实践
 
-The description determines when the agent loads the skill. Be specific.
+描述决定了代理何时加载技能。请具体说明。
 
-Good:
+良好：
 ```yaml
-description: Extracts text and tables from PDF files, fills PDF forms, and merges multiple PDFs. Use when working with PDF documents.
+description: 从 PDF 文件中提取文本和表格，填写 PDF 表单，合并多个 PDF 文件。处理 PDF 文档时使用。
 ```
 
-Poor:
+欠佳：
 ```yaml
-description: Helps with PDFs.
+description: 帮助处理 PDF。
 ```
 
-## Validation
+## 验证
 
-Pi validates skills against the Agent Skills standard. Most issues produce warnings but still load the skill:
+Pi 根据 Agent Skills 标准验证技能。大多数问题会产生警告，但技能仍会加载：
 
-- Name exceeds 64 characters or contains invalid characters
-- Name starts/ends with hyphen or has consecutive hyphens
-- Description exceeds 1024 characters
+- 名称超过64个字符或包含无效字符
+- 名称以连字符开头/结尾，或包含连续连字符
+- 描述超过1024个字符
 
-Unknown frontmatter fields are ignored.
+未知的前置元数据字段会被忽略。
 
-**Exception:** Skills with missing description are not loaded.
+**例外：** 缺少描述的技能不会被加载。
 
-Name collisions (same name from different locations) warn and keep the first skill found.
+名称冲突（不同位置的同名技能）会发出警告并保留最先找到的技能。
 
-## Example
+## 示例
 
 ```
 brave-search/
@@ -200,32 +200,32 @@ brave-search/
 ````markdown
 ---
 name: brave-search
-description: Web search and content extraction via Brave Search API. Use for searching documentation, facts, or any web content.
+description: 通过 Brave Search API 进行网络搜索和内容提取。用于搜索文档、资料或任何网络内容。
 ---
 
-# Brave Search
+# Brave 搜索
 
-## Setup
+## 设置
 
 ```bash
 cd /path/to/brave-search && npm install
 ```
 
-## Search
+## 搜索
 
 ```bash
-./search.js "query"              # Basic search
-./search.js "query" --content    # Include page content
+./search.js "查询词"              # 基本搜索
+./search.js "查询词" --content    # 包含页面内容
 ```
 
-## Extract Page Content
+## 提取页面内容
 
 ```bash
 ./content.js https://example.com
 ```
 ````
 
-## Skill Repositories
+## 技能仓库
 
-- [Anthropic Skills](https://github.com/anthropics/skills) - Document processing (docx, pdf, pptx, xlsx), web development
-- [Pi Skills](https://github.com/badlogic/pi-skills) - Web search, browser automation, Google APIs, transcription
+- [Anthropic Skills](https://github.com/anthropics/skills) - 文档处理（docx、pdf、pptx、xlsx），Web 开发
+- [Pi Skills](https://github.com/badlogic/pi-skills) - Web 搜索，浏览器自动化，Google API，转录

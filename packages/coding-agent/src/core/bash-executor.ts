@@ -1,9 +1,9 @@
 /**
- * Bash command execution with streaming support and cancellation.
+ * 支持流式执行和取消的 Bash 命令执行。
  *
- * This module provides a unified bash execution implementation used by:
- * - AgentSession.executeBash() for interactive and RPC modes
- * - Direct calls from modes that need bash execution
+ * 该模块提供了一个统一的 bash 执行实现，用于：
+ * - AgentSession.executeBash() 用于交互式和 RPC 模式
+ * - 需要 bash 执行的模式的直接调用
  */
 
 import { randomBytes } from "node:crypto";
@@ -20,22 +20,22 @@ import { DEFAULT_MAX_BYTES, truncateTail } from "./tools/truncate.ts";
 // ============================================================================
 
 export interface BashExecutorOptions {
-	/** Callback for streaming output chunks (already sanitized) */
+	/** 流式输出块的回调（已清理） */
 	onChunk?: (chunk: string) => void;
-	/** AbortSignal for cancellation */
+	/** 用于取消的 AbortSignal */
 	signal?: AbortSignal;
 }
 
 export interface BashResult {
-	/** Combined stdout + stderr output (sanitized, possibly truncated) */
+	/** 合并的 stdout + stderr 输出（已清理，可能被截断） */
 	output: string;
-	/** Process exit code (undefined if killed/cancelled) */
+	/** 进程退出码（如果被终止/取消则为 undefined） */
 	exitCode: number | undefined;
-	/** Whether the command was cancelled via signal */
+	/** 命令是否通过信号取消 */
 	cancelled: boolean;
-	/** Whether the output was truncated */
+	/** 输出是否被截断 */
 	truncated: boolean;
-	/** Path to temp file containing full output (if output exceeded truncation threshold) */
+	/** 包含完整输出的临时文件路径（如果输出超过截断阈值） */
 	fullOutputPath?: string;
 }
 
@@ -44,8 +44,8 @@ export interface BashResult {
 // ============================================================================
 
 /**
- * Execute a bash command using custom BashOperations.
- * Used for remote execution (SSH, containers, etc.).
+ * 使用自定义 BashOperations 执行 bash 命令。
+ * 用于远程执行（SSH、容器等）。
  */
 export async function executeBashWithOperations(
 	command: string,

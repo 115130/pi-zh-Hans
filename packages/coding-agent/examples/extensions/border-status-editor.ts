@@ -57,7 +57,7 @@ function formatContext(ctx: ExtensionContext): string {
 }
 
 function formatThinking(level: string): string {
-	return level === "off" ? "off" : level;
+	return level === "off" ? "关闭" : level;
 }
 
 class EmptyFooter implements Component {
@@ -128,7 +128,7 @@ export default function (pi: ExtensionAPI) {
 				if (lines.length < 2) return lines;
 
 				const thm = ctx.ui.theme;
-				const model = ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : "no model";
+				const model = ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : "无模型";
 				const thinking = pi.getThinkingLevel();
 				const topLeft = isWorking ? thm.fg("accent", ` ${spinnerFrames[spinnerIndex]} `) : "";
 				const topRight = "";

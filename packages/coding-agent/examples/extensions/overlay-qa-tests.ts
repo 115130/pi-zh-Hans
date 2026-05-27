@@ -4,19 +4,19 @@
  * Usage: pi --extension ./examples/extensions/overlay-qa-tests.ts
  *
  * Commands:
- *   /overlay-animation  - Real-time animation demo (~30 FPS, proves DOOM-like rendering works)
- *   /overlay-anchors    - Cycle through all 9 anchor positions
- *   /overlay-margins    - Test margin and offset options
- *   /overlay-stack      - Test stacked overlays
- *   /overlay-overflow   - Test width overflow with streaming process output
- *   /overlay-edge       - Test overlay positioned at terminal edge
- *   /overlay-percent    - Test percentage-based positioning
- *   /overlay-maxheight  - Test maxHeight truncation
- *   /overlay-sidepanel  - Responsive sidepanel (hides when terminal < 100 cols)
- *   /overlay-toggle     - Toggle visibility demo (demonstrates OverlayHandle.setHidden)
- *   /overlay-passive    - Non-capturing overlay demo (passive info panel alongside active overlay)
- *   /overlay-focus      - Focus cycling and rendering order with non-capturing overlays
- *   /overlay-streaming  - Multiple input panels with simulated streaming (Tab to cycle focus)
+ *   /overlay-animation  - 实时动画演示（约 30 FPS，证明类似 DOOM 的渲染可行）
+ *   /overlay-anchors    - 遍历全部 9 个锚点位置
+ *   /overlay-margins    - 测试外边距和偏移选项
+ *   /overlay-stack      - 测试堆叠覆盖层
+ *   /overlay-overflow   - 测试流式进程输出时的宽度溢出
+ *   /overlay-edge       - 测试覆盖层位于终端边缘
+ *   /overlay-percent    - 测试基于百分比的位置定位
+ *   /overlay-maxheight  - 测试 maxHeight 截断
+ *   /overlay-sidepanel  - 自适应侧边面板（当终端 < 100 列时隐藏）
+ *   /overlay-toggle     - 可见性切换演示（演示 OverlayHandle.setHidden）
+ *   /overlay-passive    - 非捕获覆盖层演示（被动信息面板与活动覆盖层并存）
+ *   /overlay-focus      - 焦点循环与渲染顺序（含非捕获覆盖层）
+ *   /overlay-streaming  - 多个输入面板配合模拟流式内容（按 Tab 循环焦点）
  */
 
 import type { ExtensionAPI, ExtensionCommandContext, Theme } from "@earendil-works/pi-coding-agent";
@@ -30,7 +30,7 @@ let globalToggleHandle: OverlayHandle | null = null;
 export default function (pi: ExtensionAPI) {
 	// Animation demo - proves overlays can handle real-time updates (like pi-doom would need)
 	pi.registerCommand("overlay-animation", {
-		description: "Test real-time animation in overlay (~30 FPS)",
+		description: "测试覆盖层中的实时动画（约 30 FPS）",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			await ctx.ui.custom<void>((tui, theme, _kb, done) => new AnimationDemoComponent(tui, theme, done), {
 				overlay: true,
@@ -41,7 +41,7 @@ export default function (pi: ExtensionAPI) {
 
 	// Test all 9 anchor positions
 	pi.registerCommand("overlay-anchors", {
-		description: "Cycle through all anchor positions",
+		description: "遍历全部 9 个锚点位置",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			const anchors: OverlayAnchor[] = [
 				"top-left",
@@ -70,7 +70,7 @@ export default function (pi: ExtensionAPI) {
 					continue;
 				}
 				if (result === "confirm") {
-					ctx.ui.notify(`Selected: ${anchors[index]}`, "info");
+					ctx.ui.notify(`已选择：${anchors[index]}`, "info");
 				}
 				break;
 			}
@@ -79,17 +79,17 @@ export default function (pi: ExtensionAPI) {
 
 	// Test margins and offsets
 	pi.registerCommand("overlay-margins", {
-		description: "Test margin and offset options",
+		description: "测试外边距和偏移选项",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			const configs: { name: string; options: OverlayOptions }[] = [
-				{ name: "No margin (top-left)", options: { anchor: "top-left", width: 35 } },
-				{ name: "Margin: 3 all sides", options: { anchor: "top-left", width: 35, margin: 3 } },
+				{ name: "无外边距（左上角）", options: { anchor: "top-left", width: 35 } },
+				{ name: "外边距：3 所有边", options: { anchor: "top-left", width: 35, margin: 3 } },
 				{
-					name: "Margin: top=5, left=10",
+					name: "外边距：顶部=5，左侧=10",
 					options: { anchor: "top-left", width: 35, margin: { top: 5, left: 10 } },
 				},
-				{ name: "Center + offset (10, -3)", options: { anchor: "center", width: 35, offsetX: 10, offsetY: -3 } },
-				{ name: "Bottom-right, margin: 2", options: { anchor: "bottom-right", width: 35, margin: 2 } },
+				{ name: "居中 + 偏移 (10, -3)", options: { anchor: "center", width: 35, offsetX: 10, offsetY: -3 } },
+				{ name: "右下角，外边距：2", options: { anchor: "bottom-right", width: 35, margin: 2 } },
 			];
 
 			let index = 0;
@@ -113,14 +113,14 @@ export default function (pi: ExtensionAPI) {
 
 	// Test stacked overlays
 	pi.registerCommand("overlay-stack", {
-		description: "Test stacked overlays",
+		description: "测试堆叠覆盖层",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			// Three large overlays that overlap in the center area
 			// Each offset slightly so you can see the stacking
 
-			ctx.ui.notify("Showing overlay 1 (back)...", "info");
+			ctx.ui.notify("正在显示覆盖层 1（后方）...", "info");
 			const p1 = ctx.ui.custom<string>(
-				(_tui, theme, _kb, done) => new StackOverlayComponent(theme, 1, "back (red border)", done),
+				(_tui, theme, _kb, done) => new StackOverlayComponent(theme, 1, "后方（红色边框）", done),
 				{
 					overlay: true,
 					overlayOptions: { anchor: "center", width: 50, offsetX: -8, offsetY: -4, maxHeight: 15 },
@@ -129,9 +129,9 @@ export default function (pi: ExtensionAPI) {
 
 			await sleep(400);
 
-			ctx.ui.notify("Showing overlay 2 (middle)...", "info");
+			ctx.ui.notify("正在显示覆盖层 2（中间）...", "info");
 			const p2 = ctx.ui.custom<string>(
-				(_tui, theme, _kb, done) => new StackOverlayComponent(theme, 2, "middle (green border)", done),
+				(_tui, theme, _kb, done) => new StackOverlayComponent(theme, 2, "中间（绿色边框）", done),
 				{
 					overlay: true,
 					overlayOptions: { anchor: "center", width: 50, offsetX: 0, offsetY: 0, maxHeight: 15 },
@@ -140,9 +140,9 @@ export default function (pi: ExtensionAPI) {
 
 			await sleep(400);
 
-			ctx.ui.notify("Showing overlay 3 (front)...", "info");
+			ctx.ui.notify("正在显示覆盖层 3（前方）...", "info");
 			const p3 = ctx.ui.custom<string>(
-				(_tui, theme, _kb, done) => new StackOverlayComponent(theme, 3, "front (blue border)", done),
+				(_tui, theme, _kb, done) => new StackOverlayComponent(theme, 3, "前方（蓝色边框）", done),
 				{
 					overlay: true,
 					overlayOptions: { anchor: "center", width: 50, offsetX: 8, offsetY: 4, maxHeight: 15 },
@@ -151,13 +151,13 @@ export default function (pi: ExtensionAPI) {
 
 			// Wait for all to close
 			const results = await Promise.all([p1, p2, p3]);
-			ctx.ui.notify(`Closed in order: ${results.join(", ")}`, "info");
+			ctx.ui.notify(`按顺序关闭：${results.join(", ")}`, "info");
 		},
 	});
 
 	// Test width overflow scenarios (original crash case) - streams real process output
 	pi.registerCommand("overlay-overflow", {
-		description: "Test width overflow with streaming process output",
+		description: "测试流式进程输出时的宽度溢出",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			await ctx.ui.custom<void>((tui, theme, _kb, done) => new StreamingOverflowComponent(tui, theme, done), {
 				overlay: true,
@@ -168,7 +168,7 @@ export default function (pi: ExtensionAPI) {
 
 	// Test overlay at terminal edge
 	pi.registerCommand("overlay-edge", {
-		description: "Test overlay positioned at terminal edge",
+		description: "测试覆盖层位于终端边缘",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			await ctx.ui.custom<void>((_tui, theme, _kb, done) => new EdgeTestComponent(theme, done), {
 				overlay: true,
@@ -179,14 +179,14 @@ export default function (pi: ExtensionAPI) {
 
 	// Test percentage-based positioning
 	pi.registerCommand("overlay-percent", {
-		description: "Test percentage-based positioning",
+		description: "测试基于百分比的位置定位",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			const configs = [
-				{ name: "rowPercent: 0 (top)", row: 0, col: 50 },
-				{ name: "rowPercent: 50 (middle)", row: 50, col: 50 },
-				{ name: "rowPercent: 100 (bottom)", row: 100, col: 50 },
-				{ name: "colPercent: 0 (left)", row: 50, col: 0 },
-				{ name: "colPercent: 100 (right)", row: 50, col: 100 },
+				{ name: "rowPercent: 0（顶部）", row: 0, col: 50 },
+				{ name: "rowPercent: 50（中间）", row: 50, col: 50 },
+				{ name: "rowPercent: 100（底部）", row: 100, col: 50 },
+				{ name: "colPercent: 0（左侧）", row: 50, col: 0 },
+				{ name: "colPercent: 100（右侧）", row: 50, col: 100 },
 			];
 
 			let index = 0;
@@ -215,7 +215,7 @@ export default function (pi: ExtensionAPI) {
 
 	// Test maxHeight
 	pi.registerCommand("overlay-maxheight", {
-		description: "Test maxHeight truncation",
+		description: "测试 maxHeight 截断",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			await ctx.ui.custom<void>((_tui, theme, _kb, done) => new MaxHeightTestComponent(theme, done), {
 				overlay: true,
@@ -226,7 +226,7 @@ export default function (pi: ExtensionAPI) {
 
 	// Test responsive sidepanel - only shows when terminal is wide enough
 	pi.registerCommand("overlay-sidepanel", {
-		description: "Test responsive sidepanel (hides when terminal < 100 cols)",
+		description: "测试自适应侧边面板（当终端 < 100 列时隐藏）",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			await ctx.ui.custom<void>((tui, theme, _kb, done) => new SidepanelComponent(tui, theme, done), {
 				overlay: true,
@@ -244,7 +244,7 @@ export default function (pi: ExtensionAPI) {
 
 	// Test toggle overlay - demonstrates OverlayHandle.setHidden() via onHandle callback
 	pi.registerCommand("overlay-toggle", {
-		description: "Test overlay toggle (press 't' to toggle visibility)",
+		description: "测试覆盖层切换（按 't' 切换可见性）",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			await ctx.ui.custom<void>((tui, theme, _kb, done) => new ToggleDemoComponent(tui, theme, done), {
 				overlay: true,
@@ -262,7 +262,7 @@ export default function (pi: ExtensionAPI) {
 
 	// Non-capturing overlay demo - passive info panel that doesn't steal focus
 	pi.registerCommand("overlay-passive", {
-		description: "Test non-capturing overlay (passive info panel alongside active overlay)",
+		description: "测试非捕获覆盖层（被动信息面板与活动覆盖层并存）",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			ctx.ui.setEditorText("");
 			await ctx.ui.custom<void>((tui, theme, _kb, done) => new PassiveDemoController(tui, theme, done), {
@@ -274,7 +274,7 @@ export default function (pi: ExtensionAPI) {
 
 	// Focus cycling demo - demonstrates focus(), unfocus(), isFocused() and rendering order
 	pi.registerCommand("overlay-focus", {
-		description: "Test focus cycling and rendering order with non-capturing overlays",
+		description: "测试焦点循环和渲染顺序（含非捕获覆盖层）",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			ctx.ui.setEditorText("");
 			await ctx.ui.custom<void>((tui, theme, _kb, done) => new FocusDemoController(tui, theme, done), {
@@ -286,7 +286,7 @@ export default function (pi: ExtensionAPI) {
 
 	// Test multiple input panels with simulated streaming
 	pi.registerCommand("overlay-streaming", {
-		description: "Multiple input panels with simulated streaming (Tab to cycle focus)",
+		description: "多个输入面板配合模拟流式内容（按 Tab 循环焦点）",
 		handler: async (_args: string, ctx: ExtensionCommandContext) => {
 			ctx.ui.setEditorText("");
 			await ctx.ui.custom<void>((tui, theme, _kb, done) => new StreamingInputController(tui, theme, done), {
@@ -358,15 +358,15 @@ class AnchorTestComponent extends BaseOverlay {
 		return this.box(
 			[
 				"",
-				` Current: ${th.fg("accent", this.anchor)}`,
+				` 当前：${th.fg("accent", this.anchor)}`,
 				"",
-				` ${th.fg("dim", "Space/→ = next anchor")}`,
-				` ${th.fg("dim", "Enter = confirm")}`,
-				` ${th.fg("dim", "Esc = cancel")}`,
+				` ${th.fg("dim", "空格/→ = 下一个锚点")}`,
+				` ${th.fg("dim", "回车 = 确认")}`,
+				` ${th.fg("dim", "Esc = 取消")}`,
 				"",
 			],
 			width,
-			"Anchor Test",
+			"锚点测试",
 		);
 	}
 }
@@ -401,12 +401,12 @@ class MarginTestComponent extends BaseOverlay {
 				"",
 				` ${th.fg("accent", this.config.name)}`,
 				"",
-				` ${th.fg("dim", "Space/→ = next config")}`,
-				` ${th.fg("dim", "Esc = close")}`,
+				` ${th.fg("dim", "空格/→ = 下一个配置")}`,
+				` ${th.fg("dim", "Esc = 关闭")}`,
 				"",
 			],
 			width,
-			"Margin Test",
+			"外边距测试",
 		);
 	}
 }
@@ -426,7 +426,7 @@ class StackOverlayComponent extends BaseOverlay {
 
 	handleInput(data: string): void {
 		if (matchesKey(data, "escape") || matchesKey(data, "ctrl+c") || matchesKey(data, "return")) {
-			this.done(`Overlay ${this.num}`);
+			this.done(`覆盖层 ${this.num}`);
 		}
 	}
 
@@ -441,15 +441,15 @@ class StackOverlayComponent extends BaseOverlay {
 		const lines: string[] = [];
 
 		lines.push(border(`╭${"─".repeat(innerW)}╮`));
-		lines.push(border("│") + padLine(` Overlay ${th.fg("accent", `#${this.num}`)}`) + border("│"));
-		lines.push(border("│") + padLine(` Layer: ${th.fg(color, this.position)}`) + border("│"));
+		lines.push(border("│") + padLine(` 覆盖层 ${th.fg("accent", `#${this.num}`)}`) + border("│"));
+		lines.push(border("│") + padLine(` 层级：${th.fg(color, this.position)}`) + border("│"));
 		lines.push(border("│") + padLine("") + border("│"));
 		// Add extra lines to make it taller
 		for (let i = 0; i < 5; i++) {
 			lines.push(border("│") + padLine(` ${"░".repeat(innerW - 2)} `) + border("│"));
 		}
 		lines.push(border("│") + padLine("") + border("│"));
-		lines.push(border("│") + padLine(th.fg("dim", " Press Enter/Esc to close")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("dim", " 按回车/Esc 关闭")) + border("│"));
 		lines.push(border(`╰${"─".repeat(innerW)}╯`));
 
 		return lines;
@@ -552,7 +552,7 @@ class StreamingOverflowComponent extends BaseOverlay {
 		const border = (c: string) => th.fg("border", c);
 
 		const result: string[] = [];
-		const title = truncateToWidth(` Streaming Output (${this.lines.length} lines) `, innerW);
+		const title = truncateToWidth(` 流式输出（${this.lines.length} 行） `, innerW);
 		const titlePad = Math.max(0, innerW - visibleWidth(title));
 		result.push(border("╭") + th.fg("accent", title) + border(`${"─".repeat(titlePad)}╮`));
 
@@ -576,8 +576,8 @@ class StreamingOverflowComponent extends BaseOverlay {
 			result.push(border("│") + padLine("") + border("│"));
 		}
 
-		const status = this.finished ? th.fg("success", "✓ Done") : th.fg("warning", "● Running");
-		result.push(border("│") + padLine(` ${status} ${th.fg("dim", "| ↑↓ scroll | Esc close")}`) + border("│"));
+		const status = this.finished ? th.fg("success", "✓ 完成") : th.fg("warning", "● 运行中");
+		result.push(border("│") + padLine(` ${status} ${th.fg("dim", "| ↑↓ 滚动 | Esc 关闭")}`) + border("│"));
 		result.push(border(`╰${"─".repeat(innerW)}╯`));
 
 		return result;
@@ -609,17 +609,17 @@ class EdgeTestComponent extends BaseOverlay {
 		return this.box(
 			[
 				"",
-				" This overlay is at the",
-				" right edge of terminal.",
+				" 此覆盖层位于",
+				" 终端右侧边缘。",
 				"",
-				` ${th.fg("dim", "Verify right border")}`,
-				` ${th.fg("dim", "aligns with edge.")}`,
+				` ${th.fg("dim", "验证右边框")}`,
+				` ${th.fg("dim", "与边缘对齐。")}`,
 				"",
-				` ${th.fg("dim", "Press Esc to close")}`,
+				` ${th.fg("dim", "按 Esc 关闭")}`,
 				"",
 			],
 			width,
-			"Edge Test",
+			"边缘测试",
 		);
 	}
 }
@@ -654,12 +654,12 @@ class PercentTestComponent extends BaseOverlay {
 				"",
 				` ${th.fg("accent", this.config.name)}`,
 				"",
-				` ${th.fg("dim", "Space/→ = next")}`,
-				` ${th.fg("dim", "Esc = close")}`,
+				` ${th.fg("dim", "空格/→ = 下一个")}`,
+				` ${th.fg("dim", "Esc = 关闭")}`,
 				"",
 			],
 			width,
-			"Percent Test",
+			"百分比测试",
 		);
 	}
 }
@@ -684,25 +684,25 @@ class MaxHeightTestComponent extends BaseOverlay {
 		// Intentionally render 21 lines - maxHeight: 10 will truncate to first 10
 		// You should see header + lines 1-6, with bottom border cut off
 		const contentLines: string[] = [
-			th.fg("warning", " ⚠ Rendering 21 lines, maxHeight: 10"),
-			th.fg("dim", " Lines 11-21 truncated (no bottom border)"),
+			th.fg("warning", " ⚠ 渲染 21 行，maxHeight: 10"),
+			th.fg("dim", " 第 11-21 行被截断（无底部边框）"),
 			"",
 		];
 
 		for (let i = 1; i <= 14; i++) {
-			contentLines.push(` Line ${i} of 14`);
+			contentLines.push(` 第 ${i} 行（共 14 行）`);
 		}
 
-		contentLines.push("", th.fg("dim", " Press Esc to close"));
+		contentLines.push("", th.fg("dim", " 按 Esc 关闭"));
 
-		return this.box(contentLines, width, "MaxHeight Test");
+		return this.box(contentLines, width, "MaxHeight 测试");
 	}
 }
 
 // Responsive sidepanel - demonstrates percentage width and visibility callback
 class SidepanelComponent extends BaseOverlay {
 	private tui: TUI;
-	private items = ["Dashboard", "Messages", "Settings", "Help", "About"];
+	private items = ["面板", "消息", "设置", "帮助", "关于"];
 	private selectedIndex = 0;
 	private done: () => void;
 
@@ -736,7 +736,7 @@ class SidepanelComponent extends BaseOverlay {
 
 		// Header
 		lines.push(border(`╭${"─".repeat(innerW)}╮`));
-		lines.push(border("│") + padLine(th.fg("accent", " Responsive Sidepanel")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("accent", "自适应侧边面板")) + border("│"));
 		lines.push(border("├") + border("─".repeat(innerW)) + border("┤"));
 
 		// Menu items
@@ -750,10 +750,10 @@ class SidepanelComponent extends BaseOverlay {
 
 		// Footer with responsive behavior info
 		lines.push(border("├") + border("─".repeat(innerW)) + border("┤"));
-		lines.push(border("│") + padLine(th.fg("warning", " ⚠ Resize terminal < 100 cols")) + border("│"));
-		lines.push(border("│") + padLine(th.fg("warning", "   to see panel auto-hide")) + border("│"));
-		lines.push(border("│") + padLine(th.fg("dim", " Uses visible: (w) => w >= 100")) + border("│"));
-		lines.push(border("│") + padLine(th.fg("dim", " ↑↓ navigate | Esc close")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("warning", " ⚠ 调整终端 < 100 列宽")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("warning", "   以查看面板自动隐藏")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("dim", " 使用 visible: (w) => w >= 100")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("dim", " ↑↓ 导航 | Esc 关闭")) + border("│"));
 		lines.push(border(`╰${"─".repeat(innerW)}╯`));
 
 		return lines;
@@ -810,10 +810,10 @@ class AnimationDemoComponent extends BaseOverlay {
 
 		const lines: string[] = [];
 		lines.push(border(`╭${"─".repeat(innerW)}╮`));
-		lines.push(border("│") + padLine(th.fg("accent", " Animation Demo (~30 FPS)")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("accent", "动画演示（~30 FPS）")) + border("│"));
 		lines.push(border("│") + padLine(``) + border("│"));
-		lines.push(border("│") + padLine(` Frame: ${th.fg("accent", String(this.frame))}`) + border("│"));
-		lines.push(border("│") + padLine(` FPS: ${th.fg("success", String(this.fps))}`) + border("│"));
+		lines.push(border("│") + padLine(` 帧：${th.fg("accent", String(this.frame))}`) + border("│"));
+		lines.push(border("│") + padLine(` FPS：${th.fg("success", String(this.fps))}`) + border("│"));
 		lines.push(border("│") + padLine(``) + border("│"));
 
 		// Animated content - bouncing bar
@@ -825,20 +825,20 @@ class AnimationDemoComponent extends BaseOverlay {
 		// Spinning character
 		const spinChars = ["◐", "◓", "◑", "◒"];
 		const spin = spinChars[this.frame % spinChars.length];
-		lines.push(border("│") + padLine(` Spinner: ${th.fg("warning", spin!)}`) + border("│"));
+		lines.push(border("│") + padLine(` 旋转器：${th.fg("warning", spin!)}`) + border("│"));
 
 		// Color cycling
 		const hue = (this.frame * 3) % 360;
 		const rgb = hslToRgb(hue / 360, 0.8, 0.5);
 		const colorBlock = `\x1b[48;2;${rgb[0]};${rgb[1]};${rgb[2]}m${"  ".repeat(10)}\x1b[0m`;
-		lines.push(border("│") + padLine(` Color: ${colorBlock}`) + border("│"));
+		lines.push(border("│") + padLine(` 颜色：${colorBlock}`) + border("│"));
 
 		lines.push(border("│") + padLine(``) + border("│"));
-		lines.push(border("│") + padLine(th.fg("dim", " This proves overlays can handle")) + border("│"));
-		lines.push(border("│") + padLine(th.fg("dim", " real-time game-like rendering.")) + border("│"));
-		lines.push(border("│") + padLine(th.fg("dim", " (pi-doom uses same approach)")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("dim", " 这证明覆盖层可以处理")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("dim", " 实时类游戏渲染。")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("dim", " (pi-doom 使用相同方法)")) + border("│"));
 		lines.push(border("│") + padLine(``) + border("│"));
-		lines.push(border("│") + padLine(th.fg("dim", " Press Esc to close")) + border("│"));
+		lines.push(border("│") + padLine(th.fg("dim", " 按 Esc 关闭")) + border("│"));
 		lines.push(border(`╰${"─".repeat(innerW)}╯`));
 
 		return lines;
@@ -914,24 +914,24 @@ class ToggleDemoComponent extends BaseOverlay {
 		return this.box(
 			[
 				"",
-				th.fg("accent", " Toggle Demo"),
+				th.fg("accent", "切换演示"),
 				"",
-				" This overlay demonstrates the",
-				" onHandle callback API.",
+				" 此覆盖层演示了",
+				" onHandle 回调 API。",
 				"",
-				` Toggle count: ${th.fg("accent", String(this.toggleCount))}`,
+				` 切换次数：${th.fg("accent", String(this.toggleCount))}`,
 				"",
-				th.fg("dim", " Press 't' to hide for 1 second"),
-				th.fg("dim", " (demonstrates setHidden API)"),
+				th.fg("dim", " 按 't' 隐藏 1 秒"),
+				th.fg("dim", " (演示 setHidden API)"),
 				"",
-				th.fg("dim", " In real usage, a global keybinding"),
-				th.fg("dim", " would toggle visibility externally."),
+				th.fg("dim", " 实际使用中，全局键绑定"),
+				th.fg("dim", " 会在外部切换可见性。"),
 				"",
-				th.fg("dim", " Press Esc to close"),
+				th.fg("dim", " 按 Esc 关闭"),
 				"",
 			],
 			width,
-			"Toggle Demo",
+			"切换演示",
 		);
 	}
 }
@@ -981,7 +981,7 @@ class PassiveDemoController extends BaseOverlay {
 
 	render(width: number): string[] {
 		const th = this.theme;
-		const display = this.typed.length > 0 ? this.typed : th.fg("dim", "(type here)");
+		const display = this.typed.length > 0 ? this.typed : th.fg("dim", "(在此输入)");
 		return this.box(
 			[
 				"",
@@ -990,12 +990,12 @@ class PassiveDemoController extends BaseOverlay {
 				"",
 				` > ${display}`,
 				"",
-				th.fg("dim", " Type to prove input goes here."),
-				th.fg("dim", " Press Esc to close both."),
+				th.fg("dim", " 在此输入以验证输入路由。"),
+				th.fg("dim", " 按 Esc 关闭两者。"),
 				"",
 			],
 			width,
-			"Non-Capturing Demo",
+			"非捕获演示",
 		);
 	}
 
@@ -1025,7 +1025,7 @@ class TimerPanel extends BaseOverlay {
 		const mins = Math.floor(this.seconds / 60);
 		const secs = this.seconds % 60;
 		const time = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
-		return this.box([` ${th.fg("accent", time)}`, th.fg("dim", " nonCapturing: true")], width, "Timer");
+		return this.box([` ${th.fg("accent", time)}`, th.fg("dim", " nonCapturing: true")], width, "计时器");
 	}
 }
 
@@ -1043,7 +1043,7 @@ class FocusDemoController extends BaseOverlay {
 		this.tui = tui;
 		this.done = done;
 		const colors = ["error", "success", "accent"] as const;
-		const labels = ["Alpha", "Beta", "Gamma"];
+		const labels = ["甲", "乙", "丙"];
 
 		for (let i = 0; i < 3; i++) {
 			const panel = new FocusPanel(
@@ -1095,24 +1095,24 @@ class FocusDemoController extends BaseOverlay {
 
 	render(width: number): string[] {
 		const th = this.theme;
-		const focused = this.focusIndex === -1 ? "Controller" : (this.panels[this.focusIndex]?.label ?? "?");
+		const focused = this.focusIndex === -1 ? "控制器" : (this.panels[this.focusIndex]?.label ?? "?");
 		return this.box(
 			[
 				"",
-				` Current focus: ${th.fg("accent", focused)}`,
+				` 当前焦点：${th.fg("accent", focused)}`,
 				"",
-				" Three overlapping panels above are",
-				` all ${th.fg("accent", "nonCapturing")}. Press Tab to`,
-				" cycle focus() between them.",
+				" 上方三个重叠面板均为",
+				` ${th.fg("accent", "nonCapturing")}。按 Tab 可`,
+				" 在它们之间循环 focus()。",
 				"",
-				" Focused panel renders on top",
-				" (focus-based rendering order).",
+				" 获得焦点的面板会渲染在",
+				" 最上层（基于焦点的渲染顺序）。",
 				"",
-				th.fg("dim", " Tab = cycle focus | Esc = close"),
+				th.fg("dim", " Tab = 循环焦点 | Esc = 关闭"),
 				"",
 			],
 			width,
-			"Focus Demo",
+			"焦点演示",
 		);
 	}
 
@@ -1162,11 +1162,11 @@ class FocusPanel extends BaseOverlay {
 		lines.push(border("│") + padLine(` ${th.fg("accent", this.label)}`) + border("│"));
 		lines.push(border("│") + padLine("") + border("│"));
 		if (focused) {
-			lines.push(border("│") + padLine(th.fg("success", " ● FOCUSED")) + border("│"));
-			lines.push(border("│") + padLine(th.fg("dim", " (receiving input)")) + border("│"));
+			lines.push(border("│") + padLine(th.fg("success", " ● 已聚焦")) + border("│"));
+			lines.push(border("│") + padLine(th.fg("dim", " (正在接收输入)")) + border("│"));
 		} else {
-			lines.push(border("│") + padLine(th.fg("dim", " ○ unfocused")) + border("│"));
-			lines.push(border("│") + padLine(th.fg("dim", " (passive)")) + border("│"));
+			lines.push(border("│") + padLine(th.fg("dim", " ○ 未聚焦")) + border("│"));
+			lines.push(border("│") + padLine(th.fg("dim", " (被动)")) + border("│"));
 		}
 		lines.push(border("│") + padLine("") + border("│"));
 		lines.push(border(`╰${"─".repeat(innerW)}╯`));
@@ -1194,7 +1194,7 @@ class StreamingInputController extends BaseOverlay {
 
 		// Create 3 input panels as non-capturing overlays
 		const colors = ["error", "success", "accent"] as const;
-		const labels = ["Panel A", "Panel B", "Panel C"];
+		const labels = ["面板 A", "面板 B", "面板 C"];
 
 		for (let i = 0; i < 3; i++) {
 			const panel = new StreamingInputPanel(
@@ -1221,7 +1221,7 @@ class StreamingInputController extends BaseOverlay {
 		this.streamInterval = setInterval(() => {
 			this.lineCount++;
 			const timestamp = new Date().toLocaleTimeString();
-			this.streamLines.push(`[${timestamp}] Streaming line ${this.lineCount}...`);
+			this.streamLines.push(`[${timestamp}] 流式行 ${this.lineCount}...`);
 			if (this.streamLines.length > 8) {
 				this.streamLines.shift();
 			}
@@ -1271,15 +1271,13 @@ class StreamingInputController extends BaseOverlay {
 	render(width: number): string[] {
 		const th = this.theme;
 		const focusedLabel =
-			this.focusIndex === -1
-				? th.fg("success", "Controller (this panel)")
-				: (this.panels[this.focusIndex]?.label ?? "?");
+			this.focusIndex === -1 ? th.fg("success", "控制器（此面板）") : (this.panels[this.focusIndex]?.label ?? "?");
 
 		const lines = [
 			"",
-			` Current focus: ${th.fg("accent", focusedLabel)}`,
+			` 当前焦点：${th.fg("accent", focusedLabel)}`,
 			"",
-			" Simulated streaming output:",
+			" 模拟流式输出：",
 			th.fg("dim", " ─".repeat((width - 2) / 2)),
 		];
 
@@ -1293,14 +1291,14 @@ class StreamingInputController extends BaseOverlay {
 
 		lines.push(th.fg("dim", " ─".repeat((width - 2) / 2)));
 		lines.push("");
-		lines.push(` Three ${th.fg("accent", "nonCapturing")} input panels on the left.`);
-		lines.push(" Tab cycles: Controller → Panel A → B → C → Controller");
-		lines.push(" Type in each panel to test input routing.");
+		lines.push(` 左侧有三个 ${th.fg("accent", "nonCapturing")} 输入面板。`);
+		lines.push(" Tab 循环：控制器 → 面板 A → B → C → 控制器");
+		lines.push(" 在每个面板中输入以测试输入路由。");
 		lines.push("");
-		lines.push(th.fg("dim", " Tab = cycle focus | Esc = close all"));
+		lines.push(th.fg("dim", " Tab = 循环焦点 | Esc = 全部关闭"));
 		lines.push("");
 
-		return this.box(lines, width, "Streaming + Input Test");
+		return this.box(lines, width, "流式 + 输入测试");
 	}
 
 	override dispose(): void {
@@ -1353,7 +1351,7 @@ class StreamingInputPanel implements Component {
 			return s + " ".repeat(Math.max(0, innerW - w));
 		};
 
-		const inputDisplay = this.typed.length > 0 ? this.typed : th.fg("dim", "(type here)");
+		const inputDisplay = this.typed.length > 0 ? this.typed : th.fg("dim", "(在此输入)");
 		const truncatedInput = truncateToWidth(` > ${inputDisplay}`, innerW, "...", true);
 
 		const lines: string[] = [];
@@ -1361,10 +1359,10 @@ class StreamingInputPanel implements Component {
 		lines.push(border("│") + padLine(` ${th.fg("accent", this.label)}`) + border("│"));
 		lines.push(border("│") + padLine("") + border("│"));
 		if (focused) {
-			lines.push(border("│") + padLine(th.fg("success", " ● FOCUSED")) + border("│"));
-			lines.push(border("│") + padLine(th.fg("dim", " (receiving input)")) + border("│"));
+			lines.push(border("│") + padLine(th.fg("success", " ● 已聚焦")) + border("│"));
+			lines.push(border("│") + padLine(th.fg("dim", " (正在接收输入)")) + border("│"));
 		} else {
-			lines.push(border("│") + padLine(th.fg("dim", " ○ unfocused")) + border("│"));
+			lines.push(border("│") + padLine(th.fg("dim", " ○ 未聚焦")) + border("│"));
 			lines.push(border("│") + padLine("") + border("│"));
 		}
 		lines.push(border("│") + padLine(truncatedInput) + border("│"));

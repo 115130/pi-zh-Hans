@@ -1,19 +1,17 @@
 /**
- * Sandbox Extension - OS-level sandboxing for bash commands
+ * 沙盒扩展 - bash 命令的 OS 级沙盒
  *
- * Uses @anthropic-ai/sandbox-runtime to enforce filesystem and network
- * restrictions on bash commands at the OS level (sandbox-exec on macOS,
- * bubblewrap on Linux).
+ * 使用 @anthropic-ai/sandbox-runtime 对 bash 命令在操作系统级别执行文件系统和网络限制
+ * （macOS 上为 sandbox-exec，Linux 上为 bubblewrap）
  *
- * Note: this example intentionally overrides the built-in `bash` tool to show
- * how built-in tools can be replaced. Alternatively, you could sandbox `bash`
- * via `tool_call` input mutation without replacing the tool.
+ * 注意：此示例故意覆盖内置的 `bash` 工具，以展示如何替换内置工具。
+ * 或者，您也可以通过 `tool_call` 输入突变对 `bash` 实施沙盒，而无需替换该工具。
  *
- * Config files (merged, project takes precedence):
- * - ~/.pi/agent/extensions/sandbox.json (global)
- * - <cwd>/.pi/sandbox.json (project-local)
+ * 配置文件（合并，项目优先级更高）：
+ * - ~/.pi/agent/extensions/sandbox.json（全局）
+ * - <cwd>/.pi/sandbox.json（项目本地）
  *
- * Example .pi/sandbox.json:
+ * 示例 .pi/sandbox.json：
  * ```json
  * {
  *   "enabled": true,
@@ -29,16 +27,16 @@
  * }
  * ```
  *
- * Usage:
- * - `pi -e ./sandbox` - sandbox enabled with default/config settings
- * - `pi -e ./sandbox --no-sandbox` - disable sandboxing
- * - `/sandbox` - show current sandbox configuration
+ * 用法：
+ * - `pi -e ./sandbox` - 使用默认/配置设置启用沙盒
+ * - `pi -e ./sandbox --no-sandbox` - 禁用沙盒
+ * - `/sandbox` - 显示当前沙盒配置
  *
- * Setup:
- * 1. Copy sandbox/ directory to ~/.pi/agent/extensions/
- * 2. Run `npm install` in ~/.pi/agent/extensions/sandbox/
+ * 安装：
+ * 1. 将 sandbox/ 目录复制到 ~/.pi/agent/extensions/
+ * 2. 在 ~/.pi/agent/extensions/sandbox/ 中运行 `npm install`
  *
- * Linux also requires: bubblewrap, socat, ripgrep
+ * Linux 还需要：bubblewrap, socat, ripgrep
  */
 
 import { spawn } from "node:child_process";
@@ -87,7 +85,7 @@ function loadConfig(cwd: string): SandboxConfig {
 		try {
 			globalConfig = JSON.parse(readFileSync(globalConfigPath, "utf-8"));
 		} catch (e) {
-			console.error(`Warning: Could not parse ${globalConfigPath}: ${e}`);
+			console.error(`警告：无法解析 ${globalConfigPath}：${e}`);
 		}
 	}
 
@@ -95,7 +93,7 @@ function loadConfig(cwd: string): SandboxConfig {
 		try {
 			projectConfig = JSON.parse(readFileSync(projectConfigPath, "utf-8"));
 		} catch (e) {
-			console.error(`Warning: Could not parse ${projectConfigPath}: ${e}`);
+			console.error(`警告：无法解析 ${projectConfigPath}：${e}`);
 		}
 	}
 
@@ -133,7 +131,7 @@ function createSandboxedBashOps(): BashOperations {
 	return {
 		async exec(command, cwd, { onData, signal, timeout }) {
 			if (!existsSync(cwd)) {
-				throw new Error(`Working directory does not exist: ${cwd}`);
+				throw new Error(`工作目录不存在：${cwd}`);
 			}
 
 			const wrappedCommand = await SandboxManager.wrapWithSandbox(command);
@@ -200,7 +198,7 @@ function createSandboxedBashOps(): BashOperations {
 
 export default function (pi: ExtensionAPI) {
 	pi.registerFlag("no-sandbox", {
-		description: "Disable OS-level sandboxing for bash commands",
+		description: "禁用 bash 命令的 OS 级沙盒",
 		type: "boolean",
 		default: false,
 	});
@@ -213,7 +211,7 @@ export default function (pi: ExtensionAPI) {
 
 	pi.registerTool({
 		...localBash,
-		label: "bash (sandboxed)",
+		label: "bash（沙盒化）",
 		async execute(id, params, signal, onUpdate, _ctx) {
 			if (!sandboxEnabled || !sandboxInitialized) {
 				return localBash.execute(id, params, signal, onUpdate);
@@ -236,7 +234,7 @@ export default function (pi: ExtensionAPI) {
 
 		if (noSandbox) {
 			sandboxEnabled = false;
-			ctx.ui.notify("Sandbox disabled via --no-sandbox", "warning");
+			ctx.ui.notify("已通过 --no-sandbox 禁用沙盒", "warning");
 			return;
 		}
 
@@ -244,14 +242,14 @@ export default function (pi: ExtensionAPI) {
 
 		if (!config.enabled) {
 			sandboxEnabled = false;
-			ctx.ui.notify("Sandbox disabled via config", "info");
+			ctx.ui.notify("已通过配置禁用沙盒", "info");
 			return;
 		}
 
 		const platform = process.platform;
 		if (platform !== "darwin" && platform !== "linux") {
 			sandboxEnabled = false;
-			ctx.ui.notify(`Sandbox not supported on ${platform}`, "warning");
+			ctx.ui.notify(`沙盒在 ${platform} 上不受支持`, "warning");
 			return;
 		}
 
@@ -275,12 +273,12 @@ export default function (pi: ExtensionAPI) {
 			const writeCount = config.filesystem?.allowWrite?.length ?? 0;
 			ctx.ui.setStatus(
 				"sandbox",
-				ctx.ui.theme.fg("accent", `🔒 Sandbox: ${networkCount} domains, ${writeCount} write paths`),
+				ctx.ui.theme.fg("accent", `🔒 沙盒：${networkCount} 个域名，${writeCount} 个写入路径`),
 			);
-			ctx.ui.notify("Sandbox initialized", "info");
+			ctx.ui.notify("沙盒已初始化", "info");
 		} catch (err) {
 			sandboxEnabled = false;
-			ctx.ui.notify(`Sandbox initialization failed: ${err instanceof Error ? err.message : err}`, "error");
+			ctx.ui.notify(`沙盒初始化失败：${err instanceof Error ? err.message : err}`, "error");
 		}
 	});
 
@@ -289,31 +287,31 @@ export default function (pi: ExtensionAPI) {
 			try {
 				await SandboxManager.reset();
 			} catch {
-				// Ignore cleanup errors
+				// 忽略清理错误
 			}
 		}
 	});
 
 	pi.registerCommand("sandbox", {
-		description: "Show sandbox configuration",
+		description: "显示沙盒配置",
 		handler: async (_args, ctx) => {
 			if (!sandboxEnabled) {
-				ctx.ui.notify("Sandbox is disabled", "info");
+				ctx.ui.notify("沙盒已禁用", "info");
 				return;
 			}
 
 			const config = loadConfig(ctx.cwd);
 			const lines = [
-				"Sandbox Configuration:",
+				"沙盒配置：",
 				"",
-				"Network:",
-				`  Allowed: ${config.network?.allowedDomains?.join(", ") || "(none)"}`,
-				`  Denied: ${config.network?.deniedDomains?.join(", ") || "(none)"}`,
+				"网络：",
+				`  允许：${config.network?.allowedDomains?.join(", ") || "（无）"}`,
+				`  拒绝：${config.network?.deniedDomains?.join(", ") || "（无）"}`,
 				"",
-				"Filesystem:",
-				`  Deny Read: ${config.filesystem?.denyRead?.join(", ") || "(none)"}`,
-				`  Allow Write: ${config.filesystem?.allowWrite?.join(", ") || "(none)"}`,
-				`  Deny Write: ${config.filesystem?.denyWrite?.join(", ") || "(none)"}`,
+				"文件系统：",
+				`  拒绝读取：${config.filesystem?.denyRead?.join(", ") || "（无）"}`,
+				`  允许写入：${config.filesystem?.allowWrite?.join(", ") || "（无）"}`,
+				`  拒绝写入：${config.filesystem?.denyWrite?.join(", ") || "（无）"}`,
 			];
 			ctx.ui.notify(lines.join("\n"), "info");
 		},

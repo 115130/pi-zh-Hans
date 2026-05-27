@@ -3,7 +3,7 @@ import type { Api, KnownProvider, Model, ModelThinkingLevel, Usage } from "./typ
 
 const modelRegistry: Map<string, Map<string, Model<Api>>> = new Map();
 
-// Initialize registry from MODELS on module load
+// 模块加载时根据 MODELS 初始化注册表
 for (const [provider, models] of Object.entries(MODELS)) {
 	const providerModels = new Map<string, Model<Api>>();
 	for (const [id, model] of Object.entries(models)) {
@@ -80,8 +80,8 @@ export function clampThinkingLevel<TApi extends Api>(
 }
 
 /**
- * Check if two models are equal by comparing both their id and provider.
- * Returns false if either model is null or undefined.
+ * 检查两个模型是否相等，通过比较它们的 id 和 provider。
+ * 如果任一模型为 null 或 undefined，则返回 false。
  */
 export function modelsAreEqual<TApi extends Api>(
 	a: Model<TApi> | null | undefined,

@@ -12,13 +12,10 @@ export default function (pi: ExtensionAPI) {
 		if (!ctx.hasUI) return;
 
 		if (event.reason === "new") {
-			const confirmed = await ctx.ui.confirm(
-				"Clear session?",
-				"This will delete all messages in the current session.",
-			);
+			const confirmed = await ctx.ui.confirm("清除会话？", "这将删除当前会话中的所有消息。");
 
 			if (!confirmed) {
-				ctx.ui.notify("Clear cancelled", "info");
+				ctx.ui.notify("清除已取消", "info");
 				return { cancel: true };
 			}
 			return;
@@ -31,13 +28,10 @@ export default function (pi: ExtensionAPI) {
 		);
 
 		if (hasUnsavedWork) {
-			const confirmed = await ctx.ui.confirm(
-				"Switch session?",
-				"You have messages in the current session. Switch anyway?",
-			);
+			const confirmed = await ctx.ui.confirm("切换会话？", "当前会话中有未保存的消息。仍要切换吗？");
 
 			if (!confirmed) {
-				ctx.ui.notify("Switch cancelled", "info");
+				ctx.ui.notify("切换已取消", "info");
 				return { cancel: true };
 			}
 		}
@@ -46,13 +40,13 @@ export default function (pi: ExtensionAPI) {
 	pi.on("session_before_fork", async (event, ctx) => {
 		if (!ctx.hasUI) return;
 
-		const choice = await ctx.ui.select(`Fork from entry ${event.entryId.slice(0, 8)}?`, [
-			"Yes, create fork",
-			"No, stay in current session",
+		const choice = await ctx.ui.select(`从条目 ${event.entryId.slice(0, 8)} 分叉？`, [
+			"是，创建分叉",
+			"否，留在当前会话",
 		]);
 
 		if (choice !== "Yes, create fork") {
-			ctx.ui.notify("Fork cancelled", "info");
+			ctx.ui.notify("分叉已取消", "info");
 			return { cancel: true };
 		}
 	});

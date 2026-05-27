@@ -65,34 +65,34 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("tool_call", async (event) => {
-		console.log(\`[Extension] Tool: \${event.toolName}\`);
+		console.log(`[Extension] Tool: ${event.toolName}`);
 		// Return { block: true, reason: "..." } to block execution
 		return undefined;
 	});
 
 	pi.on("agent_end", async (event) => {
-		console.log(\`[Extension] Done, \${event.messages.length} messages\`);
+		console.log(`[Extension] Done, ${event.messages.length} messages`);
 	});
 
 	// Register a custom tool
 	pi.registerTool({
 		name: "my_tool",
-		label: "My Tool",
-		description: "Does something useful",
+		label: "我的工具",
+		description: "做一些有用的事情",
 		parameters: Type.Object({
 			input: Type.String(),
 		}),
 		execute: async (_toolCallId, params, _signal, _onUpdate, _ctx) => ({
-			content: [{ type: "text", text: \`Processed: \${params.input}\` }],
+			content: [{ type: "text", text: `Processed: ${params.input}` }],
 			details: {},
 		}),
 	});
 
 	// Register a command
 	pi.registerCommand("mycommand", {
-		description: "Do something",
+		description: "执行某个操作",
 		handler: async (args, ctx) => {
-			ctx.ui.notify(\`Command executed with: \${args}\`);
+			ctx.ui.notify(`Command executed with: ${args}`);
 		},
 	});
 }

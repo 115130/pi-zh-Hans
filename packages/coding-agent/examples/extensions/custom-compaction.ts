@@ -19,7 +19,7 @@ import { convertToLlm, serializeConversation } from "@earendil-works/pi-coding-a
 
 export default function (pi: ExtensionAPI) {
 	pi.on("session_before_compact", async (event, ctx) => {
-		ctx.ui.notify("Custom compaction extension triggered", "info");
+		ctx.ui.notify("自定义压缩扩展已触发", "info");
 
 		const { preparation, branchEntries: _, signal } = event;
 		const { messagesToSummarize, turnPrefixMessages, tokensBefore, firstKeptEntryId, previousSummary } = preparation;
@@ -27,18 +27,18 @@ export default function (pi: ExtensionAPI) {
 		// Use Gemini Flash for summarization (cheaper/faster than most conversation models)
 		const model = ctx.modelRegistry.find("google", "gemini-2.5-flash");
 		if (!model) {
-			ctx.ui.notify(`Could not find Gemini Flash model, using default compaction`, "warning");
+			ctx.ui.notify("找不到Gemini Flash模型，使用默认压缩", "warning");
 			return;
 		}
 
 		// Resolve request auth for the summarization model
 		const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
 		if (!auth.ok) {
-			ctx.ui.notify(`Compaction auth failed: ${auth.error}`, "warning");
+			ctx.ui.notify(`压缩认证失败：${auth.error}`, "warning");
 			return;
 		}
 		if (!auth.apiKey) {
-			ctx.ui.notify(`No API key for ${model.provider}, using default compaction`, "warning");
+			ctx.ui.notify(`${model.provider}没有API密钥，使用默认压缩`, "warning");
 			return;
 		}
 
@@ -46,7 +46,7 @@ export default function (pi: ExtensionAPI) {
 		const allMessages = [...messagesToSummarize, ...turnPrefixMessages];
 
 		ctx.ui.notify(
-			`Custom compaction: summarizing ${allMessages.length} messages (${tokensBefore.toLocaleString()} tokens) with ${model.id}...`,
+			`自定义压缩：正在使用${model.id}总结${allMessages.length}条消息（${tokensBefore.toLocaleString()} tokens）...`,
 			"info",
 		);
 
@@ -104,7 +104,7 @@ ${conversationText}
 				.join("\n");
 
 			if (!summary.trim()) {
-				if (!signal.aborted) ctx.ui.notify("Compaction summary was empty, using default compaction", "warning");
+				if (!signal.aborted) ctx.ui.notify("压缩摘要为空，使用默认压缩", "warning");
 				return;
 			}
 
@@ -119,7 +119,7 @@ ${conversationText}
 			};
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
-			ctx.ui.notify(`Compaction failed: ${message}`, "error");
+			ctx.ui.notify(`压缩失败：${message}`, "error");
 			// Fall back to default compaction on error
 			return;
 		}

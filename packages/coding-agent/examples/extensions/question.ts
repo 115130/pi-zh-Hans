@@ -24,26 +24,26 @@ interface QuestionDetails {
 
 // Options with labels and optional descriptions
 const OptionSchema = Type.Object({
-	label: Type.String({ description: "Display label for the option" }),
-	description: Type.Optional(Type.String({ description: "Optional description shown below label" })),
+	label: Type.String({ description: "选项的显示标签" }),
+	description: Type.Optional(Type.String({ description: "可选描述，显示在标签下方" })),
 });
 
 const QuestionParams = Type.Object({
-	question: Type.String({ description: "The question to ask the user" }),
-	options: Type.Array(OptionSchema, { description: "Options for the user to choose from" }),
+	question: Type.String({ description: "向用户提出的问题" }),
+	options: Type.Array(OptionSchema, { description: "供用户选择的选项" }),
 });
 
 export default function question(pi: ExtensionAPI) {
 	pi.registerTool({
 		name: "question",
-		label: "Question",
-		description: "Ask the user a question and let them pick from options. Use when you need user input to proceed.",
+		label: "问题",
+		description: "向用户提问并让他们从选项中选择。在需要用户输入以继续时使用。",
 		parameters: QuestionParams,
 
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			if (!ctx.hasUI) {
 				return {
-					content: [{ type: "text", text: "Error: UI not available (running in non-interactive mode)" }],
+					content: [{ type: "text", text: "错误：UI 不可用（在非交互模式下运行）" }],
 					details: {
 						question: params.question,
 						options: params.options.map((o) => o.label),
@@ -54,12 +54,12 @@ export default function question(pi: ExtensionAPI) {
 
 			if (params.options.length === 0) {
 				return {
-					content: [{ type: "text", text: "Error: No options provided" }],
+					content: [{ type: "text", text: "错误：未提供选项" }],
 					details: { question: params.question, options: [], answer: null } as QuestionDetails,
 				};
 			}
 
-			const allOptions: DisplayOption[] = [...params.options, { label: "Type something.", isOther: true }];
+			const allOptions: DisplayOption[] = [...params.options, { label: "输入内容...", isOther: true }];
 
 			const result = await ctx.ui.custom<{ answer: string; wasCustom: boolean; index?: number } | null>(
 				(tui, theme, _kb, done) => {
@@ -167,7 +167,7 @@ export default function question(pi: ExtensionAPI) {
 
 						if (editMode) {
 							lines.push("");
-							add(theme.fg("muted", " Your answer:"));
+							add(theme.fg("muted", " 你的答案："));
 							for (const line of editor.render(width - 2)) {
 								add(` ${line}`);
 							}
@@ -175,9 +175,9 @@ export default function question(pi: ExtensionAPI) {
 
 						lines.push("");
 						if (editMode) {
-							add(theme.fg("dim", " Enter to submit • Esc to go back"));
+							add(theme.fg("dim", " 回车提交 • Esc 返回"));
 						} else {
-							add(theme.fg("dim", " ↑↓ navigate • Enter to select • Esc to cancel"));
+							add(theme.fg("dim", " ↑↓ 导航 • 回车选择 • Esc 取消"));
 						}
 						add(theme.fg("accent", "─".repeat(width)));
 
@@ -200,14 +200,14 @@ export default function question(pi: ExtensionAPI) {
 
 			if (!result) {
 				return {
-					content: [{ type: "text", text: "User cancelled the selection" }],
+					content: [{ type: "text", text: "用户已取消选择" }],
 					details: { question: params.question, options: simpleOptions, answer: null } as QuestionDetails,
 				};
 			}
 
 			if (result.wasCustom) {
 				return {
-					content: [{ type: "text", text: `User wrote: ${result.answer}` }],
+					content: [{ type: "text", text: `用户输入了：${result.answer}` }],
 					details: {
 						question: params.question,
 						options: simpleOptions,
@@ -217,7 +217,7 @@ export default function question(pi: ExtensionAPI) {
 				};
 			}
 			return {
-				content: [{ type: "text", text: `User selected: ${result.index}. ${result.answer}` }],
+				content: [{ type: "text", text: `用户选择了：${result.index}. ${result.answer}` }],
 				details: {
 					question: params.question,
 					options: simpleOptions,
@@ -228,12 +228,12 @@ export default function question(pi: ExtensionAPI) {
 		},
 
 		renderCall(args, theme, _context) {
-			let text = theme.fg("toolTitle", theme.bold("question ")) + theme.fg("muted", args.question);
+			let text = theme.fg("toolTitle", theme.bold("问题 ")) + theme.fg("muted", args.question);
 			const opts = Array.isArray(args.options) ? args.options : [];
 			if (opts.length) {
 				const labels = opts.map((o: OptionWithDesc) => o.label);
-				const numbered = [...labels, "Type something."].map((o, i) => `${i + 1}. ${o}`);
-				text += `\n${theme.fg("dim", `  Options: ${numbered.join(", ")}`)}`;
+				const numbered = [...labels, "输入内容..."].map((o, i) => `${i + 1}. ${o}`);
+				text += `\n${theme.fg("dim", `  选项：${numbered.join(", ")}`)}`;
 			}
 			return new Text(text, 0, 0);
 		},
@@ -246,12 +246,12 @@ export default function question(pi: ExtensionAPI) {
 			}
 
 			if (details.answer === null) {
-				return new Text(theme.fg("warning", "Cancelled"), 0, 0);
+				return new Text(theme.fg("warning", "已取消"), 0, 0);
 			}
 
 			if (details.wasCustom) {
 				return new Text(
-					theme.fg("success", "✓ ") + theme.fg("muted", "(wrote) ") + theme.fg("accent", details.answer),
+					theme.fg("success", "✓ ") + theme.fg("muted", "(输入) ") + theme.fg("accent", details.answer),
 					0,
 					0,
 				);

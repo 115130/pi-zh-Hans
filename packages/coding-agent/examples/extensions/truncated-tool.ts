@@ -31,9 +31,9 @@ import { join } from "path";
 import { Type } from "typebox";
 
 const RgParams = Type.Object({
-	pattern: Type.String({ description: "Search pattern (regex)" }),
-	path: Type.Optional(Type.String({ description: "Directory to search (default: current directory)" })),
-	glob: Type.Optional(Type.String({ description: "File glob pattern, e.g. '*.ts'" })),
+	pattern: Type.String({ description: "搜索模式（正则表达式）" }),
+	path: Type.Optional(Type.String({ description: "要搜索的目录（默认：当前目录）" })),
+	glob: Type.Optional(Type.String({ description: "文件通配符模式，例如 '*.ts'" })),
 });
 
 interface RgDetails {
@@ -48,9 +48,9 @@ interface RgDetails {
 export default function (pi: ExtensionAPI) {
 	pi.registerTool({
 		name: "rg",
-		label: "ripgrep",
+		label: "ripgrep 搜索",
 		// Document the truncation limits in the tool description so the LLM knows
-		description: `Search file contents using ripgrep. Output is truncated to ${DEFAULT_MAX_LINES} lines or ${formatSize(DEFAULT_MAX_BYTES)} (whichever is hit first). If truncated, full output is saved to a temp file.`,
+		description: `使用 ripgrep 搜索文件内容。输出最多截断为 ${DEFAULT_MAX_LINES} 行或 ${formatSize(DEFAULT_MAX_BYTES)}（以先达到的条件为准）。如果截断，完整输出将保存到临时文件中。`,
 		parameters: RgParams,
 
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -73,16 +73,16 @@ export default function (pi: ExtensionAPI) {
 				// ripgrep exits with 1 when no matches found
 				if (err.status === 1) {
 					return {
-						content: [{ type: "text", text: "No matches found" }],
+						content: [{ type: "text", text: "未找到匹配" }],
 						details: { pattern, path: searchPath, glob, matchCount: 0 } as RgDetails,
 					};
 				}
-				throw new Error(`ripgrep failed: ${err.message}`);
+				throw new Error(`ripgrep 失败：${err.message}`);
 			}
 
 			if (!output.trim()) {
 				return {
-					content: [{ type: "text", text: "No matches found" }],
+					content: [{ type: "text", text: "未找到匹配" }],
 					details: { pattern, path: searchPath, glob, matchCount: 0 } as RgDetails,
 				};
 			}
@@ -122,10 +122,10 @@ export default function (pi: ExtensionAPI) {
 				const truncatedLines = truncation.totalLines - truncation.outputLines;
 				const truncatedBytes = truncation.totalBytes - truncation.outputBytes;
 
-				resultText += `\n\n[Output truncated: showing ${truncation.outputLines} of ${truncation.totalLines} lines`;
-				resultText += ` (${formatSize(truncation.outputBytes)} of ${formatSize(truncation.totalBytes)}).`;
-				resultText += ` ${truncatedLines} lines (${formatSize(truncatedBytes)}) omitted.`;
-				resultText += ` Full output saved to: ${tempFile}]`;
+				resultText += `\n\n[输出已截断：显示 ${truncation.outputLines} 行（共 ${truncation.totalLines} 行）`;
+				resultText += ` (${formatSize(truncation.outputBytes)} / ${formatSize(truncation.totalBytes)})。`;
+				resultText += ` 省略了 ${truncatedLines} 行（${formatSize(truncatedBytes)}）。`;
+				resultText += ` 完整输出已保存至：${tempFile}]`;
 			}
 
 			return {
@@ -139,7 +139,7 @@ export default function (pi: ExtensionAPI) {
 			let text = theme.fg("toolTitle", theme.bold("rg "));
 			text += theme.fg("accent", `"${args.pattern}"`);
 			if (args.path) {
-				text += theme.fg("muted", ` in ${args.path}`);
+				text += theme.fg("muted", ` 在 ${args.path}`);
 			}
 			if (args.glob) {
 				text += theme.fg("dim", ` --glob ${args.glob}`);
@@ -153,20 +153,20 @@ export default function (pi: ExtensionAPI) {
 
 			// Handle streaming/partial results
 			if (isPartial) {
-				return new Text(theme.fg("warning", "Searching..."), 0, 0);
+				return new Text(theme.fg("warning", "正在搜索..."), 0, 0);
 			}
 
 			// No matches
 			if (!details || details.matchCount === 0) {
-				return new Text(theme.fg("dim", "No matches found"), 0, 0);
+				return new Text(theme.fg("dim", "未找到匹配"), 0, 0);
 			}
 
 			// Build result display
-			let text = theme.fg("success", `${details.matchCount} matches`);
+			let text = theme.fg("success", `${details.matchCount} 个匹配`);
 
 			// Show truncation warning if applicable
 			if (details.truncation?.truncated) {
-				text += theme.fg("warning", " (truncated)");
+				text += theme.fg("warning", "（已截断）");
 			}
 
 			// In expanded view, show the actual matches
@@ -179,13 +179,13 @@ export default function (pi: ExtensionAPI) {
 						text += `\n${theme.fg("dim", line)}`;
 					}
 					if (content.text.split("\n").length > 20) {
-						text += `\n${theme.fg("muted", "... (use read tool to see full output)")}`;
+						text += `\n${theme.fg("muted", "…（使用 read 工具查看完整输出）")}`;
 					}
 				}
 
 				// Show temp file path if truncated
 				if (details.fullOutputPath) {
-					text += `\n${theme.fg("dim", `Full output: ${details.fullOutputPath}`)}`;
+					text += `\n${theme.fg("dim", `完整输出：${details.fullOutputPath}`)}`;
 				}
 			}
 

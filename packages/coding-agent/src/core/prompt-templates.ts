@@ -115,7 +115,7 @@ function loadTemplateFromFile(filePath: string, sourceInfo: SourceInfo): PromptT
 			if (firstLine) {
 				// Truncate if too long
 				description = firstLine.slice(0, 60);
-				if (firstLine.length > 60) description += "...";
+				if (firstLine.length > 60) description += "…";
 			}
 		}
 

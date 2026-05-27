@@ -19,7 +19,7 @@ export default function (pi: ExtensionAPI) {
 
 		// Show notification on change
 		if (source !== "restore") {
-			ctx.ui.notify(`Model: ${next}`, "info");
+			ctx.ui.notify(`模型: ${next}`, "info");
 		}
 
 		// Update status bar with current model

@@ -460,7 +460,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 
 		const baseSystemPrompt = resolvePromptInput(
 			this.systemPromptSource ?? this.discoverSystemPromptFile(),
-			"system prompt",
+			"系统提示",
 		);
 		this.systemPrompt = this.systemPromptOverride ? this.systemPromptOverride(baseSystemPrompt) : baseSystemPrompt;
 
@@ -468,7 +468,7 @@ export class DefaultResourceLoader implements ResourceLoader {
 			this.appendSystemPromptSource ??
 			(this.discoverAppendSystemPromptFile() ? [this.discoverAppendSystemPromptFile()!] : []);
 		const baseAppend = appendSources
-			.map((s) => resolvePromptInput(s, "append system prompt"))
+			.map((s) => resolvePromptInput(s, "附加系统提示"))
 			.filter((s): s is string => s !== undefined);
 		this.appendSystemPrompt = this.appendSystemPromptOverride
 			? this.appendSystemPromptOverride(baseAppend)

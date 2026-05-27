@@ -1,17 +1,17 @@
 /**
  * RPC Extension UI Example (TUI)
  *
- * A lightweight TUI chat client that spawns the agent in RPC mode.
- * Demonstrates how to build a custom UI on top of the RPC protocol,
- * including handling extension UI requests (select, confirm, input, editor).
+ * 一个轻量级的 TUI 聊天客户端，以 RPC 模式启动智能体。
+ * 演示如何在 RPC 协议之上构建自定义 UI，
+ * 包括处理扩展 UI 请求（选择、确认、输入、编辑器）。
  *
- * Usage: npx tsx examples/rpc-extension-ui.ts
+ * 使用方法: npx tsx examples/rpc-extension-ui.ts
  *
- * Slash commands:
- *   /select  - demo select dialog
- *   /confirm - demo confirm dialog
- *   /input   - demo input dialog
- *   /editor  - demo editor dialog
+ * 斜杠命令:
+ *   /select  - 演示选择对话框
+ *   /confirm - 演示确认对话框
+ *   /input   - 演示输入对话框
+ *   /editor  - 演示编辑器对话框
  */
 
 import { spawn } from "node:child_process";
@@ -121,7 +121,7 @@ class LoadingIndicator implements Component {
 	invalidate(): void {}
 
 	render(_width: number): string[] {
-		return [`${BLUE}${BOLD}Agent:${RESET} ${DIM}Working${".".repeat(this.dots)}${RESET}`];
+		return [`${BLUE}${BOLD}智能体:${RESET} ${DIM}工作中${".".repeat(this.dots)}${RESET}`];
 	}
 }
 
@@ -150,7 +150,7 @@ class PromptInput implements Component {
 	}
 
 	render(width: number): string[] {
-		return [`${GREEN}${BOLD}You:${RESET}`, ...this.input.render(width)];
+		return [`${GREEN}${BOLD}你:${RESET}`, ...this.input.render(width)];
 	}
 }
 
@@ -190,7 +190,7 @@ class SelectDialog implements Component {
 		return [
 			`${MAGENTA}${BOLD}${this.title}${RESET}`,
 			...this.list.render(width),
-			`${DIM}Up/Down, Enter to select, Esc to cancel${RESET}`,
+			`${DIM}上/下选择，Enter 选择，Esc 取消${RESET}`,
 		];
 	}
 }
@@ -234,7 +234,7 @@ class InputDialog implements Component {
 		return [
 			`${MAGENTA}${BOLD}${this.title}${RESET}`,
 			...this.dialogInput.render(width),
-			`${DIM}Enter to submit, Esc to cancel${RESET}`,
+			`${DIM}Enter 提交，Esc 取消${RESET}`,
 		];
 	}
 }
@@ -260,7 +260,7 @@ async function main() {
 
 	await new Promise((resolve) => setTimeout(resolve, 500));
 	if (agent.exitCode !== null) {
-		console.error(`Agent exited immediately. Stderr:\n${stderr}`);
+		console.error(`智能体立即退出。Stderr:\n${stderr}`);
 		process.exit(1);
 	}
 
@@ -380,7 +380,7 @@ async function main() {
 		switch (method) {
 			// Dialog methods: replace prompt with interactive component
 			case "select": {
-				showSelectDialog(req.title ?? "Select", req.options ?? [], (value) => {
+				showSelectDialog(req.title ?? "选择", req.options ?? [], (value) => {
 					if (value !== undefined) {
 						send({ type: "extension_ui_response", id, value });
 					} else {
@@ -391,15 +391,15 @@ async function main() {
 			}
 
 			case "confirm": {
-				const title = req.message ? `${req.title}: ${req.message}` : (req.title ?? "Confirm");
-				showSelectDialog(title, ["Yes", "No"], (value) => {
-					send({ type: "extension_ui_response", id, confirmed: value === "Yes" });
+				const title = req.message ? `${req.title}: ${req.message}` : (req.title ?? "确认");
+				showSelectDialog(title, ["是", "否"], (value) => {
+					send({ type: "extension_ui_response", id, confirmed: value === "是" });
 				});
 				break;
 			}
 
 			case "input": {
-				const title = req.placeholder ? `${req.title} (${req.placeholder})` : (req.title ?? "Input");
+				const title = req.placeholder ? `${req.title} (${req.placeholder})` : (req.title ?? "输入");
 				showInputDialog(title, undefined, (value) => {
 					if (value !== undefined) {
 						send({ type: "extension_ui_response", id, value });
@@ -412,7 +412,7 @@ async function main() {
 
 			case "editor": {
 				const prefill = req.prefill?.replace(/\n/g, " ");
-				showInputDialog(req.title ?? "Editor", prefill, (value) => {
+				showInputDialog(req.title ?? "编辑器", prefill, (value) => {
 					if (value !== undefined) {
 						send({ type: "extension_ui_response", id, value });
 					} else {
@@ -426,14 +426,14 @@ async function main() {
 			case "notify": {
 				const notifyType = (req.notifyType as string) ?? "info";
 				const color = notifyType === "error" ? RED : notifyType === "warning" ? YELLOW : MAGENTA;
-				outputLog.append(`${color}${BOLD}Notification:${RESET} ${req.message}`);
+				outputLog.append(`${color}${BOLD}通知:${RESET} ${req.message}`);
 				tui.requestRender();
 				break;
 			}
 
 			case "setStatus":
 				outputLog.append(
-					`${MAGENTA}${BOLD}Notification:${RESET} ${DIM}[status: ${req.statusKey}]${RESET} ${req.statusText ?? "(cleared)"}`,
+					`${MAGENTA}${BOLD}通知:${RESET} ${DIM}[状态: ${req.statusKey}]${RESET} ${req.statusText ?? "(已清除)"}`,
 				);
 				tui.requestRender();
 				break;
@@ -441,7 +441,7 @@ async function main() {
 			case "setWidget": {
 				const lines = req.widgetLines;
 				if (lines && lines.length > 0) {
-					outputLog.append(`${MAGENTA}${BOLD}Notification:${RESET} ${DIM}[widget: ${req.widgetKey}]${RESET}`);
+					outputLog.append(`${MAGENTA}${BOLD}通知:${RESET} ${DIM}[小部件: ${req.widgetKey}]${RESET}`);
 					for (const wl of lines) {
 						outputLog.append(`  ${DIM}${wl}${RESET}`);
 					}
@@ -462,41 +462,41 @@ async function main() {
 	function handleSlashCommand(cmd: string): boolean {
 		switch (cmd) {
 			case "/select":
-				showSelectDialog("Pick a color", ["Red", "Green", "Blue", "Yellow"], (value) => {
+				showSelectDialog("选择一种颜色", ["红色", "绿色", "蓝色", "黄色"], (value) => {
 					if (value) {
-						outputLog.append(`${MAGENTA}${BOLD}Notification:${RESET} You picked: ${value}`);
+						outputLog.append(`${MAGENTA}${BOLD}通知:${RESET} 你选择了: ${value}`);
 					} else {
-						outputLog.append(`${MAGENTA}${BOLD}Notification:${RESET} Selection cancelled`);
+						outputLog.append(`${MAGENTA}${BOLD}通知:${RESET} 选择已取消`);
 					}
 					tui.requestRender();
 				});
 				return true;
 
 			case "/confirm":
-				showSelectDialog("Are you sure?", ["Yes", "No"], (value) => {
-					const confirmed = value === "Yes";
-					outputLog.append(`${MAGENTA}${BOLD}Notification:${RESET} Confirmed: ${confirmed}`);
+				showSelectDialog("你确定吗?", ["是", "否"], (value) => {
+					const confirmed = value === "是";
+					outputLog.append(`${MAGENTA}${BOLD}通知:${RESET} 已确认: ${confirmed}`);
 					tui.requestRender();
 				});
 				return true;
 
 			case "/input":
-				showInputDialog("Enter your name", undefined, (value) => {
+				showInputDialog("输入你的名字", undefined, (value) => {
 					if (value) {
-						outputLog.append(`${MAGENTA}${BOLD}Notification:${RESET} You entered: ${value}`);
+						outputLog.append(`${MAGENTA}${BOLD}通知:${RESET} 你输入了: ${value}`);
 					} else {
-						outputLog.append(`${MAGENTA}${BOLD}Notification:${RESET} Input cancelled`);
+						outputLog.append(`${MAGENTA}${BOLD}通知:${RESET} 输入已取消`);
 					}
 					tui.requestRender();
 				});
 				return true;
 
 			case "/editor":
-				showInputDialog("Edit text", "Hello, world!", (value) => {
+				showInputDialog("编辑文本", "你好，世界!", (value) => {
 					if (value) {
-						outputLog.append(`${MAGENTA}${BOLD}Notification:${RESET} Submitted: ${value}`);
+						outputLog.append(`${MAGENTA}${BOLD}通知:${RESET} 已提交: ${value}`);
 					} else {
-						outputLog.append(`${MAGENTA}${BOLD}Notification:${RESET} Editor cancelled`);
+						outputLog.append(`${MAGENTA}${BOLD}通知:${RESET} 编辑器已取消`);
 					}
 					tui.requestRender();
 				});
@@ -520,7 +520,7 @@ async function main() {
 		}
 
 		if (data.type === "response" && !data.success) {
-			outputLog.append(`${RED}[error]${RESET} ${data.command}: ${data.error}`);
+			outputLog.append(`${RED}[错误]${RESET} ${data.command}: ${data.error}`);
 			tui.requestRender();
 			return;
 		}
@@ -541,7 +541,7 @@ async function main() {
 				if (!hasTextOutput) {
 					hasTextOutput = true;
 					outputLog.append("");
-					outputLog.append(`${BLUE}${BOLD}Agent:${RESET}`);
+					outputLog.append(`${BLUE}${BOLD}智能体:${RESET}`);
 				}
 				const delta = evt.delta as string;
 				const parts = delta.split("\n");
@@ -555,14 +555,14 @@ async function main() {
 		}
 
 		if (data.type === "tool_execution_start") {
-			outputLog.append(`${DIM}[tool: ${data.toolName}]${RESET}`);
+			outputLog.append(`${DIM}[工具: ${data.toolName}]${RESET}`);
 			tui.requestRender();
 			return;
 		}
 
 		if (data.type === "tool_execution_end") {
 			const result = JSON.stringify(data.result).slice(0, 120);
-			outputLog.append(`${DIM}[result: ${result}...]${RESET}`);
+			outputLog.append(`${DIM}[结果: ${result}...]${RESET}`);
 			tui.requestRender();
 			return;
 		}
@@ -585,12 +585,12 @@ async function main() {
 		promptInput.input.setValue("");
 
 		if (handleSlashCommand(trimmed)) {
-			outputLog.append(`${GREEN}${BOLD}You:${RESET} ${trimmed}`);
+			outputLog.append(`${GREEN}${BOLD}你:${RESET} ${trimmed}`);
 			tui.requestRender();
 			return;
 		}
 
-		outputLog.append(`${GREEN}${BOLD}You:${RESET} ${trimmed}`);
+		outputLog.append(`${GREEN}${BOLD}你:${RESET} ${trimmed}`);
 		send({ type: "prompt", message: trimmed });
 		tui.requestRender();
 	};
@@ -600,7 +600,7 @@ async function main() {
 	promptInput.input.onEscape = () => {
 		if (isStreaming) {
 			send({ type: "abort" });
-			outputLog.append(`${YELLOW}[aborted]${RESET}`);
+			outputLog.append(`${YELLOW}[已中止]${RESET}`);
 			tui.requestRender();
 		} else {
 			exit();
@@ -612,15 +612,15 @@ async function main() {
 	agent.on("exit", (code) => {
 		tui.stop();
 		if (stderr) console.error(stderr);
-		console.log(`Agent exited with code ${code}`);
+		console.log(`智能体退出，代码 ${code}`);
 		process.exit(code ?? 0);
 	});
 
 	// -- Start --
 
-	outputLog.append(`${BOLD}RPC Chat${RESET}`);
-	outputLog.append(`${DIM}Type a message and press Enter. Esc to abort or exit. Ctrl+D to quit.${RESET}`);
-	outputLog.append(`${DIM}Slash commands: /select /confirm /input /editor${RESET}`);
+	outputLog.append(`${BOLD}RPC 聊天${RESET}`);
+	outputLog.append(`${DIM}输入消息并按Enter。Esc取消或退出。Ctrl+D退出。${RESET}`);
+	outputLog.append(`${DIM}斜杠命令: /select /confirm /input /editor${RESET}`);
 	outputLog.append("");
 
 	tui.start();

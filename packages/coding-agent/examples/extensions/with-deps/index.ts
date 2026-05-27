@@ -13,18 +13,18 @@ export default function (pi: ExtensionAPI) {
 	// Register a tool that uses ms
 	pi.registerTool({
 		name: "parse_duration",
-		label: "Parse Duration",
-		description: "Parse a human-readable duration string (e.g., '2 days', '1h', '5m') to milliseconds",
+		label: "解析时长",
+		description: "将人类可读的时长字符串（例如 '2 days'、'1h'、'5m'）解析为毫秒",
 		parameters: Type.Object({
-			duration: Type.String({ description: "Duration string like '2 days', '1h', '5m'" }),
+			duration: Type.String({ description: "时长字符串，如 '2 days'、'1h'、'5m'" }),
 		}),
 		execute: async (_toolCallId, params) => {
 			const result = ms(params.duration as ms.StringValue);
 			if (result === undefined) {
-				throw new Error(`Invalid duration: "${params.duration}"`);
+				throw new Error(`无效时长："${params.duration}"`);
 			}
 			return {
-				content: [{ type: "text", text: `${params.duration} = ${result} milliseconds` }],
+				content: [{ type: "text", text: `${params.duration} = ${result} 毫秒` }],
 				details: {},
 			};
 		},

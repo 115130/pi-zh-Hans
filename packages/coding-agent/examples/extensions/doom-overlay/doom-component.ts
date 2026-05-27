@@ -114,7 +114,7 @@ export class DoomOverlayComponent implements Component {
 		const lines = renderHalfBlock(rgba, this.engine.width, this.engine.height, width, height);
 
 		// Footer
-		const footer = " DOOM | Q=Pause | WASD=Move | Shift+WASD=Run | Space=Use | F=Fire | 1-7=Weapons";
+		const footer = " DOOM | Q=暂停 | WASD=移动 | Shift+WASD=奔跑 | 空格=使用 | F=开火 | 1-7=武器";
 		const truncatedFooter = footer.length > width ? footer.slice(0, width) : footer;
 		lines.push(`\x1b[2m${truncatedFooter}\x1b[0m`);
 

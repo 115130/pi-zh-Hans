@@ -37,7 +37,7 @@ try {
 		}
 	});
 
-	console.log("=== Replace prompt ===");
+	console.log("=== 替换提示 ===");
 	await session1.prompt("What is 2 + 2?");
 	console.log("\n");
 } finally {
@@ -67,7 +67,7 @@ try {
 		}
 	});
 
-	console.log("=== Modify prompt ===");
+	console.log("=== 修改提示 ===");
 	await session2.prompt("List 3 benefits of TypeScript.");
 	console.log();
 } finally {

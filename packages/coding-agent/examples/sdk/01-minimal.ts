@@ -1,8 +1,8 @@
 /**
- * Minimal SDK Usage
+ * 最小化 SDK 使用
  *
- * Uses all defaults: discovers skills, extensions, tools, context files
- * from cwd and ~/.pi/agent. Model chosen from settings or first available.
+ * 使用所有默认设置：从当前工作目录和 ~/.pi/agent 发现技能、扩展、工具、上下文文件。
+ * 根据设置或第一个可用模型选择模型。
  */
 
 import { createAgentSession } from "@earendil-works/pi-coding-agent";
@@ -16,7 +16,7 @@ try {
 		}
 	});
 
-	await session.prompt("What files are in the current directory?");
+	await session.prompt("当前目录中有哪些文件？");
 	session.state.messages.forEach((msg) => {
 		console.log(msg);
 	});

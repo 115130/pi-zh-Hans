@@ -116,7 +116,7 @@ export function discoverAgents(cwd: string, scope: AgentScope): AgentDiscoveryRe
 }
 
 export function formatAgentList(agents: AgentConfig[], maxItems: number): { text: string; remaining: number } {
-	if (agents.length === 0) return { text: "none", remaining: 0 };
+	if (agents.length === 0) return { text: "无", remaining: 0 };
 	const listed = agents.slice(0, maxItems);
 	const remaining = agents.length - listed.length;
 	return {

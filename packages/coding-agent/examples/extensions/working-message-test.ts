@@ -1,20 +1,17 @@
 /**
- * Working Message Persistence Test
+ * 工作消息持久性测试
  *
- * Sets a custom working message and indicator on session start so you can
- * verify they survive across loader recreations (e.g. between agent turns).
+ * 在会话启动时设置自定义工作消息和指示器，以便验证它们在加载器重新创建（例如在代理轮次之间）后依然保持不变。
  *
- * Usage:
+ * 用法：
  *   pi --extension examples/extensions/working-message-test.ts
  *
- * Then send a few messages in interactive mode. The working message should
- * stay "Working... (custom)" with a brown dot indicator every time the
- * loader appears, not revert to the default gray "Working...".
+ * 然后在交互模式下发送几条消息。每次加载器出现时，工作消息应保持为“工作中... (自定义)”，并带有棕色圆点指示器，而不是恢复为默认的灰色“工作中...”。
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
-const CUSTOM_MESSAGE = "\x1b[38;2;155;86;63mWorking... (custom)\x1b[39m";
+const CUSTOM_MESSAGE = "\x1b[38;2;155;86;63m工作中... (自定义)\x1b[39m";
 const CUSTOM_INDICATOR = { frames: ["\x1b[38;2;155;86;63m●\x1b[39m"] };
 
 export default function (pi: ExtensionAPI) {

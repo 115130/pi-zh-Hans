@@ -1,46 +1,45 @@
 /**
- * Keyboard input handling for terminal applications.
+ * 终端应用程序的键盘输入处理。
  *
- * Supports both legacy terminal sequences and Kitty keyboard protocol.
- * See: https://sw.kovidgoyal.net/kitty/keyboard-protocol/
- * Reference: https://github.com/sst/opentui/blob/7da92b4088aebfe27b9f691c04163a48821e49fd/packages/core/src/lib/parse.keypress.ts
+ * 支持传统终端序列和 Kitty 键盘协议。
+ * 参见：https://sw.kovidgoyal.net/kitty/keyboard-protocol/
+ * 参考：https://github.com/sst/opentui/blob/7da92b4088aebfe27b9f691c04163a48821e49fd/packages/core/src/lib/parse.keypress.ts
  *
- * Symbol keys are also supported, however some ctrl+symbol combos
- * overlap with ASCII codes, e.g. ctrl+[ = ESC.
- * See: https://sw.kovidgoyal.net/kitty/keyboard-protocol/#legacy-ctrl-mapping-of-ascii-keys
- * Those can still be * used for ctrl+shift combos
+ * 也支持符号键，但某些 Ctrl+符号组合与 ASCII 码重叠，例如 Ctrl+[ = ESC。
+ * 参见：https://sw.kovidgoyal.net/kitty/keyboard-protocol/#legacy-ctrl-mapping-of-ascii-keys
+ * 这些仍然可以用于 Ctrl+Shift 组合。
  *
- * API:
- * - matchesKey(data, keyId) - Check if input matches a key identifier
- * - parseKey(data) - Parse input and return the key identifier
- * - Key - Helper object for creating typed key identifiers
- * - setKittyProtocolActive(active) - Set global Kitty protocol state
- * - isKittyProtocolActive() - Query global Kitty protocol state
+ * API：
+ * - matchesKey(data, keyId) - 检查输入是否匹配某个键标识符
+ * - parseKey(data) - 解析输入并返回键标识符
+ * - Key - 用于创建类型化键标识符的辅助对象
+ * - setKittyProtocolActive(active) - 设置全局 Kitty 协议状态
+ * - isKittyProtocolActive() - 查询全局 Kitty 协议状态
  */
 
 // =============================================================================
-// Global Kitty Protocol State
+// 全局 Kitty 协议状态
 // =============================================================================
 
 let _kittyProtocolActive = false;
 
 /**
- * Set the global Kitty keyboard protocol state.
- * Called by ProcessTerminal after detecting protocol support.
+ * 设置全局 Kitty 键盘协议状态。
+ * 在 ProcessTerminal 检测到协议支持后调用。
  */
 export function setKittyProtocolActive(active: boolean): void {
 	_kittyProtocolActive = active;
 }
 
 /**
- * Query whether Kitty keyboard protocol is currently active.
+ * 查询 Kitty 键盘协议当前是否处于活动状态。
  */
 export function isKittyProtocolActive(): boolean {
 	return _kittyProtocolActive;
 }
 
 // =============================================================================
-// Type-Safe Key Identifiers
+// 类型安全的键标识符
 // =============================================================================
 
 type Letter =
@@ -146,22 +145,22 @@ type ModifiedKeyId<Key extends string, RemainingModifiers extends ModifierName =
 }[RemainingModifiers];
 
 /**
- * Union type of all valid key identifiers.
- * Provides autocomplete and catches typos at compile time.
+ * 所有有效键标识符的联合类型。
+ * 提供自动完成并在编译时捕获拼写错误。
  */
 export type KeyId = BaseKey | ModifiedKeyId<BaseKey>;
 
 /**
- * Helper object for creating typed key identifiers with autocomplete.
+ * 用于创建类型化键标识符的辅助对象，支持自动完成。
  *
- * Usage:
- * - Key.escape, Key.enter, Key.tab, etc. for special keys
- * - Key.backtick, Key.comma, Key.period, etc. for symbol keys
- * - Key.ctrl("c"), Key.alt("x"), Key.super("k") for single modifiers
- * - Key.ctrlShift("p"), Key.ctrlAlt("x"), Key.ctrlSuper("k") for combined modifiers
+ * 用法：
+ * - Key.escape, Key.enter, Key.tab 等用于特殊键
+ * - Key.backtick, Key.comma, Key.period 等用于符号键
+ * - Key.ctrl("c"), Key.alt("x"), Key.super("k") 用于单一修饰符
+ * - Key.ctrlShift("p"), Key.ctrlAlt("x"), Key.ctrlSuper("k") 用于组合修饰符
  */
 export const Key = {
-	// Special keys
+	// 特殊键
 	escape: "escape" as const,
 	esc: "esc" as const,
 	enter: "enter" as const,
@@ -193,7 +192,7 @@ export const Key = {
 	f11: "f11" as const,
 	f12: "f12" as const,
 
-	// Symbol keys
+	// 符号键
 	backtick: "`" as const,
 	hyphen: "-" as const,
 	equals: "=" as const,
@@ -226,13 +225,13 @@ export const Key = {
 	greaterthan: ">" as const,
 	question: "?" as const,
 
-	// Single modifiers
+	// 单一修饰符
 	ctrl: <K extends BaseKey>(key: K): `ctrl+${K}` => `ctrl+${key}`,
 	shift: <K extends BaseKey>(key: K): `shift+${K}` => `shift+${key}`,
 	alt: <K extends BaseKey>(key: K): `alt+${K}` => `alt+${key}`,
 	super: <K extends BaseKey>(key: K): `super+${K}` => `super+${key}`,
 
-	// Combined modifiers
+	// 组合修饰符
 	ctrlShift: <K extends BaseKey>(key: K): `ctrl+shift+${K}` => `ctrl+shift+${key}`,
 	shiftCtrl: <K extends BaseKey>(key: K): `shift+ctrl+${K}` => `shift+ctrl+${key}`,
 	ctrlAlt: <K extends BaseKey>(key: K): `ctrl+alt+${K}` => `ctrl+alt+${key}`,
@@ -246,13 +245,13 @@ export const Key = {
 	altSuper: <K extends BaseKey>(key: K): `alt+super+${K}` => `alt+super+${key}`,
 	superAlt: <K extends BaseKey>(key: K): `super+alt+${K}` => `super+alt+${key}`,
 
-	// Triple modifiers
+	// 三重修饰符
 	ctrlShiftAlt: <K extends BaseKey>(key: K): `ctrl+shift+alt+${K}` => `ctrl+shift+alt+${key}`,
 	ctrlShiftSuper: <K extends BaseKey>(key: K): `ctrl+shift+super+${K}` => `ctrl+shift+super+${key}`,
 } as const;
 
 // =============================================================================
-// Constants
+// 常量
 // =============================================================================
 
 const SYMBOL_KEYS = new Set([
@@ -296,7 +295,7 @@ const MODIFIERS = {
 	super: 8,
 } as const;
 
-const LOCK_MASK = 64 + 128; // Caps Lock + Num Lock
+const LOCK_MASK = 64 + 128; // 大写锁定 + 数字锁定
 
 const CODEPOINTS = {
 	escape: 27,
@@ -304,7 +303,7 @@ const CODEPOINTS = {
 	enter: 13,
 	space: 32,
 	backspace: 127,
-	kpEnter: 57414, // Numpad Enter (Kitty protocol)
+	kpEnter: 57414, // 数字键盘 Enter (Kitty 协议)
 } as const;
 
 const ARROW_CODEPOINTS = {
@@ -495,19 +494,19 @@ const matchesLegacyModifierSequence = (data: string, key: LegacyModifierKey, mod
 };
 
 // =============================================================================
-// Kitty Protocol Parsing
+// Kitty 协议解析
 // =============================================================================
 
 /**
- * Event types from Kitty keyboard protocol (flag 2)
- * 1 = key press, 2 = key repeat, 3 = key release
+ * Kitty 键盘协议（flag 2）的事件类型
+ * 1 = 按键按下，2 = 按键重复，3 = 按键释放
  */
 export type KeyEventType = "press" | "repeat" | "release";
 
 interface ParsedKittySequence {
 	codepoint: number;
-	shiftedKey?: number; // Shifted version of the key (when shift is pressed)
-	baseLayoutKey?: number; // Key in standard PC-101 layout (for non-Latin layouts)
+	shiftedKey?: number; // Shift 修饰后的键（当 Shift 被按下时）
+	baseLayoutKey?: number; // 标准 PC-101 布局中的键（用于非拉丁布局）
 	modifier: number;
 	eventType: KeyEventType;
 }
@@ -517,24 +516,24 @@ interface ParsedModifyOtherKeysSequence {
 	modifier: number;
 }
 
-// Store the last parsed event type for isKeyRelease() to query
+// 存储上次解析的事件类型，供 isKeyRelease() 查询
 let _lastEventType: KeyEventType = "press";
 
 /**
- * Check if the last parsed key event was a key release.
- * Only meaningful when Kitty keyboard protocol with flag 2 is active.
+ * 检查上次解析的按键事件是否是按键释放。
+ * 仅当 Kitty 键盘协议（flag 2）处于活动状态时才有意义。
  */
 export function isKeyRelease(data: string): boolean {
-	// Don't treat bracketed paste content as key release, even if it contains
-	// patterns like ":3F" (e.g., bluetooth MAC addresses like "90:62:3F:A5").
-	// Terminal.ts re-wraps paste content with bracketed paste markers before
-	// passing to TUI, so pasted data will always contain \x1b[200~.
+	// 不将带括号粘贴内容视为按键释放，即使它包含像 ":3F" 这样的模式
+	// （例如蓝牙 MAC 地址 "90:62:3F:A5"）。
+	// Terminal.ts 在将粘贴内容传递给 TUI 前会重新用括号标记包裹，
+	// 因此粘贴的数据总是包含 \x1b[200~。
 	if (data.includes("\x1b[200~")) {
 		return false;
 	}
 
-	// Quick check: release events with flag 2 contain ":3"
-	// Format: \x1b[<codepoint>;<modifier>:3u
+	// 快速检查：带有 flag 2 的释放事件包含 ":3"
+	// 格式：\x1b[<codepoint>;<modifier>:3u
 	if (
 		data.includes(":3u") ||
 		data.includes(":3~") ||
@@ -551,12 +550,12 @@ export function isKeyRelease(data: string): boolean {
 }
 
 /**
- * Check if the last parsed key event was a key repeat.
- * Only meaningful when Kitty keyboard protocol with flag 2 is active.
+ * 检查上次解析的按键事件是否是按键重复。
+ * 仅当 Kitty 键盘协议（flag 2）处于活动状态时才有意义。
  */
 export function isKeyRepeat(data: string): boolean {
-	// Don't treat bracketed paste content as key repeat, even if it contains
-	// patterns like ":2F". See isKeyRelease() for details.
+	// 不将带括号粘贴内容视为按键重复，即使它包含像 ":2F" 这样的模式。
+	// 详见 isKeyRelease()。
 	if (data.includes("\x1b[200~")) {
 		return false;
 	}
@@ -585,16 +584,16 @@ function parseEventType(eventTypeStr: string | undefined): KeyEventType {
 }
 
 function parseKittySequence(data: string): ParsedKittySequence | null {
-	// CSI u format with alternate keys (flag 4):
+	// CSI u 格式，带替代键（flag 4）：
 	// \x1b[<codepoint>u
 	// \x1b[<codepoint>;<mod>u
 	// \x1b[<codepoint>;<mod>:<event>u
 	// \x1b[<codepoint>:<shifted>;<mod>u
 	// \x1b[<codepoint>:<shifted>:<base>;<mod>u
-	// \x1b[<codepoint>::<base>;<mod>u (no shifted key, only base)
+	// \x1b[<codepoint>::<base>;<mod>u （无 shifted 键，只有 base）
 	//
-	// With flag 2, event type is appended after modifier colon: 1=press, 2=repeat, 3=release
-	// With flag 4, alternate keys are appended after codepoint with colons
+	// 使用 flag 2 时，事件类型附加在修饰符冒号之后：1=按下，2=重复，3=释放
+	// 使用 flag 4 时，替代键在码位之后用冒号分隔
 	const csiUMatch = data.match(/^\x1b\[(\d+)(?::(\d*))?(?::(\d+))?(?:;(\d+))?(?::(\d+))?u$/);
 	if (csiUMatch) {
 		const codepoint = parseInt(csiUMatch[1]!, 10);
@@ -606,7 +605,7 @@ function parseKittySequence(data: string): ParsedKittySequence | null {
 		return { codepoint, shiftedKey, baseLayoutKey, modifier: modValue - 1, eventType };
 	}
 
-	// Arrow keys with modifier: \x1b[1;<mod>A/B/C/D or \x1b[1;<mod>:<event>A/B/C/D
+	// 带修饰符的箭头键：\x1b[1;<mod>A/B/C/D 或 \x1b[1;<mod>:<event>A/B/C/D
 	const arrowMatch = data.match(/^\x1b\[1;(\d+)(?::(\d+))?([ABCD])$/);
 	if (arrowMatch) {
 		const modValue = parseInt(arrowMatch[1]!, 10);
@@ -616,7 +615,7 @@ function parseKittySequence(data: string): ParsedKittySequence | null {
 		return { codepoint: arrowCodes[arrowMatch[3]!]!, modifier: modValue - 1, eventType };
 	}
 
-	// Functional keys: \x1b[<num>~ or \x1b[<num>;<mod>~ or \x1b[<num>;<mod>:<event>~
+	// 功能键：\x1b[<num>~ 或 \x1b[<num>;<mod>~ 或 \x1b[<num>;<mod>:<event>~
 	const funcMatch = data.match(/^\x1b\[(\d+)(?:;(\d+))?(?::(\d+))?~$/);
 	if (funcMatch) {
 		const keyNum = parseInt(funcMatch[1]!, 10);
@@ -637,7 +636,7 @@ function parseKittySequence(data: string): ParsedKittySequence | null {
 		}
 	}
 
-	// Home/End with modifier: \x1b[1;<mod>H/F or \x1b[1;<mod>:<event>H/F
+	// 带修饰符的 Home/End：\x1b[1;<mod>H/F 或 \x1b[1;<mod>:<event>H/F
 	const homeEndMatch = data.match(/^\x1b\[1;(\d+)(?::(\d+))?([HF])$/);
 	if (homeEndMatch) {
 		const modValue = parseInt(homeEndMatch[1]!, 10);
@@ -656,7 +655,7 @@ function matchesKittySequence(data: string, expectedCodepoint: number, expectedM
 	const actualMod = parsed.modifier & ~LOCK_MASK;
 	const expectedMod = expectedModifier & ~LOCK_MASK;
 
-	// Check if modifiers match
+	// 检查修饰符是否匹配
 	if (actualMod !== expectedMod) return false;
 
 	const normalizedCodepoint = normalizeShiftedLetterIdentityCodepoint(
@@ -668,21 +667,16 @@ function matchesKittySequence(data: string, expectedCodepoint: number, expectedM
 		expectedModifier,
 	);
 
-	// Primary match: codepoint matches directly after normalizing functional keys
+	// 主匹配：规范化功能键后的码位直接匹配
 	if (normalizedCodepoint === normalizedExpectedCodepoint) return true;
 
-	// Alternate match: use base layout key for non-Latin keyboard layouts.
-	// This allows Ctrl+С (Cyrillic) to match Ctrl+c (Latin) when terminal reports
-	// the base layout key (the key in standard PC-101 layout).
+	// 备选匹配：对于非拉丁键盘布局，使用基础布局键。
+	// 这允许 Ctrl+С（西里尔）匹配 Ctrl+c（拉丁），当终端报告基础布局键（标准 PC-101 布局中的键）时。
 	//
-	// Only fall back to base layout key when the codepoint is NOT already a
-	// recognized Latin letter (a-z) or symbol (e.g., /, -, [, ;, etc.).
-	// When the codepoint is a recognized key, it is authoritative regardless
-	// of physical key position. This prevents remapped layouts (Dvorak, Colemak,
-	// xremap, etc.) from causing false matches: both letters and symbols move
-	// to different physical positions, so Ctrl+K could falsely match Ctrl+V
-	// (letter remapping) and Ctrl+/ could falsely match Ctrl+[ (symbol remapping)
-	// if the base layout key were always considered.
+	// 仅当码位不是已识别的拉丁字母（a-z）或符号（如 /、-、[、; 等）时才回退到基础布局键。
+	// 当码位是已识别的键时，它是权威的，与物理键位置无关。
+	// 这可以防止重映射布局（Dvorak、Colemak、xremap 等）导致错误匹配：字母和符号都移动到不同的物理位置，
+	// 如果始终考虑基础布局键，Ctrl+K 可能错误匹配 Ctrl+V（字母重映射），Ctrl+/ 可能错误匹配 Ctrl+[（符号重映射）。
 	if (parsed.baseLayoutKey !== undefined && parsed.baseLayoutKey === expectedCodepoint) {
 		const cp = normalizedCodepoint;
 		const isLatinLetter = cp >= 97 && cp <= 122; // a-z
@@ -702,9 +696,9 @@ function parseModifyOtherKeysSequence(data: string): ParsedModifyOtherKeysSequen
 }
 
 /**
- * Match xterm modifyOtherKeys format: CSI 27 ; modifiers ; keycode ~
- * This is used by terminals when Kitty protocol is not enabled.
- * Modifier values are 1-indexed: 2=shift, 3=alt, 5=ctrl, etc.
+ * 匹配 xterm modifyOtherKeys 格式：CSI 27 ; modifiers ; keycode ~
+ * 当 Kitty 协议未启用时，终端使用此格式。
+ * 修饰符值是 1 索引的：2=shift, 3=alt, 5=ctrl 等。
  */
 function matchesModifyOtherKeys(data: string, expectedKeycode: number, expectedModifier: number): boolean {
 	const parsed = parseModifyOtherKeysSequence(data);
@@ -719,13 +713,13 @@ function isWindowsTerminalSession(): boolean {
 }
 
 /**
- * Raw 0x08 (BS) is ambiguous in legacy terminals.
+ * 原始 0x08 (BS) 在传统终端中是有歧义的。
  *
- * - Windows Terminal uses it for Ctrl+Backspace.
- * - Some legacy terminals and tmux setups send it for plain Backspace.
+ * - Windows 终端将其用于 Ctrl+Backspace。
+ * - 某些传统终端和 tmux 设置将其用于普通 Backspace。
  *
- * Prefer explicit Kitty / CSI-u / modifyOtherKeys sequences whenever they are
- * available. Fall back to a Windows Terminal heuristic only for raw BS bytes.
+ * 只要可能，优先使用明确的 Kitty / CSI-u / modifyOtherKeys 序列。
+ * 仅对原始 BS 字节使用 Windows 终端启发式方法。
  */
 function matchesRawBackspace(data: string, expectedModifier: number): boolean {
 	if (data === "\x7f") return expectedModifier === 0;
@@ -734,17 +728,17 @@ function matchesRawBackspace(data: string, expectedModifier: number): boolean {
 }
 
 // =============================================================================
-// Generic Key Matching
+// 通用键匹配
 // =============================================================================
 
 /**
- * Get the control character for a key.
- * Uses the universal formula: code & 0x1f (mask to lower 5 bits)
+ * 获取某个键的控制字符。
+ * 使用通用公式：code & 0x1f（掩码到低 5 位）
  *
- * Works for:
- * - Letters a-z → 1-26
- * - Symbols [\]_ → 27, 28, 29, 31
- * - Also maps - to same as _ (same physical key on US keyboards)
+ * 适用于：
+ * - 字母 a-z → 1-26
+ * - 符号 [\]_ → 27, 28, 29, 31
+ * - 同时将 - 映射为 _（在美国键盘上它们共享同一个物理键）
  */
 function rawCtrlChar(key: string): string | null {
 	const char = key.toLowerCase();
@@ -752,9 +746,9 @@ function rawCtrlChar(key: string): string | null {
 	if ((code >= 97 && code <= 122) || char === "[" || char === "\\" || char === "]" || char === "_") {
 		return String.fromCharCode(code & 0x1f);
 	}
-	// Handle - as _ (same physical key on US keyboards)
+	// 将 - 处理为 _（在美国键盘上它们共享同一个物理键）
 	if (char === "-") {
-		return String.fromCharCode(31); // Same as Ctrl+_
+		return String.fromCharCode(31); // 与 Ctrl+_ 相同
 	}
 	return null;
 }
@@ -801,21 +795,21 @@ function parseKeyId(
 }
 
 /**
- * Match input data against a key identifier string.
+ * 将输入数据与键标识符字符串进行匹配。
  *
- * Supported key identifiers:
- * - Single keys: "escape", "tab", "enter", "backspace", "delete", "home", "end", "space"
- * - Arrow keys: "up", "down", "left", "right"
- * - Ctrl combinations: "ctrl+c", "ctrl+z", etc.
- * - Shift combinations: "shift+tab", "shift+enter"
- * - Alt combinations: "alt+enter", "alt+backspace"
- * - Super combinations: "super+k", "super+enter"
- * - Combined modifiers: "shift+ctrl+p", "ctrl+alt+x", "ctrl+super+k"
+ * 支持的键标识符：
+ * - 单键："escape", "tab", "enter", "backspace", "delete", "home", "end", "space"
+ * - 箭头键："up", "down", "left", "right"
+ * - Ctrl 组合："ctrl+c", "ctrl+z" 等
+ * - Shift 组合："shift+tab", "shift+enter"
+ * - Alt 组合："alt+enter", "alt+backspace"
+ * - Super 组合："super+k", "super+enter"
+ * - 组合修饰符："shift+ctrl+p", "ctrl+alt+x", "ctrl+super+k"
  *
- * Use the Key helper for autocomplete: Key.ctrl("c"), Key.escape, Key.ctrlShift("p"), Key.super("k")
+ * 使用 Key 辅助对象实现自动完成：Key.ctrl("c"), Key.escape, Key.ctrlShift("p"), Key.super("k")
  *
- * @param data - Raw input data from terminal
- * @param keyId - Key identifier (e.g., "ctrl+c", "escape", Key.ctrl("c"))
+ * @param data - 来自终端的原始输入数据
+ * @param keyId - 键标识符（例如 "ctrl+c", "escape", Key.ctrl("c")）
  */
 export function matchesKey(data: string, keyId: KeyId): boolean {
 	const parsed = parseKeyId(keyId);
@@ -878,39 +872,39 @@ export function matchesKey(data: string, keyId: KeyId): boolean {
 		case "enter":
 		case "return":
 			if (modifier === MODIFIERS.shift) {
-				// CSI u sequences (standard Kitty protocol)
+				// CSI u 序列（标准 Kitty 协议）
 				if (
 					matchesKittySequence(data, CODEPOINTS.enter, MODIFIERS.shift) ||
 					matchesKittySequence(data, CODEPOINTS.kpEnter, MODIFIERS.shift)
 				) {
 					return true;
 				}
-				// xterm modifyOtherKeys format (fallback when Kitty protocol not enabled)
+				// xterm modifyOtherKeys 格式（Kitty 协议未启用时的回退）
 				if (matchesModifyOtherKeys(data, CODEPOINTS.enter, MODIFIERS.shift)) {
 					return true;
 				}
-				// When Kitty protocol is active, legacy sequences are custom terminal mappings
-				// \x1b\r = Kitty's "map shift+enter send_text all \e\r"
-				// \n = Ghostty's "keybind = shift+enter=text:\n"
+				// 当 Kitty 协议激活时，传统序列是自定义终端映射
+				// \x1b\r = Kitty 的 "map shift+enter send_text all \e\r"
+				// \n = Ghostty 的 "keybind = shift+enter=text:\n"
 				if (_kittyProtocolActive) {
 					return data === "\x1b\r" || data === "\n";
 				}
 				return false;
 			}
 			if (modifier === MODIFIERS.alt) {
-				// CSI u sequences (standard Kitty protocol)
+				// CSI u 序列（标准 Kitty 协议）
 				if (
 					matchesKittySequence(data, CODEPOINTS.enter, MODIFIERS.alt) ||
 					matchesKittySequence(data, CODEPOINTS.kpEnter, MODIFIERS.alt)
 				) {
 					return true;
 				}
-				// xterm modifyOtherKeys format (fallback when Kitty protocol not enabled)
+				// xterm modifyOtherKeys 格式（Kitty 协议未启用时的回退）
 				if (matchesModifyOtherKeys(data, CODEPOINTS.enter, MODIFIERS.alt)) {
 					return true;
 				}
-				// \x1b\r is alt+enter only in legacy mode (no Kitty protocol)
-				// When Kitty protocol is active, alt+enter comes as CSI u sequence
+				// \x1b\r 仅在传统模式下（无 Kitty 协议）是 alt+enter
+				// 当 Kitty 协议激活时，alt+enter 作为 CSI u 序列发送
 				if (!_kittyProtocolActive) {
 					return data === "\x1b\r";
 				}
@@ -920,7 +914,7 @@ export function matchesKey(data: string, keyId: KeyId): boolean {
 				return (
 					data === "\r" ||
 					(!_kittyProtocolActive && data === "\n") ||
-					data === "\x1bOM" || // SS3 M (numpad enter in some terminals)
+					data === "\x1bOM" || // SS3 M（某些终端中的数字键盘 Enter）
 					matchesKittySequence(data, CODEPOINTS.enter, 0) ||
 					matchesKittySequence(data, CODEPOINTS.kpEnter, 0)
 				);
@@ -942,9 +936,8 @@ export function matchesKey(data: string, keyId: KeyId): boolean {
 				);
 			}
 			if (modifier === MODIFIERS.ctrl) {
-				// Legacy raw 0x08 is ambiguous: it can be Ctrl+Backspace on Windows
-				// Terminal or plain Backspace on other terminals, while also
-				// overlapping with Ctrl+H.
+				// 传统原始 0x08 是有歧义的：在 Windows 终端上可能是 Ctrl+Backspace，
+				// 在其他终端上可能是普通 Backspace，同时也与 Ctrl+H 重叠。
 				if (matchesRawBackspace(data, MODIFIERS.ctrl)) return true;
 				return (
 					matchesKittySequence(data, CODEPOINTS.backspace, MODIFIERS.ctrl) ||
@@ -1145,7 +1138,7 @@ export function matchesKey(data: string, keyId: KeyId): boolean {
 		}
 	}
 
-	// Handle single letter/digit keys and symbols
+	// 处理单字母/数字键和符号
 	if (key.length === 1 && ((key >= "a" && key <= "z") || isDigitKey(key) || SYMBOL_KEYS.has(key))) {
 		const codepoint = key.charCodeAt(0);
 		const rawCtrl = rawCtrlChar(key);
@@ -1153,19 +1146,18 @@ export function matchesKey(data: string, keyId: KeyId): boolean {
 		const isDigit = isDigitKey(key);
 
 		if (modifier === MODIFIERS.ctrl + MODIFIERS.alt && !_kittyProtocolActive && rawCtrl) {
-			// Legacy: ctrl+alt+key is ESC followed by the control character.
-			// If that legacy form does not match, continue so CSI-u and
-			// modifyOtherKeys sequences from tmux can still be recognized.
+			// 传统：ctrl+alt+键是 ESC 后跟控制字符。
+			// 如果该传统形式不匹配，则继续，以便仍能识别来自 tmux 的 CSI-u 和 modifyOtherKeys 序列。
 			if (data === `\x1b${rawCtrl}`) return true;
 		}
 
 		if (modifier === MODIFIERS.alt && !_kittyProtocolActive && (isLetter || isDigit)) {
-			// Legacy: alt+letter/digit is ESC followed by the key
+			// 传统：alt+字母/数字是 ESC 后跟键本身
 			if (data === `\x1b${key}`) return true;
 		}
 
 		if (modifier === MODIFIERS.ctrl) {
-			// Legacy: ctrl+key sends the control character
+			// 传统：ctrl+键发送控制字符
 			if (rawCtrl && data === rawCtrl) return true;
 			return (
 				matchesKittySequence(data, codepoint, MODIFIERS.ctrl) ||
@@ -1181,7 +1173,7 @@ export function matchesKey(data: string, keyId: KeyId): boolean {
 		}
 
 		if (modifier === MODIFIERS.shift) {
-			// Legacy: shift+letter produces uppercase
+			// 传统：shift+字母产生大写
 			if (isLetter && data === key.toUpperCase()) return true;
 			return (
 				matchesKittySequence(data, codepoint, MODIFIERS.shift) ||
@@ -1196,7 +1188,7 @@ export function matchesKey(data: string, keyId: KeyId): boolean {
 			);
 		}
 
-		// Check both raw char and Kitty sequence (needed for release events)
+		// 检查原始字符和 Kitty 序列（释放事件需要）
 		return data === key || matchesKittySequence(data, codepoint, 0);
 	}
 
@@ -1204,20 +1196,18 @@ export function matchesKey(data: string, keyId: KeyId): boolean {
 }
 
 /**
- * Parse input data and return the key identifier if recognized.
+ * 解析输入数据并返回识别的键标识符。
  *
- * @param data - Raw input data from terminal
- * @returns Key identifier string (e.g., "ctrl+c") or undefined
+ * @param data - 来自终端的原始输入数据
+ * @returns 键标识符字符串（例如 "ctrl+c"）或 undefined
  */
 function formatParsedKey(codepoint: number, modifier: number, baseLayoutKey?: number): string | undefined {
 	const normalizedCodepoint = normalizeKittyFunctionalCodepoint(codepoint);
 	const identityCodepoint = normalizeShiftedLetterIdentityCodepoint(normalizedCodepoint, modifier);
 
-	// Use base layout key only when codepoint is not a recognized Latin
-	// letter (a-z), digit (0-9), or symbol (/, -, [, ;, etc.). For those,
-	// the codepoint is authoritative regardless of physical key position.
-	// This prevents remapped layouts (Dvorak, Colemak, xremap, etc.) from
-	// reporting the wrong key name based on the QWERTY physical position.
+	// 仅当码位不是已识别的拉丁字母（a-z）、数字（0-9）或符号（/、-、[、; 等）时才使用基础布局键。
+	// 对于这些键，码位是权威的，与物理键位置无关。
+	// 这可以防止重映射布局（Dvorak、Colemak、xremap 等）基于 QWERTY 物理位置报告错误键名。
 	const isLatinLetter = identityCodepoint >= 97 && identityCodepoint <= 122; // a-z
 	const isDigit = identityCodepoint >= 48 && identityCodepoint <= 57; // 0-9
 	const isKnownSymbol = SYMBOL_KEYS.has(String.fromCharCode(identityCodepoint));
@@ -1259,10 +1249,10 @@ export function parseKey(data: string): string | undefined {
 		return formatParsedKey(modifyOtherKeys.codepoint, modifyOtherKeys.modifier);
 	}
 
-	// Mode-aware legacy sequences
-	// When Kitty protocol is active, ambiguous sequences are interpreted as custom terminal mappings:
-	// - \x1b\r = shift+enter (Kitty mapping), not alt+enter
-	// - \n = shift+enter (Ghostty mapping)
+	// 模式感知的传统序列
+	// 当 Kitty 协议激活时，有歧义的序列被解释为自定义终端映射：
+	// - \x1b\r = shift+enter（Kitty 映射），而不是 alt+enter
+	// - \n = shift+enter（Ghostty 映射）
 	if (_kittyProtocolActive) {
 		if (data === "\x1b\r" || data === "\n") return "shift+enter";
 	}
@@ -1270,7 +1260,7 @@ export function parseKey(data: string): string | undefined {
 	const legacySequenceKeyId = LEGACY_SEQUENCE_KEY_IDS[data];
 	if (legacySequenceKeyId) return legacySequenceKeyId;
 
-	// Legacy sequences (used when Kitty protocol is not active, or for unambiguous sequences)
+	// 传统序列（当 Kitty 协议未激活时使用，或者对于无歧义的序列）
 	if (data === "\x1b") return "escape";
 	if (data === "\x1c") return "ctrl+\\";
 	if (data === "\x1d") return "ctrl+]";
@@ -1296,7 +1286,7 @@ export function parseKey(data: string): string | undefined {
 		if (code >= 1 && code <= 26) {
 			return `ctrl+alt+${String.fromCharCode(code + 96)}`;
 		}
-		// Legacy alt+letter/digit (ESC followed by the key)
+		// 传统 alt+字母/数字（ESC 后跟键本身）
 		if ((code >= 97 && code <= 122) || (code >= 48 && code <= 57)) {
 			return `alt+${String.fromCharCode(code)}`;
 		}
@@ -1311,7 +1301,7 @@ export function parseKey(data: string): string | undefined {
 	if (data === "\x1b[5~") return "pageUp";
 	if (data === "\x1b[6~") return "pageDown";
 
-	// Raw Ctrl+letter
+	// 原始 Ctrl+字母
 	if (data.length === 1) {
 		const code = data.charCodeAt(0);
 		if (code >= 1 && code <= 26) {
@@ -1326,52 +1316,50 @@ export function parseKey(data: string): string | undefined {
 }
 
 // =============================================================================
-// Kitty CSI-u Printable Decoding
+// Kitty CSI-u 可打印字符解码
 // =============================================================================
 
 const KITTY_CSI_U_REGEX = /^\x1b\[(\d+)(?::(\d*))?(?::(\d+))?(?:;(\d+))?(?::(\d+))?u$/;
 const KITTY_PRINTABLE_ALLOWED_MODIFIERS = MODIFIERS.shift | LOCK_MASK;
 
 /**
- * Decode a Kitty CSI-u sequence into a printable character, if applicable.
+ * 将 Kitty CSI-u 序列解码为可打印字符（如果适用）。
  *
- * When Kitty keyboard protocol flag 1 (disambiguate) is active, terminals send
- * CSI-u sequences for all keys, including plain printable characters. This
- * function extracts the printable character from such sequences.
+ * 当 Kitty 键盘协议 flag 1（消除歧义）激活时，终端为所有键发送 CSI-u 序列，
+ * 包括普通可打印字符。此函数从这些序列中提取可打印字符。
  *
- * Only accepts plain or Shift-modified keys. Rejects Ctrl, Alt, and unsupported
- * modifier combinations (those are handled by keybinding matching instead).
- * Prefers the shifted keycode when Shift is held and a shifted key is reported.
+ * 仅接受普通或 Shift 修饰的键。拒绝 Ctrl、Alt 和不支持的修饰符组合
+ * （这些由键绑定匹配处理）。当 Shift 被按下且报告了 shifted 键时，
+ * 优先使用 shifted 键码。
  *
- * @param data - Raw input data from terminal
- * @returns The printable character, or undefined if not a printable CSI-u sequence
+ * @param data - 来自终端的原始输入数据
+ * @returns 可打印字符，如果不是可打印的 CSI-u 序列则返回 undefined
  */
 export function decodeKittyPrintable(data: string): string | undefined {
 	const match = data.match(KITTY_CSI_U_REGEX);
 	if (!match) return undefined;
 
-	// CSI-u groups: <codepoint>[:<shifted>[:<base>]];<mod>[:<event>]u
+	// CSI-u 分组：<codepoint>[:<shifted>[:<base>]];<mod>[:<event>]u
 	const codepoint = Number.parseInt(match[1] ?? "", 10);
 	if (!Number.isFinite(codepoint)) return undefined;
 
 	const shiftedKey = match[2] && match[2].length > 0 ? Number.parseInt(match[2], 10) : undefined;
 	const modValue = match[4] ? Number.parseInt(match[4], 10) : 1;
-	// Modifiers are 1-indexed in CSI-u; normalize to our bitmask.
+	// 修饰符在 CSI-u 中是 1 索引的；标准化为我们的位掩码。
 	const modifier = Number.isFinite(modValue) ? modValue - 1 : 0;
 
-	// Only accept printable CSI-u input for plain or Shift-modified text keys.
-	// Reject unsupported modifier bits (e.g. Super/Meta) to avoid inserting
-	// characters from modifier-only terminal events.
+	// 仅接受普通或 Shift 修饰的文本键的可打印 CSI-u 输入。
+	// 拒绝不支持的修饰符位（例如 Super/Meta），以避免从仅修饰符的终端事件中插入字符。
 	if ((modifier & ~KITTY_PRINTABLE_ALLOWED_MODIFIERS) !== 0) return undefined;
 	if (modifier & (MODIFIERS.alt | MODIFIERS.ctrl)) return undefined;
 
-	// Prefer the shifted keycode when Shift is held.
+	// 当 Shift 被按下时，优先使用 shifted 键码。
 	let effectiveCodepoint = codepoint;
 	if (modifier & MODIFIERS.shift && typeof shiftedKey === "number") {
 		effectiveCodepoint = shiftedKey;
 	}
 	effectiveCodepoint = normalizeKittyFunctionalCodepoint(effectiveCodepoint);
-	// Drop control characters or invalid codepoints.
+	// 丢弃控制字符或无效码位。
 	if (!Number.isFinite(effectiveCodepoint) || effectiveCodepoint < 32) return undefined;
 
 	try {

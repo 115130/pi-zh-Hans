@@ -56,7 +56,7 @@ export default function claudeRulesExtension(pi: ExtensionAPI) {
 		ruleFiles = findMarkdownFiles(rulesDir);
 
 		if (ruleFiles.length > 0) {
-			ctx.ui.notify(`Found ${ruleFiles.length} rule(s) in .claude/rules/`, "info");
+			ctx.ui.notify(`在 .claude/rules/ 中找到 ${ruleFiles.length} 条规则`, "info");
 		}
 	});
 

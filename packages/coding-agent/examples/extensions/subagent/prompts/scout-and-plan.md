@@ -1,9 +1,9 @@
 ---
-description: Scout gathers context, planner creates implementation plan (no implementation)
+description: Scout 收集上下文，planner 创建实施计划（不实施）
 ---
-Use the subagent tool with the chain parameter to execute this workflow:
+使用带有 chain 参数的子代理工具来执行此工作流：
 
-1. First, use the "scout" agent to find all code relevant to: $@
-2. Then, use the "planner" agent to create an implementation plan for "$@" using the context from the previous step (use {previous} placeholder)
+1. 首先，使用“scout”代理查找与 $@ 相关的所有代码。
+2. 然后，使用“planner”代理，利用上一步的上下文（使用 {previous} 占位符）为“$@”创建实施计划。
 
-Execute this as a chain, passing output between steps via {previous}. Do NOT implement - just return the plan.
+以链式执行，通过 {previous} 在步骤之间传递输出。不要实施——只返回计划。

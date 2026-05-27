@@ -75,7 +75,8 @@ function formatBaseDir(baseDir: string): string {
 
 function getGroupLabel(metadata: PathMetadata): string {
 	if (metadata.origin === "package") {
-		return `${metadata.source} (${metadata.scope})`;
+		const scopeLabel = metadata.scope === "user" ? "用户" : "项目";
+		return `${metadata.source} (${scopeLabel})`;
 	}
 	// Top-level resources
 	if (metadata.source === "auto") {

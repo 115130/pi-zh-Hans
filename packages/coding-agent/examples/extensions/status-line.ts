@@ -12,21 +12,21 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_start", async (_event, ctx) => {
 		const theme = ctx.ui.theme;
-		ctx.ui.setStatus("status-demo", theme.fg("dim", "Ready"));
+		ctx.ui.setStatus("status-demo", theme.fg("dim", "就绪"));
 	});
 
 	pi.on("turn_start", async (_event, ctx) => {
 		turnCount++;
 		const theme = ctx.ui.theme;
 		const spinner = theme.fg("accent", "●");
-		const text = theme.fg("dim", ` Turn ${turnCount}...`);
+		const text = theme.fg("dim", ` 回合 ${turnCount}...`);
 		ctx.ui.setStatus("status-demo", spinner + text);
 	});
 
 	pi.on("turn_end", async (_event, ctx) => {
 		const theme = ctx.ui.theme;
 		const check = theme.fg("success", "✓");
-		const text = theme.fg("dim", ` Turn ${turnCount} complete`);
+		const text = theme.fg("dim", ` 回合 ${turnCount} 完成`);
 		ctx.ui.setStatus("status-demo", check + text);
 	});
 }

@@ -17,23 +17,22 @@ interface StructuredOutputDetails {
 
 const structuredOutputTool = defineTool({
 	name: "structured_output",
-	label: "Structured Output",
-	description:
-		"Return a final structured answer. Use this as your last action when the user asks for structured output or a machine-readable summary.",
-	promptSnippet: "Emit a final structured answer as a terminating tool result",
+	label: "结构化输出",
+	description: "返回最终的结构化答案。当用户要求结构化输出或机器可读摘要时，请将此作为您的最后操作。",
+	promptSnippet: "以工具终止结果的形式发出最终的结构化答案",
 	promptGuidelines: [
-		"Use structured_output as your final action when the user asks for structured output, JSON-like output, or a machine-readable summary.",
-		"After calling structured_output, do not emit another assistant response in the same turn.",
+		"当用户要求结构化输出、类似 JSON 的输出或机器可读摘要时，请使用 structured_output 作为您的最终操作。",
+		"调用 structured_output 后，请勿在同一轮中发出另一个助手响应。",
 	],
 	parameters: Type.Object({
-		headline: Type.String({ description: "Short title for the result" }),
-		summary: Type.String({ description: "One-paragraph summary" }),
-		actionItems: Type.Array(Type.String(), { description: "Concrete next steps or key bullets" }),
+		headline: Type.String({ description: "结果的简短标题" }),
+		summary: Type.String({ description: "一段摘要" }),
+		actionItems: Type.Array(Type.String(), { description: "具体的后续步骤或关键要点" }),
 	}),
 
 	async execute(_toolCallId, params) {
 		return {
-			content: [{ type: "text", text: `Saved structured output: ${params.headline}` }],
+			content: [{ type: "text", text: `已保存结构化输出：${params.headline}` }],
 			details: {
 				headline: params.headline,
 				summary: params.summary,

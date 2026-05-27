@@ -1,46 +1,46 @@
-# DOOM Overlay Demo
+# DOOM 覆盖层演示
 
-Play DOOM as an overlay in pi. Demonstrates that the overlay system can handle real-time game rendering at 35 FPS.
+在 pi 中作为覆盖层运行 DOOM。展示覆盖系统能够以 35 FPS 实时渲染游戏的能力。
 
-## Usage
+## 使用方法
 
 ```bash
 pi --extension ./examples/extensions/doom-overlay
 ```
 
-Then run:
+然后运行：
 ```
 /doom-overlay
 ```
 
-The shareware WAD file (~4MB) is auto-downloaded on first run.
+共享版 WAD 文件（约 4MB）会在首次运行时自动下载。
 
-## Controls
+## 控制
 
-| Action | Keys |
-|--------|------|
-| Move | WASD or Arrow Keys |
-| Run | Shift + WASD |
-| Fire | F or Ctrl |
-| Use/Open | Space |
-| Weapons | 1-7 |
-| Map | Tab |
-| Menu | Escape |
-| Pause/Quit | Q |
+| 操作 | 按键 |
+|------|------|
+| 移动 | W A S D 或方向键 |
+| 奔跑 | Shift + W A S D |
+| 开火 | F 或 Ctrl |
+| 使用/开门 | 空格键 |
+| 武器 | 1-7 |
+| 地图 | Tab |
+| 菜单 | Escape |
+| 暂停/退出 | Q |
 
-## How It Works
+## 工作原理
 
-DOOM runs as WebAssembly compiled from [doomgeneric](https://github.com/ozkl/doomgeneric). Each frame is rendered using half-block characters (▀) with 24-bit color, where the top pixel is the foreground color and the bottom pixel is the background color.
+DOOM 作为从 [doomgeneric](https://github.com/ozkl/doomgeneric) 编译的 WebAssembly 运行。每一帧使用半块字符（▀）和 24 位颜色渲染，其中上半像素为前景色，下半像素为背景色。
 
-The overlay uses:
-- `width: "90%"` - 90% of terminal width
-- `maxHeight: "80%"` - Maximum 80% of terminal height
-- `anchor: "center"` - Centered in terminal
+覆盖层使用：
+- `width: "90%"` - 终端宽度的 90%
+- `maxHeight: "80%"` - 终端高度的最大 80%
+- `anchor: "center"` - 在终端中居中
 
-Height is calculated from width to maintain DOOM's 3.2:1 aspect ratio (accounting for half-block rendering).
+高度根据宽度计算，以保持 DOOM 的 3.2:1 宽高比（考虑半块渲染）。
 
-## Credits
+## 致谢
 
-- [id Software](https://github.com/id-Software/DOOM) for the original DOOM
-- [doomgeneric](https://github.com/ozkl/doomgeneric) for the portable DOOM implementation
-- [pi-doom](https://github.com/badlogic/pi-doom) for the original pi integration
+- [id Software](https://github.com/id-Software/DOOM) 提供原始 DOOM
+- [doomgeneric](https://github.com/ozkl/doomgeneric) 提供可移植的 DOOM 实现
+- [pi-doom](https://github.com/badlogic/pi-doom) 提供原始的 pi 集成

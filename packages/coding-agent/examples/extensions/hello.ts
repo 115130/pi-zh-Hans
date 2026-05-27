@@ -7,10 +7,10 @@ import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const helloTool = defineTool({
 	name: "hello",
-	label: "Hello",
-	description: "A simple greeting tool",
+	label: "你好",
+	description: "简单的问候工具",
 	parameters: Type.Object({
-		name: Type.String({ description: "Name to greet" }),
+		name: Type.String({ description: "要问候的名称" }),
 	}),
 
 	async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {

@@ -22,7 +22,7 @@ export default function (pi: ExtensionAPI) {
 		if (event.text.startsWith("?quick ")) {
 			const query = event.text.slice(7).trim();
 			if (!query) {
-				ctx.ui.notify("Usage: ?quick <question>", "warning");
+				ctx.ui.notify("用法：?quick <问题>", "warning");
 				return { action: "handled" };
 			}
 			return { action: "transform", text: `Respond briefly in 1-2 sentences: ${query}` };

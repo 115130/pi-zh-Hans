@@ -27,7 +27,7 @@ if (process.env.MY_ANTHROPIC_KEY) {
 const modelRegistry = ModelRegistry.inMemory(authStorage);
 
 const model = getModel("anthropic", "claude-sonnet-4-20250514");
-if (!model) throw new Error("Model not found");
+if (!model) throw new Error("未找到模型");
 
 // In-memory settings with overrides
 const settingsManager = SettingsManager.inMemory({
@@ -43,8 +43,8 @@ const resourceLoader: ResourceLoader = {
 	getPrompts: () => ({ prompts: [], diagnostics: [] }),
 	getThemes: () => ({ themes: [], diagnostics: [] }),
 	getAgentsFiles: () => ({ agentsFiles: [] }),
-	getSystemPrompt: () => `You are a minimal assistant.
-Available: read, bash. Be concise.`,
+	getSystemPrompt: () => `你是一个极简助手。
+可用：read, bash。请简洁。`,
 	getAppendSystemPrompt: () => [],
 	extendResources: () => {},
 	reload: async () => {},
@@ -70,7 +70,7 @@ try {
 		}
 	});
 
-	await session.prompt("List files in the current directory.");
+	await session.prompt("列出当前目录中的文件。");
 	console.log();
 } finally {
 	session.dispose();

@@ -2,73 +2,73 @@ import type { AutocompleteProvider } from "./autocomplete.ts";
 import type { Component } from "./tui.ts";
 
 /**
- * Interface for custom editor components.
+ * 自定义编辑器组件的接口。
  *
- * This allows extensions to provide their own editor implementation
- * (e.g., vim mode, emacs mode, custom keybindings) while maintaining
- * compatibility with the core application.
+ * 这允许扩展提供自己的编辑器实现
+ *（例如 vim 模式、emacs 模式、自定义按键绑定），同时保持
+ * 与核心应用程序的兼容性。
  */
 export interface EditorComponent extends Component {
 	// =========================================================================
-	// Core text access (required)
+	// 核心文本访问（必需）
 	// =========================================================================
 
-	/** Get the current text content */
+	/** 获取当前文本内容 */
 	getText(): string;
 
-	/** Set the text content */
+	/** 设置文本内容 */
 	setText(text: string): void;
 
-	/** Handle raw terminal input (key presses, paste sequences, etc.) */
+	/** 处理原始终端输入（按键、粘贴序列等） */
 	handleInput(data: string): void;
 
 	// =========================================================================
-	// Callbacks (required)
+	// 回调（必需）
 	// =========================================================================
 
-	/** Called when user submits (e.g., Enter key) */
+	/** 当用户提交时调用（例如按 Enter 键） */
 	onSubmit?: (text: string) => void;
 
-	/** Called when text changes */
+	/** 当文本变化时调用 */
 	onChange?: (text: string) => void;
 
 	// =========================================================================
-	// History support (optional)
+	// 历史记录支持（可选）
 	// =========================================================================
 
-	/** Add text to history for up/down navigation */
+	/** 将文本添加到历史记录中，用于上下导航 */
 	addToHistory?(text: string): void;
 
 	// =========================================================================
-	// Advanced text manipulation (optional)
+	// 高级文本操作（可选）
 	// =========================================================================
 
-	/** Insert text at current cursor position */
+	/** 在当前光标位置插入文本 */
 	insertTextAtCursor?(text: string): void;
 
 	/**
-	 * Get text with any markers expanded (e.g., paste markers).
-	 * Falls back to getText() if not implemented.
+	 * 获取扩展任意标记后的文本（例如粘贴标记）。
+	 * 如果未实现，则回退到 getText()。
 	 */
 	getExpandedText?(): string;
 
 	// =========================================================================
-	// Autocomplete support (optional)
+	// 自动完成支持（可选）
 	// =========================================================================
 
-	/** Set the autocomplete provider */
+	/** 设置自动完成提供程序 */
 	setAutocompleteProvider?(provider: AutocompleteProvider): void;
 
 	// =========================================================================
-	// Appearance (optional)
+	// 外观（可选）
 	// =========================================================================
 
-	/** Border color function */
+	/** 边框颜色函数 */
 	borderColor?: (str: string) => string;
 
-	/** Set horizontal padding */
+	/** 设置水平内边距 */
 	setPaddingX?(padding: number): void;
 
-	/** Set max visible items in autocomplete dropdown */
+	/** 设置自动完成下拉菜单的最大可见项数 */
 	setAutocompleteMaxVisible?(maxVisible: number): void;
 }

@@ -471,7 +471,7 @@ export class ModelRegistry {
 						.Errors(parsed)
 						.map((error) => `  - ${formatValidationPath(error)}: ${error.message}`)
 						.join("\n") || "未知的 schema 错误";
-				return emptyCustomModelsResult(`Invalid models.json schema:\n${errors}\n\nFile: ${modelsJsonPath}`);
+				return emptyCustomModelsResult(`models.json 架构无效:\n${errors}\n\n文件: ${modelsJsonPath}`);
 			}
 
 			const config = parsed as ModelsConfig;
@@ -525,16 +525,16 @@ export class ModelRegistry {
 				// Override-only config: needs baseUrl, headers, compat, modelOverrides, or some combination.
 				if (!providerConfig.baseUrl && !providerConfig.headers && !providerConfig.compat && !hasModelOverrides) {
 					throw new Error(
-						`Provider ${providerName}: must specify "baseUrl", "headers", "compat", "modelOverrides", or "models".`,
+						`Provider ${providerName}: 必须指定 "baseUrl"、"headers"、"compat"、"modelOverrides" 或 "models"。`,
 					);
 				}
 			} else if (!isBuiltIn) {
 				// Non-built-in providers with custom models require endpoint + auth.
 				if (!providerConfig.baseUrl) {
-					throw new Error(`Provider ${providerName}: "baseUrl" is required when defining custom models.`);
+					throw new Error(`Provider ${providerName}: 定义自定义模型时需要 "baseUrl"。`);
 				}
 				if (!providerConfig.apiKey) {
-					throw new Error(`Provider ${providerName}: "apiKey" is required when defining custom models.`);
+					throw new Error(`Provider ${providerName}: 定义自定义模型时需要 "apiKey"。`);
 				}
 			}
 			// Built-in providers with custom models: baseUrl/apiKey/api are optional,
@@ -545,17 +545,17 @@ export class ModelRegistry {
 
 				if (!hasProviderApi && !hasModelApi && !isBuiltIn) {
 					throw new Error(
-						`Provider ${providerName}, model ${modelDef.id}: no "api" specified. Set at provider or model level.`,
+						`Provider ${providerName}, 模型 ${modelDef.id}: 未指定 "api"。请在 provider 或 model 级别设置。`,
 					);
 				}
 				// For built-in providers, api is optional — inherited from built-in models.
 
-				if (!modelDef.id) throw new Error(`Provider ${providerName}: model missing "id"`);
+				if (!modelDef.id) throw new Error(`Provider ${providerName}: 模型缺少 "id"`);
 				// Validate contextWindow/maxTokens only if provided (they have defaults)
 				if (modelDef.contextWindow !== undefined && modelDef.contextWindow <= 0)
-					throw new Error(`Provider ${providerName}, model ${modelDef.id}: invalid contextWindow`);
+					throw new Error(`Provider ${providerName}, 模型 ${modelDef.id}: contextWindow 无效`);
 				if (modelDef.maxTokens !== undefined && modelDef.maxTokens <= 0)
-					throw new Error(`Provider ${providerName}, model ${modelDef.id}: invalid maxTokens`);
+					throw new Error(`Provider ${providerName}, 模型 ${modelDef.id}: maxTokens 无效`);
 			}
 		}
 	}
@@ -705,7 +705,7 @@ export class ModelRegistry {
 
 			if (providerConfig?.authHeader) {
 				if (!apiKey) {
-					return { ok: false, error: `No API key found for "${model.provider}"` };
+					return { ok: false, error: `未找到 "${model.provider}" 的 API 密钥` };
 				}
 				headers = { ...headers, Authorization: `Bearer ${apiKey}` };
 			}
@@ -835,7 +835,7 @@ export class ModelRegistry {
 
 	private validateProviderConfig(providerName: string, config: ProviderConfigInput): void {
 		if (config.streamSimple && !config.api) {
-			throw new Error(`Provider ${providerName}: "api" is required when registering streamSimple.`);
+			throw new Error(`Provider ${providerName}: 注册 streamSimple 时需要 "api"。`);
 		}
 
 		if (!config.models || config.models.length === 0) {
@@ -843,16 +843,16 @@ export class ModelRegistry {
 		}
 
 		if (!config.baseUrl) {
-			throw new Error(`Provider ${providerName}: "baseUrl" is required when defining models.`);
+			throw new Error(`Provider ${providerName}: 定义模型时需要 "baseUrl"。`);
 		}
 		if (!config.apiKey && !config.oauth) {
-			throw new Error(`Provider ${providerName}: "apiKey" or "oauth" is required when defining models.`);
+			throw new Error(`Provider ${providerName}: 定义模型时需要 "apiKey" 或 "oauth"。`);
 		}
 
 		for (const modelDef of config.models) {
 			const api = modelDef.api || config.api;
 			if (!api) {
-				throw new Error(`Provider ${providerName}, model ${modelDef.id}: no "api" specified.`);
+				throw new Error(`Provider ${providerName}, 模型 ${modelDef.id}: 未指定 "api"。`);
 			}
 		}
 	}

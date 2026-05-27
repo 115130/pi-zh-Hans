@@ -1,7 +1,7 @@
 import type { Component } from "../tui.ts";
 
 /**
- * Spacer component that renders empty lines
+ * 用于渲染空行的间距组件
  */
 export class Spacer implements Component {
 	private lines: number;
@@ -15,7 +15,7 @@ export class Spacer implements Component {
 	}
 
 	invalidate(): void {
-		// No cached state to invalidate currently
+		// 当前没有需要无效化的缓存状态
 	}
 
 	render(_width: number): string[] {

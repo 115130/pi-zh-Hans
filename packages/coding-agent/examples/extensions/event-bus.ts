@@ -1,42 +1,41 @@
 /**
- * Inter-extension event bus example.
+ * 扩展间事件总线示例。
  *
- * Shows pi.events for communication between extensions. One extension
- * can emit events that other extensions listen to.
+ * 展示 pi.events 如何用于扩展间的通信。一个扩展可以发出事件，其他扩展监听这些事件。
  *
- * Usage: /emit [event-name] [data] - emit an event on the bus
+ * 使用方法：/emit [事件名称] [数据] - 在总线上发出事件
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {
-	// Store ctx for use in event handler
+	// 存储 ctx 以供事件处理器使用
 	let currentCtx: ExtensionContext | undefined;
 
 	pi.on("session_start", async (_event, ctx) => {
 		currentCtx = ctx;
 	});
 
-	// Listen for events from other extensions
+	// 监听来自其他扩展的事件
 	pi.events.on("my:notification", (data) => {
 		const { message, from } = data as { message: string; from: string };
-		currentCtx?.ui.notify(`Event from ${from}: ${message}`, "info");
+		currentCtx?.ui.notify(`来自 ${from} 的事件：${message}`, "info");
 	});
 
-	// Command to emit events (emits "my:notification" which the listener above receives)
+	// 发出事件的命令（发出 "my:notification"，由上面的监听器接收）
 	pi.registerCommand("emit", {
-		description: "Emit my:notification event (usage: /emit message)",
+		description: "发出 my:notification 事件（使用方法：/emit 消息内容）",
 		handler: async (args, _ctx) => {
 			const message = args.trim() || "hello";
-			pi.events.emit("my:notification", { message, from: "/emit command" });
-			// Listener above will show the notification
+			pi.events.emit("my:notification", { message, from: "/emit 命令" });
+			// 上面的监听器将显示通知
 		},
 	});
 
-	// Example: emit on session start
+	// 示例：在会话启动时发出事件
 	pi.on("session_start", async () => {
 		pi.events.emit("my:notification", {
-			message: "Session started",
+			message: "会话已启动",
 			from: "event-bus-example",
 		});
 	});

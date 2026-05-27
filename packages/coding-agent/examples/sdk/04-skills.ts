@@ -17,7 +17,7 @@ import {
 // Or define custom skills inline
 const customSkill: Skill = {
 	name: "my-skill",
-	description: "Custom project instructions",
+	description: "自定义项目指令",
 	filePath: "/virtual/SKILL.md",
 	baseDir: "/virtual",
 	sourceInfo: createSyntheticSourceInfo("/virtual/SKILL.md", { source: "sdk" }),
@@ -40,16 +40,16 @@ await loader.reload();
 // Discover all skills from cwd/.pi/skills, ~/.pi/agent/skills, etc.
 const { skills: allSkills, diagnostics } = loader.getSkills();
 console.log(
-	"Discovered skills:",
+	"发现的技能:",
 	allSkills.map((s) => s.name),
 );
 if (diagnostics.length > 0) {
-	console.log("Warnings:", diagnostics);
+	console.log("警告:", diagnostics);
 }
 
 const { session } = await createAgentSession({
 	resourceLoader: loader,
 	sessionManager: SessionManager.inMemory(),
 });
-console.log("Session created with filtered skills");
+console.log("已使用过滤后的技能创建会话");
 session.dispose();

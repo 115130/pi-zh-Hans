@@ -45,20 +45,20 @@ export class DoomEngine {
 	}
 
 	async init(): Promise<void> {
-		// Locate WASM build
+		// 定位 WASM 构建目录
 		const __dirname = dirname(fileURLToPath(import.meta.url));
 		const buildDir = join(__dirname, "doom", "build");
 		const doomJsPath = join(buildDir, "doom.js");
 
 		if (!existsSync(doomJsPath)) {
-			throw new Error(`WASM not found at ${doomJsPath}. Run ./doom/build.sh first`);
+			throw new Error(`在 ${doomJsPath} 未找到 WASM。请先运行 ./doom/build.sh`);
 		}
 
-		// Read WAD file
+		// 读取 WAD 文件
 		const wadData = readFileSync(this.wadPath);
 		const wadArray = Array.from(new Uint8Array(wadData));
 
-		// Load WASM module - eval to bypass jiti completely
+		// 加载 WASM 模块 - 使用 eval 以完全绕过 jiti
 		const doomJsCode = readFileSync(doomJsPath, "utf-8");
 		const moduleExports: { exports: unknown } = { exports: {} };
 		const nativeRequire = createRequire(doomJsPath);
@@ -77,7 +77,7 @@ export class DoomEngine {
 			printErr: () => {},
 			preRun: [
 				(module: DoomModule) => {
-					// Create /doom directory and add WAD
+					// 创建 /doom 目录并添加 WAD
 					module.FS_createPath("/", "doom", true, true);
 					module.FS_createDataFile("/doom", "doom1.wad", wadArray, true, false);
 				},
@@ -86,13 +86,13 @@ export class DoomEngine {
 
 		this.module = await createDoomModule(moduleConfig);
 		if (!this.module) {
-			throw new Error("Failed to initialize DOOM module");
+			throw new Error("初始化 DOOM 模块失败");
 		}
 
-		// Initialize DOOM
+		// 初始化 DOOM
 		this.initDoom();
 
-		// Get framebuffer info
+		// 获取帧缓冲区信息
 		this.frameBufferPtr = this.module._DG_GetFrameBuffer();
 		this._width = this.module._DG_GetScreenWidth();
 		this._height = this.module._DG_GetScreenHeight();
@@ -128,7 +128,7 @@ export class DoomEngine {
 	}
 
 	/**
-	 * Run one game tick
+	 * 运行一个游戏滴答
 	 */
 	tick(): void {
 		if (!this.module || !this.initialized) return;
@@ -136,8 +136,8 @@ export class DoomEngine {
 	}
 
 	/**
-	 * Get current frame as RGBA pixel data
-	 * DOOM outputs ARGB, we convert to RGBA
+	 * 获取当前帧的 RGBA 像素数据
+	 * DOOM 输出 ARGB，我们转换为 RGBA
 	 */
 	getFrameRGBA(): Uint8Array {
 		if (!this.module || !this.initialized) {
@@ -160,7 +160,7 @@ export class DoomEngine {
 	}
 
 	/**
-	 * Push a key event
+	 * 推送一个按键事件
 	 */
 	pushKey(pressed: boolean, key: number): void {
 		if (!this.module || !this.initialized) return;

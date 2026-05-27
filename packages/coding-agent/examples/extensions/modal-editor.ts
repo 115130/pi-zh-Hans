@@ -69,7 +69,7 @@ class ModalEditor extends CustomEditor {
 		if (lines.length === 0) return lines;
 
 		// Add mode indicator to bottom border
-		const label = this.mode === "normal" ? " NORMAL " : " INSERT ";
+		const label = this.mode === "normal" ? " 普通模式 " : " 插入模式 ";
 		const last = lines.length - 1;
 		if (visibleWidth(lines[last]!) >= label.length) {
 			lines[last] = truncateToWidth(lines[last]!, width - label.length, "") + label;

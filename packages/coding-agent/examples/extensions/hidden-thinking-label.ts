@@ -20,7 +20,7 @@
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
-const DEFAULT_LABEL = "Pondering...";
+const DEFAULT_LABEL = "思考中...";
 
 export default function (pi: ExtensionAPI) {
 	let label = DEFAULT_LABEL;
@@ -34,20 +34,20 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerCommand("thinking-label", {
-		description: "Set the hidden thinking label. Use without args to reset.",
+		description: "设置隐藏思考标签。不带参数使用以重置。",
 		handler: async (args, ctx) => {
 			const nextLabel = args.trim();
 
 			if (!nextLabel) {
 				label = DEFAULT_LABEL;
 				ctx.ui.setHiddenThinkingLabel();
-				ctx.ui.notify(`Hidden thinking label reset to: ${DEFAULT_LABEL}`);
+				ctx.ui.notify(`隐藏思考标签已重置为：${DEFAULT_LABEL}`);
 				return;
 			}
 
 			label = nextLabel;
 			ctx.ui.setHiddenThinkingLabel(label);
-			ctx.ui.notify(`Hidden thinking label set to: ${label}`);
+			ctx.ui.notify(`隐藏思考标签已设置为：${label}`);
 		},
 	});
 }

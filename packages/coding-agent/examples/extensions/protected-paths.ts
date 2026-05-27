@@ -1,8 +1,8 @@
 /**
- * Protected Paths Extension
+ * 受保护路径扩展
  *
- * Blocks write and edit operations to protected paths.
- * Useful for preventing accidental modifications to sensitive files.
+ * 阻止对受保护路径的写入和编辑操作。
+ * 有助于防止意外修改敏感文件。
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -20,9 +20,9 @@ export default function (pi: ExtensionAPI) {
 
 		if (isProtected) {
 			if (ctx.hasUI) {
-				ctx.ui.notify(`Blocked write to protected path: ${path}`, "warning");
+				ctx.ui.notify(`已阻止写入受保护路径：${path}`, "warning");
 			}
-			return { block: true, reason: `Path "${path}" is protected` };
+			return { block: true, reason: `路径 "${path}" 受保护` };
 		}
 
 		return undefined;

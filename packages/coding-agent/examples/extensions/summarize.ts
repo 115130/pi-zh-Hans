@@ -125,9 +125,9 @@ const showSummaryUi = async (summary: string, ctx: ExtensionCommandContext) => {
 		const mdTheme = getMarkdownTheme();
 
 		container.addChild(border);
-		container.addChild(new Text(theme.fg("accent", theme.bold("Conversation Summary")), 1, 0));
+		container.addChild(new Text(theme.fg("accent", theme.bold("对话摘要")), 1, 0));
 		container.addChild(new Markdown(summary, 1, 1, mdTheme));
-		container.addChild(new Text(theme.fg("dim", "Press Enter or Esc to close"), 1, 0));
+		container.addChild(new Text(theme.fg("dim", "按 Enter 或 Esc 关闭"), 1, 0));
 		container.addChild(border);
 
 		return {
@@ -144,25 +144,25 @@ const showSummaryUi = async (summary: string, ctx: ExtensionCommandContext) => {
 
 export default function (pi: ExtensionAPI) {
 	pi.registerCommand("summarize", {
-		description: "Summarize the current conversation in a custom UI",
+		description: "在自定义界面中总结当前对话",
 		handler: async (_args, ctx) => {
 			const branch = ctx.sessionManager.getBranch();
 			const conversationText = buildConversationText(branch);
 
 			if (!conversationText.trim()) {
 				if (ctx.hasUI) {
-					ctx.ui.notify("No conversation text found", "warning");
+					ctx.ui.notify("未找到对话文本", "warning");
 				}
 				return;
 			}
 
 			if (ctx.hasUI) {
-				ctx.ui.notify("Preparing summary...", "info");
+				ctx.ui.notify("正在准备摘要...", "info");
 			}
 
 			const model = getModel("openai", "gpt-5.2");
 			if (!model && ctx.hasUI) {
-				ctx.ui.notify("Model openai/gpt-5.2 not found", "warning");
+				ctx.ui.notify("未找到 openai/gpt-5.2 模型", "warning");
 			}
 
 			const auth = model ? await ctx.modelRegistry.getApiKeyAndHeaders(model) : undefined;
@@ -170,7 +170,7 @@ export default function (pi: ExtensionAPI) {
 				ctx.ui.notify(auth.error, "warning");
 			}
 			if (auth?.ok && !auth.apiKey && ctx.hasUI) {
-				ctx.ui.notify("No API key for openai/gpt-5.2", "warning");
+				ctx.ui.notify("没有 openai/gpt-5.2 的 API 密钥", "warning");
 			}
 
 			if (!model || !auth?.ok || !auth.apiKey) {

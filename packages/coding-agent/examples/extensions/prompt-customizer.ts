@@ -1,23 +1,22 @@
 /**
- * Prompt Customizer Extension
+ * 提示定制器扩展
  *
- * Demonstrates using systemPromptOptions to make informed, context-aware
- * modifications to the system prompt without re-discovering resources.
+ * 演示如何使用 systemPromptOptions 做出明智的、上下文感知的修改，
+ * 而无需重新发现资源。
  *
- * This extension adds tool-specific guidance based on what tools and skills
- * are currently active, respecting whatever the user has configured.
+ * 此扩展根据当前激活的工具和技能添加特定于工具的指导，
+ * 尊重用户的配置。
  *
- * Usage:
- * 1. Copy this file to ~/.pi/agent/extensions/ or your project's .pi/extensions/
- * 2. Use the extension — it automatically adapts to your active tools and skills
+ * 用法：
+ * 1. 将此文件复制到 ~/.pi/agent/extensions/ 或项目的 .pi/extensions/ 中
+ * 2. 使用扩展 — 它会自动适应您激活的工具和技能
  */
 
 import type { BuildSystemPromptOptions, ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 /**
- * Adds tool-specific guidance that adapts to the active tool set.
- * Instead of appending one-size-fits-all instructions, this reads what's
- * actually loaded and tailors the guidance accordingly.
+ * 添加适应当前工具集的特定工具指导。
+ * 而不是附加一刀切的指令，它会读取实际加载的内容并定制指导。
  */
 function addToolGuidance(options: BuildSystemPromptOptions, basePrompt: string): string {
 	const hasTool = (name: string) => options.selectedTools?.includes(name) ?? false;
@@ -26,28 +25,26 @@ function addToolGuidance(options: BuildSystemPromptOptions, basePrompt: string):
 
 	if (hasTool("read")) {
 		parts.push(
-			"• Use the `read` tool for file contents (supports text and images).",
-			"  - For large files, use `offset` and `limit` to read in chunks.",
+			"• 使用 `read` 工具获取文件内容（支持文本和图像）。",
+			"  - 对于大文件，使用 `offset` 和 `limit` 分块读取。",
 		);
 	}
 
 	if (hasTool("bash")) {
-		parts.push("• Execute commands with the `bash` tool. Use it for file operations like `ls`, `find`, `grep`.");
+		parts.push("• 使用 `bash` 工具执行命令。用于文件操作，如 `ls`、`find`、`grep`。");
 	}
 
 	if (hasTool("edit")) {
-		parts.push(
-			"• Use the `edit` tool for precise text replacements in files. Match exact content including whitespace.",
-		);
+		parts.push("• 使用 `edit` 工具对文件进行精确文本替换。匹配包括空白在内的确切内容。");
 	}
 
 	if (hasTool("write")) {
-		parts.push("• Use the `write` tool to create new files or overwrite existing ones completely.");
+		parts.push("• 使用 `write` 工具创建新文件或完全覆盖现有文件。");
 	}
 
 	if (options.skills && options.skills.length > 0) {
 		const skillNames = options.skills.map((s) => s.name).join(", ");
-		parts.push(`\nAvailable skills: ${skillNames}`, "Use skill documentation for best practices on specific tools.");
+		parts.push(`\n可用技能：${skillNames}`, "使用技能文档了解特定工具的最佳实践。");
 	}
 
 	if (parts.length === 0) {
@@ -56,24 +53,23 @@ function addToolGuidance(options: BuildSystemPromptOptions, basePrompt: string):
 
 	return `${basePrompt}
 
-## Tool Guidance
+## 工具指导
 
 ${parts.join("\n")}
 `;
 }
 
 /**
- * Merges extension instructions with user-provided append prompts.
- * This respects whatever the user configured via --append-system-prompt
- * flags or files, rather than duplicating that work.
+ * 将扩展指令与用户提供的附加提示合并。
+ * 这尊重用户通过 --append-system-prompt 标志或文件配置的内容，而不是重复该工作。
  */
 function mergeWithUserAppend(options: BuildSystemPromptOptions): string {
 	const userAppend = options.appendSystemPrompt;
 	const extensionSpecific = `
-## Extension-Added Context
+## 扩展添加的上下文
 
-This prompt includes tool guidance and skill information loaded dynamically.
-If you have additional requirements, configure them via --append-system-prompt or project context files.
+此提示包含动态加载的工具指导和技能信息。
+如果您有其他要求，请通过 --append-system-prompt 或项目上下文文件进行配置。
 `;
 
 	if (userAppend) {

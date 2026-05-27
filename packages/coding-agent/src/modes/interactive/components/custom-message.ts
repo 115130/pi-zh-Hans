@@ -6,8 +6,8 @@ import type { CustomMessage } from "../../../core/messages.ts";
 import { getMarkdownTheme, theme } from "../theme/theme.ts";
 
 /**
- * Component that renders a custom message entry from extensions.
- * Uses distinct styling to differentiate from user messages.
+ * 组件，用于渲染来自扩展的自定义消息条目。
+ * 使用不同的样式以区别于用户消息。
  */
 export class CustomMessageComponent extends Container {
 	private message: CustomMessage<unknown>;

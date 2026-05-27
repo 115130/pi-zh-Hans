@@ -1,55 +1,55 @@
-> pi can help you create pi packages. Ask it to bundle your extensions, skills, prompt templates, or themes.
+> pi 可以帮助你创建 pi 包。你可以用它来打包你的扩展、技能、提示模板或主题。
 
-# Pi Packages
+# Pi 包
 
-Pi packages bundle extensions, skills, prompt templates, and themes so you can share them through npm or git. A package can declare resources in `package.json` under the `pi` key, or use conventional directories.
+Pi 包可以将扩展、技能、提示模板和主题打包，以便通过 npm 或 git 分享。包可以在 `package.json` 的 `pi` 键下声明资源，或使用约定目录。
 
-## Table of Contents
+## 目录
 
-- [Install and Manage](#install-and-manage)
-- [Package Sources](#package-sources)
-- [Creating a Pi Package](#creating-a-pi-package)
-- [Package Structure](#package-structure)
-- [Dependencies](#dependencies)
-- [Package Filtering](#package-filtering)
-- [Enable and Disable Resources](#enable-and-disable-resources)
-- [Scope and Deduplication](#scope-and-deduplication)
+- [安装和管理](#安装和管理)
+- [包来源](#包来源)
+- [创建 Pi 包](#创建-pi-包)
+- [包结构](#包结构)
+- [依赖](#依赖)
+- [包过滤](#包过滤)
+- [启用和禁用资源](#启用和禁用资源)
+- [作用域与去重](#作用域与去重)
 
-## Install and Manage
+## 安装和管理
 
-> **Security:** Pi packages run with full system access. Extensions execute arbitrary code, and skills can instruct the model to perform any action including running executables. Review source code before installing third-party packages.
+> **安全：** Pi 包以完全系统权限运行。扩展会执行任意代码，技能可以指示模型执行任何操作，包括运行可执行文件。在安装第三方包之前，请审查源代码。
 
 ```bash
 pi install npm:@foo/bar@1.0.0
 pi install git:github.com/user/repo@v1
-pi install https://github.com/user/repo  # raw URLs work too
+pi install https://github.com/user/repo  # 原始 URL 也可用
 pi install /absolute/path/to/package
 pi install ./relative/path/to/package
 
 pi remove npm:@foo/bar
-pi list                     # show installed packages from settings
-pi update                   # update pi, update packages, and reconcile pinned git refs
-pi update --extensions      # update packages and reconcile pinned git refs only
-pi update --self            # update pi only
-pi update --self --force    # reinstall pi even if current
-pi update npm:@foo/bar      # update one package
+pi list                     # 显示设置中已安装的包
+pi update                   # 更新 pi、更新包，并协调固定 git 引用
+pi update --extensions      # 仅更新包并协调固定 git 引用
+pi update --self            # 仅更新 pi
+pi update --self --force    # 即使当前版本已安装也重新安装 pi
+pi update npm:@foo/bar      # 更新单个包
 pi update --extension npm:@foo/bar
 ```
 
-These commands manage pi packages, not the pi CLI installation. To uninstall pi itself, see [Quickstart](quickstart.md#uninstall).
+这些命令管理 pi 包，而非 pi CLI 本身。要卸载 pi 自身，请参阅[快速入门](quickstart.md#卸载)。
 
-By default, `install` and `remove` write to user settings (`~/.pi/agent/settings.json`). Use `-l` to write to project settings (`.pi/settings.json`) instead. Project settings can be shared with your team, and pi installs any missing packages automatically on startup.
+默认情况下，`install` 和 `remove` 写入用户设置（`~/.pi/agent/settings.json`）。使用 `-l` 可改为写入项目设置（`.pi/settings.json`）。项目设置可以与团队共享，pi 会在启动时自动安装任何缺失的包。
 
-To try a package without installing it, use `--extension` or `-e`. This installs to a temporary directory for the current run only:
+若要试用包而不安装，可使用 `--extension` 或 `-e`。这会安装到临时目录，仅限本次运行：
 
 ```bash
 pi -e npm:@foo/bar
 pi -e git:github.com/user/repo
 ```
 
-## Package Sources
+## 包来源
 
-Pi accepts three source types in settings and `pi install`.
+Pi 接受设置和 `pi install` 中的三种来源类型。
 
 ### npm
 
@@ -58,12 +58,12 @@ npm:@scope/pkg@1.2.3
 npm:pkg
 ```
 
-- Versioned specs are pinned and skipped by package updates (`pi update`, `pi update --extensions`).
-- User installs go under `~/.pi/agent/npm/`.
-- Project installs go under `.pi/npm/`.
-- Set `npmCommand` in `settings.json` to pin npm package lookup and install operations to a specific wrapper command such as `mise` or `asdf`.
+- 指定版本的包会被固定，包更新（`pi update`、`pi update --extensions`）时跳过。
+- 用户安装位置：`~/.pi/agent/npm/`。
+- 项目安装位置：`.pi/npm/`。
+- 在 `settings.json` 中设置 `npmCommand`，可将 npm 包查找和安装操作固定到特定的包装命令，例如 `mise` 或 `asdf`。
 
-Example:
+示例：
 
 ```json
 {
@@ -80,40 +80,40 @@ https://github.com/user/repo@v1
 ssh://git@github.com/user/repo@v1
 ```
 
-- Without `git:` prefix, only protocol URLs are accepted (`https://`, `http://`, `ssh://`, `git://`).
-- With `git:` prefix, shorthand formats are accepted, including `github.com/user/repo` and `git@github.com:user/repo`.
-- HTTPS and SSH URLs are both supported.
-- SSH URLs use your configured SSH keys automatically (respects `~/.ssh/config`).
-- For non-interactive runs (for example CI), you can set `GIT_TERMINAL_PROMPT=0` to disable credential prompts and set `GIT_SSH_COMMAND` (for example `ssh -o BatchMode=yes -o ConnectTimeout=5`) to fail fast.
-- Refs are pinned tags or commits. `pi update` and `pi update --extensions` do not move them to newer refs, but they do reconcile an existing clone to the configured ref.
-- Use `pi install git:host/user/repo@new-ref` to update settings and move an existing package to a new pinned ref.
-- Cloned to `~/.pi/agent/git/<host>/<path>` (global) or `.pi/git/<host>/<path>` (project).
-- When reconciliation changes the checkout, pi resets and cleans the clone, then runs `npm install` if `package.json` exists.
+- 没有 `git:` 前缀时，仅接受协议 URL（`https://`、`http://`、`ssh://`、`git://`）。
+- 有 `git:` 前缀时，接受简写格式，包括 `github.com/user/repo` 和 `git@github.com:user/repo`。
+- HTTPS 和 SSH URL 均支持。
+- SSH URL 自动使用你配置的 SSH 密钥（遵循 `~/.ssh/config`）。
+- 对于非交互式运行（例如 CI），你可以设置 `GIT_TERMINAL_PROMPT=0` 禁用凭据提示，并设置 `GIT_SSH_COMMAND`（例如 `ssh -o BatchMode=yes -o ConnectTimeout=5`）快速失败。
+- 引用是固定的标签或提交。`pi update` 和 `pi update --extensions` 不会将其移动到新引用，但会协调现有克隆到配置的引用。
+- 使用 `pi install git:host/user/repo@new-ref` 更新设置并将现有包移动到新的固定引用。
+- 克隆到 `~/.pi/agent/git/<host>/<path>`（全局）或 `.pi/git/<host>/<path>`（项目）。
+- 当协调导致检出变更时，pi 会重置并清理克隆，如果存在 `package.json`，则运行 `npm install`。
 
-**SSH examples:**
+**SSH 示例：**
 ```bash
-# git@host:path shorthand (requires git: prefix)
+# git@host:path 简写格式（需要 git: 前缀）
 pi install git:git@github.com:user/repo
 
-# ssh:// protocol format
+# ssh:// 协议格式
 pi install ssh://git@github.com/user/repo
 
-# With version ref
+# 带有版本引用
 pi install git:git@github.com:user/repo@v1.0.0
 ```
 
-### Local Paths
+### 本地路径
 
 ```
 /absolute/path/to/package
 ./relative/path/to/package
 ```
 
-Local paths point to files or directories on disk and are added to settings without copying. Relative paths are resolved against the settings file they appear in. If the path is a file, it loads as a single extension. If it is a directory, pi loads resources using package rules.
+本地路径指向磁盘上的文件或目录，并添加到设置中而不复制。相对路径相对于它们所在的设置文件进行解析。如果路径是文件，则作为单个扩展加载。如果是目录，则 pi 使用包规则加载资源。
 
-## Creating a Pi Package
+## 创建 Pi 包
 
-Add a `pi` manifest to `package.json` or use conventional directories. Include the `pi-package` keyword for discoverability.
+在 `package.json` 中添加 `pi` 清单，或使用约定目录。包含 `pi-package` 关键字以便于发现。
 
 ```json
 {
@@ -128,11 +128,11 @@ Add a `pi` manifest to `package.json` or use conventional directories. Include t
 }
 ```
 
-Paths are relative to the package root. Arrays support glob patterns and `!exclusions`.
+路径相对于包根目录。数组支持 glob 模式和 `!排除项`。
 
-### Gallery Metadata
+### 画廊元数据
 
-The [package gallery](https://pi.dev/packages) displays packages tagged with `pi-package`. Add `video` or `image` fields to show a preview:
+[包画廊](https://pi.dev/packages) 会显示标记有 `pi-package` 的包。添加 `video` 或 `image` 字段以显示预览：
 
 ```json
 {
@@ -146,31 +146,31 @@ The [package gallery](https://pi.dev/packages) displays packages tagged with `pi
 }
 ```
 
-- **video**: MP4 only. On desktop, autoplays on hover. Clicking opens a fullscreen player.
-- **image**: PNG, JPEG, GIF, or WebP. Displayed as a static preview.
+- **video**：仅 MP4。桌面端在悬停时自动播放。点击打开全屏播放器。
+- **image**：PNG、JPEG、GIF 或 WebP。显示为静态预览。
 
-If both are set, video takes precedence.
+如果两者都设置，视频优先。
 
-## Package Structure
+## 包结构
 
-### Convention Directories
+### 约定目录
 
-If no `pi` manifest is present, pi auto-discovers resources from these directories:
+如果没有 `pi` 清单，pi 会自动从以下目录发现资源：
 
-- `extensions/` loads `.ts` and `.js` files
-- `skills/` recursively finds `SKILL.md` folders and loads top-level `.md` files as skills
-- `prompts/` loads `.md` files
-- `themes/` loads `.json` files
+- `extensions/` 加载 `.ts` 和 `.js` 文件
+- `skills/` 递归查找 `SKILL.md` 文件夹，并加载顶层 `.md` 文件作为技能
+- `prompts/` 加载 `.md` 文件
+- `themes/` 加载 `.json` 文件
 
-## Dependencies
+## 依赖
 
-Third party runtime dependencies belong in `dependencies` in `package.json`. Dependencies that do not register extensions, skills, prompt templates, or themes also belong in `dependencies`. When pi installs a package from npm or git, it runs `npm install`, so those dependencies are installed automatically.
+第三方运行时依赖应放在 `package.json` 的 `dependencies` 中。那些没有注册扩展、技能、提示模板或主题的依赖也放在 `dependencies` 中。当 pi 从 npm 或 git 安装包时，会运行 `npm install`，因此这些依赖会自动安装。
 
-Pi bundles core packages for extensions and skills. If you import any of these, list them in `peerDependencies` with a `"*"` range and do not bundle them: `@earendil-works/pi-ai`, `@earendil-works/pi-agent-core`, `@earendil-works/pi-coding-agent`, `@earendil-works/pi-tui`, `typebox`.
+Pi 为扩展和技能提供了核心包。如果你导入了其中任何一个，请在 `peerDependencies` 中以 `"*"` 范围列出它们，并且不要打包它们：`@earendil-works/pi-ai`、`@earendil-works/pi-agent-core`、`@earendil-works/pi-coding-agent`、`@earendil-works/pi-tui`、`typebox`。
 
-Other pi packages must be bundled in your tarball. Add them to `dependencies` and `bundledDependencies`, then reference their resources through `node_modules/` paths. Pi loads packages with separate module roots, so separate installs do not collide or share modules.
+其他 pi 包必须打包在你的 tarball 中。将它们添加到 `dependencies` 和 `bundledDependencies`，然后通过 `node_modules/` 路径引用它们的资源。Pi 使用独立的模块根目录加载包，因此独立的安装不会冲突或共享模块。
 
-Example:
+示例：
 
 ```json
 {
@@ -185,9 +185,9 @@ Example:
 }
 ```
 
-## Package Filtering
+## 包过滤
 
-Filter what a package loads using the object form in settings:
+使用设置中的对象形式来过滤包加载的内容：
 
 ```json
 {
@@ -204,23 +204,23 @@ Filter what a package loads using the object form in settings:
 }
 ```
 
-`+path` and `-path` are exact paths relative to the package root.
+`+path` 和 `-path` 是相对于包根目录的精确路径。
 
-- Omit a key to load all of that type.
-- Use `[]` to load none of that type.
-- `!pattern` excludes matches.
-- `+path` force-includes an exact path.
-- `-path` force-excludes an exact path.
-- Filters layer on top of the manifest. They narrow down what is already allowed.
+- 省略某个键表示加载该类型的所有内容。
+- 使用 `[]` 表示不加载该类型的任何内容。
+- `!pattern` 排除匹配项。
+- `+path` 强制包含一个精确路径。
+- `-path` 强制排除一个精确路径。
+- 过滤在清单之上叠加。它们进一步缩小已允许的范围。
 
-## Enable and Disable Resources
+## 启用和禁用资源
 
-Use `pi config` to enable or disable extensions, skills, prompt templates, and themes from installed packages and local directories. Works for both global (`~/.pi/agent`) and project (`.pi/`) scopes.
+使用 `pi config` 启用或禁用来自已安装包和本地目录的扩展、技能、提示模板和主题。适用于全局（`~/.pi/agent`）和项目（`.pi/`）作用域。
 
-## Scope and Deduplication
+## 作用域与去重
 
-Packages can appear in both global and project settings. If the same package appears in both, the project entry wins. Identity is determined by:
+包可以同时出现在全局和项目设置中。如果同一个包出现在两者中，项目条目优先。身份由以下方式确定：
 
-- npm: package name
-- git: repository URL without ref
-- local: resolved absolute path
+- npm：包名
+- git：不带引用的仓库 URL
+- local：解析后的绝对路径

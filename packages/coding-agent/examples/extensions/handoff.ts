@@ -79,21 +79,21 @@ function getHandoffMessages(branch: SessionEntry[]): AgentMessage[] {
 
 export default function (pi: ExtensionAPI) {
 	pi.registerCommand("handoff", {
-		description: "Transfer context to a new focused session",
+		description: "将上下文移交到新的专注会话",
 		handler: async (args, ctx) => {
 			if (!ctx.hasUI) {
-				ctx.ui.notify("handoff requires interactive mode", "error");
+				ctx.ui.notify("handoff 需要交互模式", "error");
 				return;
 			}
 
 			if (!ctx.model) {
-				ctx.ui.notify("No model selected", "error");
+				ctx.ui.notify("未选择模型", "error");
 				return;
 			}
 
 			const goal = args.trim();
 			if (!goal) {
-				ctx.ui.notify("Usage: /handoff <goal for new thread>", "error");
+				ctx.ui.notify("用法：/handoff <新线程的目标>", "error");
 				return;
 			}
 
@@ -102,7 +102,7 @@ export default function (pi: ExtensionAPI) {
 			const messages = getHandoffMessages(ctx.sessionManager.getBranch());
 
 			if (messages.length === 0) {
-				ctx.ui.notify("No conversation to hand off", "error");
+				ctx.ui.notify("没有可移交的对话", "error");
 				return;
 			}
 
@@ -113,13 +113,13 @@ export default function (pi: ExtensionAPI) {
 
 			// Generate the handoff prompt with loader UI
 			const result = await ctx.ui.custom<string | null>((tui, theme, _kb, done) => {
-				const loader = new BorderedLoader(tui, theme, `Generating handoff prompt...`);
+				const loader = new BorderedLoader(tui, theme, `正在生成移交提示...`);
 				loader.onAbort = () => done(null);
 
 				const doGenerate = async () => {
 					const auth = await ctx.modelRegistry.getApiKeyAndHeaders(ctx.model!);
 					if (!auth.ok || !auth.apiKey) {
-						throw new Error(auth.ok ? `No API key for ${ctx.model!.provider}` : auth.error);
+						throw new Error(auth.ok ? `无 ${ctx.model!.provider} 的 API 密钥` : auth.error);
 					}
 
 					const userMessage: Message = {
@@ -127,7 +127,7 @@ export default function (pi: ExtensionAPI) {
 						content: [
 							{
 								type: "text",
-								text: `## Conversation History\n\n${conversationText}\n\n## User's Goal for New Thread\n\n${goal}`,
+								text: `## 对话历史\n\n${conversationText}\n\n## 用户新线程的目标\n\n${goal}`,
 							},
 						],
 						timestamp: Date.now(),
@@ -152,7 +152,7 @@ export default function (pi: ExtensionAPI) {
 				doGenerate()
 					.then(done)
 					.catch((err) => {
-						console.error("Handoff generation failed:", err);
+						console.error("移交生成失败:", err);
 						done(null);
 					});
 
@@ -160,15 +160,15 @@ export default function (pi: ExtensionAPI) {
 			});
 
 			if (result === null) {
-				ctx.ui.notify("Cancelled", "info");
+				ctx.ui.notify("已取消", "info");
 				return;
 			}
 
 			// Let user edit the generated prompt
-			const editedPrompt = await ctx.ui.editor("Edit handoff prompt", result);
+			const editedPrompt = await ctx.ui.editor("编辑移交提示", result);
 
 			if (editedPrompt === undefined) {
-				ctx.ui.notify("Cancelled", "info");
+				ctx.ui.notify("已取消", "info");
 				return;
 			}
 
@@ -179,12 +179,12 @@ export default function (pi: ExtensionAPI) {
 				parentSession: currentSessionFile,
 				withSession: async (replacementCtx) => {
 					replacementCtx.ui.setEditorText(editedPrompt);
-					replacementCtx.ui.notify("Handoff ready. Submit when ready.", "info");
+					replacementCtx.ui.notify("移交就绪。准备就绪后提交。", "info");
 				},
 			});
 
 			if (newSessionResult.cancelled) {
-				ctx.ui.notify("New session cancelled", "info");
+				ctx.ui.notify("新会话已取消", "info");
 			}
 		},
 	});

@@ -17,10 +17,10 @@ export default function pirateExtension(pi: ExtensionAPI) {
 
 	// Register /pirate command to toggle pirate mode
 	pi.registerCommand("pirate", {
-		description: "Toggle pirate mode (agent speaks like a pirate)",
+		description: "切换海盗模式（智能体像海盗一样说话）",
 		handler: async (_args, ctx) => {
 			pirateMode = !pirateMode;
-			ctx.ui.notify(pirateMode ? "Arrr! Pirate mode enabled!" : "Pirate mode disabled", "info");
+			ctx.ui.notify(pirateMode ? "啊吼！海盗模式已启用！" : "海盗模式已禁用", "info");
 		},
 	});
 

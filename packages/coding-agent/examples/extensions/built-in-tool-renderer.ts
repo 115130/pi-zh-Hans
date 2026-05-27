@@ -36,7 +36,7 @@ export default function (pi: ExtensionAPI) {
 	const originalRead = createReadTool(cwd);
 	pi.registerTool({
 		name: "read",
-		label: "read",
+		label: "读取",
 		description: originalRead.description,
 		parameters: originalRead.parameters,
 
@@ -45,36 +45,36 @@ export default function (pi: ExtensionAPI) {
 		},
 
 		renderCall(args, theme, _context) {
-			let text = theme.fg("toolTitle", theme.bold("read "));
+			let text = theme.fg("toolTitle", theme.bold("读取 "));
 			text += theme.fg("accent", args.path);
-			if (args.offset || args.limit) {
+			if (args.offset !== undefined || args.limit !== undefined) {
 				const parts: string[] = [];
-				if (args.offset) parts.push(`offset=${args.offset}`);
-				if (args.limit) parts.push(`limit=${args.limit}`);
+				if (args.offset !== undefined) parts.push(`偏移=${args.offset}`);
+				if (args.limit !== undefined) parts.push(`限制=${args.limit}`);
 				text += theme.fg("dim", ` (${parts.join(", ")})`);
 			}
 			return new Text(text, 0, 0);
 		},
 
 		renderResult(result, { expanded, isPartial }, theme, _context) {
-			if (isPartial) return new Text(theme.fg("warning", "Reading..."), 0, 0);
+			if (isPartial) return new Text(theme.fg("warning", "正在读取..."), 0, 0);
 
 			const details = result.details as ReadToolDetails | undefined;
 			const content = result.content[0];
 
 			if (content?.type === "image") {
-				return new Text(theme.fg("success", "Image loaded"), 0, 0);
+				return new Text(theme.fg("success", "图片已加载"), 0, 0);
 			}
 
 			if (content?.type !== "text") {
-				return new Text(theme.fg("error", "No content"), 0, 0);
+				return new Text(theme.fg("error", "无内容"), 0, 0);
 			}
 
 			const lineCount = content.text.split("\n").length;
-			let text = theme.fg("success", `${lineCount} lines`);
+			let text = theme.fg("success", `${lineCount} 行`);
 
 			if (details?.truncation?.truncated) {
-				text += theme.fg("warning", ` (truncated from ${details.truncation.totalLines})`);
+				text += theme.fg("warning", ` (已截断，原共 ${details.truncation.totalLines} 行)`);
 			}
 
 			if (expanded) {
@@ -83,7 +83,7 @@ export default function (pi: ExtensionAPI) {
 					text += `\n${theme.fg("dim", line)}`;
 				}
 				if (lineCount > 15) {
-					text += `\n${theme.fg("muted", `... ${lineCount - 15} more lines`)}`;
+					text += `\n${theme.fg("muted", `... 还有 ${lineCount - 15} 行`)}`;
 				}
 			}
 
@@ -95,7 +95,7 @@ export default function (pi: ExtensionAPI) {
 	const originalBash = createBashTool(cwd);
 	pi.registerTool({
 		name: "bash",
-		label: "bash",
+		label: "Bash",
 		description: originalBash.description,
 		parameters: originalBash.parameters,
 
@@ -108,13 +108,13 @@ export default function (pi: ExtensionAPI) {
 			const cmd = args.command.length > 80 ? `${args.command.slice(0, 77)}...` : args.command;
 			text += theme.fg("accent", cmd);
 			if (args.timeout) {
-				text += theme.fg("dim", ` (timeout: ${args.timeout}s)`);
+				text += theme.fg("dim", ` (超时: ${args.timeout}秒)`);
 			}
 			return new Text(text, 0, 0);
 		},
 
 		renderResult(result, { expanded, isPartial }, theme, _context) {
-			if (isPartial) return new Text(theme.fg("warning", "Running..."), 0, 0);
+			if (isPartial) return new Text(theme.fg("warning", "运行中..."), 0, 0);
 
 			const details = result.details as BashToolDetails | undefined;
 			const content = result.content[0];
@@ -126,14 +126,14 @@ export default function (pi: ExtensionAPI) {
 
 			let text = "";
 			if (exitCode === 0 || exitCode === null) {
-				text += theme.fg("success", "done");
+				text += theme.fg("success", "完成");
 			} else {
-				text += theme.fg("error", `exit ${exitCode}`);
+				text += theme.fg("error", `退出 ${exitCode}`);
 			}
-			text += theme.fg("dim", ` (${lineCount} lines)`);
+			text += theme.fg("dim", ` (${lineCount} 行)`);
 
 			if (details?.truncation?.truncated) {
-				text += theme.fg("warning", " [truncated]");
+				text += theme.fg("warning", " [已截断]");
 			}
 
 			if (expanded) {
@@ -142,7 +142,7 @@ export default function (pi: ExtensionAPI) {
 					text += `\n${theme.fg("dim", line)}`;
 				}
 				if (output.split("\n").length > 20) {
-					text += `\n${theme.fg("muted", "... more output")}`;
+					text += `\n${theme.fg("muted", "... 更多输出")}`;
 				}
 			}
 
@@ -154,7 +154,7 @@ export default function (pi: ExtensionAPI) {
 	const originalEdit = createEditTool(cwd);
 	pi.registerTool({
 		name: "edit",
-		label: "edit",
+		label: "编辑",
 		description: originalEdit.description,
 		parameters: originalEdit.parameters,
 		renderShell: "self",
@@ -164,13 +164,13 @@ export default function (pi: ExtensionAPI) {
 		},
 
 		renderCall(args, theme, _context) {
-			let text = theme.fg("toolTitle", theme.bold("edit "));
+			let text = theme.fg("toolTitle", theme.bold("编辑 "));
 			text += theme.fg("accent", args.path);
 			return new Text(text, 0, 0);
 		},
 
 		renderResult(result, { expanded, isPartial }, theme, _context) {
-			if (isPartial) return new Text(theme.fg("warning", "Editing..."), 0, 0);
+			if (isPartial) return new Text(theme.fg("warning", "正在编辑..."), 0, 0);
 
 			const details = result.details as EditToolDetails | undefined;
 			const content = result.content[0];
@@ -180,7 +180,7 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			if (!details?.diff) {
-				return new Text(theme.fg("success", "Applied"), 0, 0);
+				return new Text(theme.fg("success", "已应用"), 0, 0);
 			}
 
 			// Count additions and removals from the diff
@@ -207,7 +207,7 @@ export default function (pi: ExtensionAPI) {
 					}
 				}
 				if (diffLines.length > 30) {
-					text += `\n${theme.fg("muted", `... ${diffLines.length - 30} more diff lines`)}`;
+					text += `\n${theme.fg("muted", `... 还有 ${diffLines.length - 30} 行差异`)}`;
 				}
 			}
 
@@ -219,7 +219,7 @@ export default function (pi: ExtensionAPI) {
 	const originalWrite = createWriteTool(cwd);
 	pi.registerTool({
 		name: "write",
-		label: "write",
+		label: "写入",
 		description: originalWrite.description,
 		parameters: originalWrite.parameters,
 
@@ -228,22 +228,22 @@ export default function (pi: ExtensionAPI) {
 		},
 
 		renderCall(args, theme, _context) {
-			let text = theme.fg("toolTitle", theme.bold("write "));
+			let text = theme.fg("toolTitle", theme.bold("写入 "));
 			text += theme.fg("accent", args.path);
 			const lineCount = args.content.split("\n").length;
-			text += theme.fg("dim", ` (${lineCount} lines)`);
+			text += theme.fg("dim", ` (${lineCount} 行)`);
 			return new Text(text, 0, 0);
 		},
 
 		renderResult(result, { isPartial }, theme, _context) {
-			if (isPartial) return new Text(theme.fg("warning", "Writing..."), 0, 0);
+			if (isPartial) return new Text(theme.fg("warning", "正在写入..."), 0, 0);
 
 			const content = result.content[0];
 			if (content?.type === "text" && content.text.startsWith("Error")) {
 				return new Text(theme.fg("error", content.text.split("\n")[0]), 0, 0);
 			}
 
-			return new Text(theme.fg("success", "Written"), 0, 0);
+			return new Text(theme.fg("success", "已写入"), 0, 0);
 		},
 	});
 }

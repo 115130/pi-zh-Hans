@@ -491,10 +491,10 @@ export async function main(args: string[], options?: MainOptions) {
 	const cwd = process.cwd();
 	const agentDir = getAgentDir();
 	const startupSettingsManager = SettingsManager.create(cwd, agentDir);
-	reportDiagnostics(collectSettingsDiagnostics(startupSettingsManager, "startup session lookup"));
+	reportDiagnostics(collectSettingsDiagnostics(startupSettingsManager, "启动会话查找"));
 
 	// Decide the final runtime cwd before creating cwd-bound runtime services.
-	// --session and --resume may select a session from another project, so project-local
+	// --session and --resume may select a session from other project, so project-local
 	// settings, resources, provider registrations, and models must be resolved only after
 	// the target session cwd is known. The startup-cwd settings manager is used only for
 	// sessionDir lookup during session selection.
@@ -553,7 +553,7 @@ export async function main(args: string[], options?: MainOptions) {
 		const { settingsManager, modelRegistry, resourceLoader } = services;
 		const diagnostics: AgentSessionRuntimeDiagnostic[] = [
 			...services.diagnostics,
-			...collectSettingsDiagnostics(settingsManager, "runtime creation"),
+			...collectSettingsDiagnostics(settingsManager, "运行时创建"),
 			...resourceLoader.getExtensions().errors.map(({ path, error }) => ({
 				type: "error" as const,
 				message: `加载扩展 "${path}" 失败: ${error}`,

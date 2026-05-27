@@ -9,7 +9,7 @@ export type OAuthCredentials = {
 
 export type OAuthProviderId = string;
 
-/** @deprecated Use OAuthProviderId instead */
+/** @deprecated 改用 OAuthProviderId */
 export type OAuthProvider = OAuthProviderId;
 
 export type OAuthPrompt = {
@@ -46,7 +46,7 @@ export interface OAuthLoginCallbacks {
 	onPrompt: (prompt: OAuthPrompt) => Promise<string>;
 	onProgress?: (message: string) => void;
 	onManualCodeInput?: () => Promise<string>;
-	/** Show an interactive selector and return the selected option id, or undefined on cancel. */
+	/** 显示一个交互式选择器，返回所选选项的id，取消时返回 undefined。 */
 	onSelect: (prompt: OAuthSelectPrompt) => Promise<string | undefined>;
 	signal?: AbortSignal;
 }
@@ -55,23 +55,23 @@ export interface OAuthProviderInterface {
 	readonly id: OAuthProviderId;
 	readonly name: string;
 
-	/** Run the login flow, return credentials to persist */
+	/** 运行登录流程，返回用于持久化的凭据 */
 	login(callbacks: OAuthLoginCallbacks): Promise<OAuthCredentials>;
 
-	/** Whether login uses a local callback server and supports manual code input. */
+	/** 登录是否使用本地回调服务器并支持手动输入代码。 */
 	usesCallbackServer?: boolean;
 
-	/** Refresh expired credentials, return updated credentials to persist */
+	/** 刷新过期凭据，返回用于持久化的更新后凭据 */
 	refreshToken(credentials: OAuthCredentials): Promise<OAuthCredentials>;
 
-	/** Convert credentials to API key string for the provider */
+	/** 将凭据转换为供提供者使用的 API 密钥字符串 */
 	getApiKey(credentials: OAuthCredentials): string;
 
-	/** Optional: modify models for this provider (e.g., update baseUrl) */
+	/** 可选：为此提供者修改模型（例如更新 baseUrl） */
 	modifyModels?(models: Model<Api>[], credentials: OAuthCredentials): Model<Api>[];
 }
 
-/** @deprecated Use OAuthProviderInterface instead */
+/** @deprecated 改用 OAuthProviderInterface */
 export interface OAuthProviderInfo {
 	id: OAuthProviderId;
 	name: string;

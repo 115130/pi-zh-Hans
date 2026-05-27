@@ -15,15 +15,15 @@ export type SkillDiagnosticCode =
 	| "parse_failed"
 	| "invalid_metadata";
 
-/** Warning produced while loading skills. */
+/** 加载技能时产生的警告。 */
 export interface SkillDiagnostic {
-	/** Diagnostic severity. Currently only warnings are emitted. */
+	/** 诊断严重性。目前只发出警告。 */
 	type: "warning";
-	/** Stable diagnostic code. */
+	/** 稳定的诊断代码。 */
 	code: SkillDiagnosticCode;
-	/** Human-readable diagnostic message. */
+	/** 人类可读的诊断消息。 */
 	message: string;
-	/** Path associated with the diagnostic. */
+	/** 与诊断关联的路径。 */
 	path: string;
 }
 
@@ -34,17 +34,17 @@ interface SkillFrontmatter {
 	[key: string]: unknown;
 }
 
-/** Format a skill invocation prompt, optionally appending additional user instructions. */
+/** 格式化技能调用提示，可选地附加额外的用户指令。 */
 export function formatSkillInvocation(skill: Skill, additionalInstructions?: string): string {
 	const skillBlock = `<skill name="${skill.name}" location="${skill.filePath}">\n引用路径相对于 ${dirnameEnvPath(skill.filePath)}。\n\n${skill.content}\n</skill>`;
 	return additionalInstructions ? `${skillBlock}\n\n${additionalInstructions}` : skillBlock;
 }
 
 /**
- * Load skills from one or more directories.
+ * 从一个或多个目录加载技能。
  *
- * Traverses directories recursively, loads `SKILL.md` files, loads direct root `.md` files as skills, honors ignore files,
- * and returns diagnostics for invalid skill files. Missing input directories are skipped.
+ * 递归遍历目录，加载 `SKILL.md` 文件，将根目录下的直接 `.md` 文件作为技能加载，遵循忽略文件，
+ * 并为无效的技能文件返回诊断信息。缺失的输入目录会被跳过。
  */
 export async function loadSkills(
 	env: ExecutionEnv,
@@ -75,10 +75,9 @@ export async function loadSkills(
 }
 
 /**
- * Load skills from source-tagged directories.
+ * 从源标签的目录加载技能。
  *
- * Source values are preserved exactly and attached to every loaded skill and diagnostic. The agent package does not
- * interpret source values; applications define their own provenance shape.
+ * 源值原样保留，并附加到每个加载的技能和诊断上。代理包不解释源值；应用定义自己的来源形状。
  */
 export async function loadSourcedSkills<TSource, TSkill extends Skill = Skill>(
 	env: ExecutionEnv,

@@ -36,7 +36,7 @@ export default function (pi: ExtensionAPI) {
 
 	// Command to send status messages
 	pi.registerCommand("status", {
-		description: "Send a status message (usage: /status [warn|error] message)",
+		description: "发送状态消息（用法：/status [warn|error] message）",
 		handler: async (args, _ctx) => {
 			const parts = args.trim().split(/\s+/);
 			let level = "info";

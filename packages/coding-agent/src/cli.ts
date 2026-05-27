@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * CLI entry point for the refactored coding agent.
- * Uses main.ts with AgentSession and new mode modules.
+ * 重构版编码代理的 CLI 入口点。
+ * 使用 main.ts，包含 AgentSession 和新的模式模块。
  *
- * Test with: npx tsx src/cli-new.ts [args...]
+ * 测试命令：npx tsx src/cli-new.ts [参数...]
  */
 import { APP_NAME } from "./config.ts";
 import { configureHttpDispatcher } from "./core/http-dispatcher.ts";
@@ -13,8 +13,8 @@ process.title = APP_NAME;
 process.env.PI_CODING_AGENT = "true";
 process.emitWarning = (() => {}) as typeof process.emitWarning;
 
-// Configure undici's global dispatcher before provider SDKs issue requests.
-// Runtime settings are applied once SettingsManager has loaded global/project settings.
+// 在提供商的 SDK 发出请求之前，先配置 undici 的全局分发器。
+// 一旦 SettingsManager 加载了全局/项目设置，就会应用运行时设置。
 configureHttpDispatcher();
 
 main(process.argv.slice(2));

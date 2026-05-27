@@ -20,20 +20,20 @@ let activeWadPath: string | null = null;
 
 export default function (pi: ExtensionAPI) {
 	pi.registerCommand("doom-overlay", {
-		description: "Play DOOM as an overlay. Q to pause and exit.",
+		description: "以叠加层方式游玩 DOOM。按 Q 暂停或退出。",
 
 		handler: async (args, ctx) => {
 			if (!ctx.hasUI) {
-				ctx.ui.notify("DOOM requires interactive mode", "error");
+				ctx.ui.notify("DOOM 需要交互模式", "error");
 				return;
 			}
 
 			// Auto-download WAD if not present
-			ctx.ui.notify("Loading DOOM...", "info");
+			ctx.ui.notify("正在加载 DOOM...", "info");
 			const wad = args?.trim() ? args.trim() : await ensureWadFile();
 
 			if (!wad) {
-				ctx.ui.notify("Failed to download DOOM WAD file. Check your internet connection.", "error");
+				ctx.ui.notify("下载 DOOM WAD 文件失败。请检查网络连接。", "error");
 				return;
 			}
 
@@ -41,10 +41,10 @@ export default function (pi: ExtensionAPI) {
 				// Reuse existing engine if same WAD, otherwise create new
 				let isResume = false;
 				if (activeEngine && activeWadPath === wad) {
-					ctx.ui.notify("Resuming DOOM...", "info");
+					ctx.ui.notify("正在继续 DOOM...", "info");
 					isResume = true;
 				} else {
-					ctx.ui.notify(`Loading DOOM from ${wad}...`, "info");
+					ctx.ui.notify(`正在从 ${wad} 加载 DOOM...`, "info");
 					activeEngine = new DoomEngine(wad);
 					await activeEngine.init();
 					activeWadPath = wad;
@@ -65,7 +65,7 @@ export default function (pi: ExtensionAPI) {
 					},
 				);
 			} catch (error) {
-				ctx.ui.notify(`Failed to load DOOM: ${error}`, "error");
+				ctx.ui.notify(`加载 DOOM 失败: ${error}`, "error");
 				activeEngine = null;
 				activeWadPath = null;
 			}
