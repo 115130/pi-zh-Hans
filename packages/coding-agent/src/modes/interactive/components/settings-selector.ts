@@ -293,7 +293,7 @@ export class SettingsSelectorComponent extends Container {
 				id: "warnings",
 				label: "警告",
 				description: "启用或禁用单个警告",
-				currentValue: "configure",
+				currentValue: "配置",
 				submenu: (_currentValue, done) =>
 					new WarningSettingsSubmenu(
 						currentWarnings,
