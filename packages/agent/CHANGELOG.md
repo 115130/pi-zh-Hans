@@ -4,7 +4,7 @@
 
 ### Changed
 
-- 中文化 "Operation aborted" 错误消息为 "操作已中止"
+- 全量汉化所有面向用户的英文字符串
 
 ### Fixed
 
