@@ -103,6 +103,7 @@ const TOGETHER_REASONING_EFFORT_LEVEL_MAP = {
 	minimal: null,
 } as const;
 const TOGETHER_DEEPSEEK_V4_THINKING_LEVEL_MAP = {
+	off: null,
 	minimal: null,
 	low: null,
 	medium: null,
@@ -125,6 +126,7 @@ const EAGER_TOOL_INPUT_STREAMING_UNSUPPORTED_ANTHROPIC_MODELS = new Set([
 ]);
 
 const DEEPSEEK_V4_THINKING_LEVEL_MAP = {
+	off: null,
 	minimal: null,
 	low: null,
 	medium: null,
@@ -234,7 +236,7 @@ function applyThinkingLevelMetadata(model: Model<any>): void {
 	if (model.api === "anthropic-messages" && isAnthropicAdaptiveThinkingModel(model.id)) {
 		mergeAnthropicMessagesCompat(model, { forceAdaptiveThinking: true });
 	}
-	if (model.api === "openai-completions" && model.id.includes("deepseek-v4")) {
+	if (model.api === "openai-completions" && model.id.includes("deepseek-v4") && model.provider !== "poe") {
 		mergeThinkingLevelMap(model, DEEPSEEK_V4_THINKING_LEVEL_MAP);
 	}
 	if (isGoogleThinkingApi(model) && isGemini3ProModel(model.id)) {
@@ -385,6 +387,116 @@ async function fetchAiGatewayModels(): Promise<Model<any>[]> {
 		return models;
 	} catch (error) {
 		console.error("Failed to fetch Vercel AI Gateway models:", error);
+		return [];
+	}
+}
+
+function parseContextFromDescription(description?: string): { contextWindow?: number; maxTokens?: number } {
+	if (!description) return {};
+	const result: { contextWindow?: number; maxTokens?: number } = {};
+
+	// Parse "Context Window: 1M" or "Context Window: 200000"
+	const ctxMatch = description.match(/Context Window:\s*([\d.]+)\s*([KM]?)/i);
+	if (ctxMatch) {
+		const num = parseFloat(ctxMatch[1]);
+		const unit = ctxMatch[2].toUpperCase();
+		result.contextWindow = unit === "M" ? num * 1_000_000 : unit === "K" ? num * 1_000 : num;
+	}
+
+	// Parse "Max Output: 128K" or "max_output_tokens: 4096"
+	const maxMatch = description.match(/(?:Max Output|max_output_tokens):\s*([\d.]+)\s*([KM]?)/i);
+	if (maxMatch) {
+		const num = parseFloat(maxMatch[1]);
+		const unit = maxMatch[2].toUpperCase();
+		result.maxTokens = unit === "M" ? num * 1_000_000 : unit === "K" ? num * 1_000 : num;
+	}
+
+	return result;
+}
+
+async function fetchPoeModels(): Promise<Model<any>[]> {
+	try {
+		console.log("Fetching models from Poe API...");
+		const response = await fetch("https://api.poe.com/v1/models");
+		const data = await response.json();
+		const models: Model<any>[] = [];
+
+		const toNumber = (value: string | number | undefined): number => {
+			if (typeof value === "number") {
+				return Number.isFinite(value) ? value : 0;
+			}
+			const parsed = parseFloat(value ?? "0");
+			return Number.isFinite(parsed) ? parsed : 0;
+		};
+
+		const items = Array.isArray(data.data) ? (data.data as any[]) : [];
+		for (const model of items) {
+			// Only include models that support tools and text output
+			// Poe's supported_endpoints is optional metadata; all bots work via /v1/chat/completions
+			const features: string[] = Array.isArray(model.supported_features) ? model.supported_features : [];
+			if (!features.includes("tools")) continue;
+
+			// Skip image/video/audio-only models (output modalities not text)
+			const outputModalities: string[] =
+				model.architecture?.output_modalities && Array.isArray(model.architecture.output_modalities)
+					? model.architecture.output_modalities
+					: [];
+			if (outputModalities.length > 0 && !outputModalities.includes("text")) continue;
+
+			const input: ("text" | "image")[] = ["text"];
+			const inputModalities: string[] =
+				model.architecture?.input_modalities && Array.isArray(model.architecture.input_modalities)
+					? model.architecture.input_modalities
+					: [];
+			if (inputModalities.includes("image")) {
+				input.push("image");
+			}
+
+			// Poe's context_window field is often null; parse from description text
+			const descCtx = parseContextFromDescription(model.description);
+			const contextWindow =
+				model.context_window?.context_length ?? model.context_length ?? descCtx.contextWindow ?? 4096;
+			const maxTokens =
+				model.context_window?.max_output_tokens ?? descCtx.maxTokens ?? contextWindow;
+
+		// Poe's reasoning field is often None even when the model supports thinking
+			// via extra_body params (enable_thinking, reasoning_effort, thinking_budget).
+			const reasoning =
+				(model.reasoning != null && typeof model.reasoning === "object") ||
+				(Array.isArray(model.parameters) &&
+					model.parameters.some((p: any) =>
+						["enable_thinking", "reasoning_effort", "thinking_budget"].includes(p.name),
+					));
+
+			const inputCost = toNumber(model.pricing?.prompt) * 1_000_000;
+			const outputCost = toNumber(model.pricing?.completion) * 1_000_000;
+			const requestCost = toNumber(model.pricing?.request);
+			const cacheReadCost = toNumber(model.pricing?.input_cache_read) * 1_000_000;
+			const cacheWriteCost = toNumber(model.pricing?.input_cache_write) * 1_000_000;
+
+			models.push({
+				id: model.id,
+				name: model.metadata?.display_name || model.id,
+				api: "openai-completions",
+				baseUrl: "https://api.poe.com/v1",
+				provider: "poe",
+				reasoning,
+				input,
+				cost: {
+					input: inputCost || requestCost,
+					output: outputCost || requestCost,
+					cacheRead: cacheReadCost || 0,
+					cacheWrite: cacheWriteCost || 0,
+				},
+				contextWindow,
+				maxTokens,
+			});
+		}
+
+		console.log(`Fetched ${models.length} tool-capable models from Poe`);
+		return models;
+	} catch (error) {
+		console.error("Failed to fetch Poe models:", error);
 		return [];
 	}
 }
@@ -1140,9 +1252,10 @@ async function generateModels() {
 	const modelsDevModels = await loadModelsDevData();
 	const openRouterModels = await fetchOpenRouterModels();
 	const aiGatewayModels = await fetchAiGatewayModels();
+	const poeModels = await fetchPoeModels();
 
 	// Combine models (models.dev has priority)
-	const allModels = [...modelsDevModels, ...openRouterModels, ...aiGatewayModels].filter(
+	const allModels = [...modelsDevModels, ...openRouterModels, ...aiGatewayModels, ...poeModels].filter(
 		(model) =>
 			!((model.provider === "opencode" || model.provider === "opencode-go") && model.id === "gpt-5.3-codex-spark"),
 	);
@@ -1470,7 +1583,7 @@ async function generateModels() {
 	allModels.push(...deepseekV4Models);
 
 	for (const candidate of allModels) {
-		if (candidate.api === "openai-completions" && candidate.id.includes("deepseek-v4")) {
+		if (candidate.api === "openai-completions" && candidate.id.includes("deepseek-v4") && candidate.provider !== "poe") {
 			candidate.compat = {
 				...candidate.compat,
 				...(candidate.provider === "openrouter"

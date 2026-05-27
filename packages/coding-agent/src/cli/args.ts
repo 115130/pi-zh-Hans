@@ -326,6 +326,7 @@ ${chalk.bold("环境变量:")}
   CLOUDFLARE_API_KEY               - Cloudflare API 令牌（Workers AI 和 AI Gateway）
   CLOUDFLARE_ACCOUNT_ID            - Cloudflare 账户 ID（两者都需要）
   CLOUDFLARE_GATEWAY_ID            - Cloudflare AI Gateway slug（AI Gateway 必需）
+  POE_API_KEY                      - Poe API 密钥（从 https://poe.com/api/keys 获取）
   XIAOMI_API_KEY                   - 小米 MiMo API 密钥（api.xiaomimimo.com 计费）
   XIAOMI_TOKEN_PLAN_CN_API_KEY     - 小米 MiMo Token Plan API 密钥（中国区域）
   XIAOMI_TOKEN_PLAN_AMS_API_KEY    - 小米 MiMo Token Plan API 密钥（阿姆斯特丹区域）

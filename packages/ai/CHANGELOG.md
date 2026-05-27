@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- 新增 Poe 作为 LLM provider，通过 OpenAI 兼容的 Chat Completions API 提供 69+ 模型（包括 Claude、Gemini、GPT 等）
+
 ### Changed
 
 - 全量汉化所有面向用户的英文字符串

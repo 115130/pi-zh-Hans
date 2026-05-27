@@ -1063,6 +1063,7 @@ function detectCompat(model: Model<"openai-completions">): ResolvedOpenAIComplet
 	const provider = model.provider;
 	const baseUrl = model.baseUrl;
 
+	const isPoe = provider === "poe" || baseUrl.includes("api.poe.com");
 	const isZai = provider === "zai" || baseUrl.includes("api.z.ai");
 	const isTogether =
 		provider === "together" || baseUrl.includes("api.together.ai") || baseUrl.includes("api.together.xyz");
@@ -1092,9 +1093,9 @@ function detectCompat(model: Model<"openai-completions">): ResolvedOpenAIComplet
 	const cacheControlFormat = provider === "openrouter" && model.id.startsWith("anthropic/") ? "anthropic" : undefined;
 
 	return {
-		supportsStore: !isNonStandard,
-		supportsDeveloperRole: !isNonStandard,
-		supportsReasoningEffort: !isGrok && !isZai && !isMoonshot && !isTogether && !isCloudflareAiGateway,
+		supportsStore: !isNonStandard && !isPoe,
+		supportsDeveloperRole: !isNonStandard && !isPoe,
+		supportsReasoningEffort: !isGrok && !isZai && !isMoonshot && !isTogether && !isCloudflareAiGateway && !isPoe,
 		supportsUsageInStreaming: true,
 		maxTokensField: useMaxTokens ? "max_tokens" : "max_completion_tokens",
 		requiresToolResultName: false,

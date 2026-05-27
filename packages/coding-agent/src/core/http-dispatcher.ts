@@ -37,6 +37,10 @@ export function formatHttpIdleTimeoutMs(timeoutMs: number): string {
 }
 
 export function configureHttpDispatcher(timeoutMs: number = DEFAULT_HTTP_IDLE_TIMEOUT_MS): void {
+	// Bun 内置 fetch 不支持 undici 全局调度器，跳过配置
+	if (typeof (globalThis as any).Bun !== "undefined") {
+		return;
+	}
 	const normalizedTimeoutMs = parseHttpIdleTimeoutMs(timeoutMs);
 	if (normalizedTimeoutMs === undefined) {
 		throw new Error(`无效的HTTP空闲超时：${String(timeoutMs)}`);

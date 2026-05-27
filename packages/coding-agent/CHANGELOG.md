@@ -4,6 +4,7 @@
 
 ### Added
 
+- 新增 Poe provider 支持（环境变量 `POE_API_KEY`），通过 OpenAI 兼容 API 提供 69+ 模型
 - Added nix flake development environment (`.envrc`, `flake.nix`, `flake.lock`)
 - Added bun embedded CLI entry point (`cli-embedded.ts`, `embed-assets.mjs`)
 
