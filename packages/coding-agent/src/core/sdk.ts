@@ -171,22 +171,22 @@ function getAttributionHeaders(
  *
  * @example
  * ```typescript
- * // Minimal - uses defaults
+ * // 完全控制
  * const { session } = await createAgentSession();
  *
- * // With explicit model
+ * // 完全控制
  * import { getModel } from '@earendil-works/pi-ai';
  * const { session } = await createAgentSession({
  *   model: getModel('anthropic', 'claude-opus-4-5'),
  *   thinkingLevel: 'high',
  * });
  *
- * // Continue previous session
+ * // 完全控制
  * const { session, modelFallbackMessage } = await createAgentSession({
  *   continueSession: true,
  * });
  *
- * // Full control
+ * // 完全控制
  * const loader = new DefaultResourceLoader({
  *   cwd: process.cwd(),
  *   agentDir: getAgentDir(),

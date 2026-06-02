@@ -1275,9 +1275,7 @@ export class AgentSession {
 		const command = this._extensionRunner.getCommand(commandName);
 
 		if (command) {
-			throw new Error(
-				`Extension command "/${commandName}" cannot be queued. Use prompt() or execute the command when not streaming.`,
-			);
+			throw new Error(`扩展命令 "/${commandName}" 不能排队。请使用 prompt() 或在非流式时执行命令。`);
 		}
 	}
 

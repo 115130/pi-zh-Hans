@@ -204,9 +204,7 @@ function createSessionId(): string {
 
 export function assertValidSessionId(id: string): void {
 	if (!/^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$/.test(id)) {
-		throw new Error(
-			"Session id must be non-empty, contain only alphanumeric characters, '-', '_', and '.', and start and end with an alphanumeric character",
-		);
+		throw new Error("会话 ID 不能为空，只能包含字母数字字符、'-'、'_' 和 '.'，且必须以字母数字字符开头和结尾");
 	}
 }
 
