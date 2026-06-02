@@ -206,7 +206,7 @@ export class AgentHarness<
 		this.getApiKeyAndHeaders = options.getApiKeyAndHeaders;
 		this.validateUniqueNames(
 			(options.tools ?? []).map((tool) => tool.name),
-			"Duplicate tool name(s)",
+			"重复的工具名称",
 		);
 		for (const tool of options.tools ?? []) {
 			this.tools.set(tool.name, tool);
@@ -216,7 +216,7 @@ export class AgentHarness<
 		this.activeToolNames = options.activeToolNames
 			? [...options.activeToolNames]
 			: (options.tools ?? []).map((tool) => tool.name);
-		this.validateUniqueNames(this.activeToolNames, "Duplicate active tool name(s)");
+		this.validateUniqueNames(this.activeToolNames, "重复的活动工具名称");
 		this.validateToolNames(this.activeToolNames);
 		this.steeringQueueMode = options.steeringMode ?? "one-at-a-time";
 		this.followUpQueueMode = options.followUpMode ?? "one-at-a-time";
@@ -907,7 +907,7 @@ export class AgentHarness<
 		try {
 			this.validateUniqueNames(
 				tools.map((tool) => tool.name),
-				"Duplicate tool name(s)",
+				"重复的工具名称",
 			);
 			const nextTools = new Map(tools.map((tool) => [tool.name, tool]));
 			const nextActiveToolNames = activeToolNames ? [...activeToolNames] : this.activeToolNames;
@@ -1025,7 +1025,7 @@ export class AgentHarness<
 			errors.push(toError(error));
 		}
 		if (errors.length > 0) {
-			const cause = errors.length === 1 ? errors[0]! : new AggregateError(errors, "Abort completed with errors");
+			const cause = errors.length === 1 ? errors[0]! : new AggregateError(errors, "中止完成但存在错误");
 			throw normalizeHarnessError(cause, "hook");
 		}
 		return { clearedSteer, clearedFollowUp };
