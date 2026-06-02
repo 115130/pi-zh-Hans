@@ -12,8 +12,8 @@ import { normalizeDisplayText, renderToolPath, replaceTabs, str } from "./render
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
 
 const writeSchema = Type.Object({
-	path: Type.String({ description: "Path to the file to write (relative or absolute)" }),
-	content: Type.String({ description: "Content to write to the file" }),
+	path: Type.String({ description: "要写入的文件路径（相对或绝对）" }),
+	content: Type.String({ description: "要写入文件的内容" }),
 });
 
 export type WriteToolInput = Static<typeof writeSchema>;

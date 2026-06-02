@@ -34,7 +34,7 @@ const replaceEditSchema = Type.Object(
 	{
 		oldText: Type.String({
 			description:
-				"Exact text for one targeted replacement. It must be unique in the original file and must not overlap with any other edits[].oldText in the same call.",
+				"一次替换的精确原始文本。它在原文件中必须唯一，且不能与同一次调用中的其他 edits[].oldText 重叠。",
 		}),
 		newText: Type.String({ description: "Replacement text for this targeted edit." }),
 	},
