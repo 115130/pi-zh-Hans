@@ -54,7 +54,7 @@ export interface BedrockOptions extends StreamOptions {
 	region?: string;
 	profile?: string;
 	toolChoice?: "auto" | "any" | "none" | { type: "tool"; name: string };
-	/* See https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html for supported models. */
+	/* See https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html 获取支持的模型列表。 */
 	reasoning?: ThinkingLevel;
 	/* Custom token budgets per thinking level. Overrides default budgets. */
 	thinkingBudgets?: ThinkingBudgets;
@@ -133,11 +133,11 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 			config.endpoint = model.baseUrl;
 		}
 
-		// Resolve bearer token for Bedrock API key auth.
+		// 仅在 Node.js/Bun 环境中
 		const bearerToken = options.bearerToken || process.env.AWS_BEARER_TOKEN_BEDROCK || undefined;
 		const useBearerToken = bearerToken !== undefined && process.env.AWS_BEDROCK_SKIP_AUTH !== "1";
 
-		// in Node.js/Bun environment only
+		// 否则回退到 us-east-1。
 		if (typeof process !== "undefined" && (process.versions?.node || process.versions?.bun)) {
 			// Region resolution: explicit option > env vars > SDK default chain.
 			// When AWS_PROFILE is set, we leave region undefined so the SDK can
@@ -160,7 +160,7 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 
 			const proxyAgents = createHttpProxyAgentsForTarget(model.baseUrl);
 			if (proxyAgents) {
-				// Bedrock runtime uses NodeHttp2Handler by default since v3.798.0, which is based
+				// 某些自定义端点需要 HTTP/1.1 而非 HTTP/2
 				// on `http2` module and has no support for http agent.
 				// Use NodeHttpHandler to support HTTP(S) proxy agents.
 				config.requestHandler = new NodeHttpHandler(proxyAgents);
@@ -697,7 +697,7 @@ function convertMessages(
 				for (const c of m.content) {
 					switch (c.type) {
 						case "text":
-							// Skip empty text blocks
+							// Bedrock 要求所有工具结果都在一条消息中
 							if (c.text.trim().length === 0) continue;
 							contentBlocks.push({ text: sanitizeSurrogates(c.text) });
 							break;
@@ -713,7 +713,7 @@ function convertMessages(
 							// For other models, we omit the signature to avoid errors like:
 							// "This model doesn't support the reasoningContent.reasoningText.signature field"
 							if (supportsThinkingSignature(model)) {
-								// Signatures arrive after thinking deltas. If a partial or externally
+								// 向前查找连续的 toolResult 消息
 								// persisted message lacks a signature, Bedrock rejects the replayed
 								// reasoning block. Fall back to plain text, matching Anthropic.
 								if (!c.thinkingSignature || c.thinkingSignature.trim().length === 0) {

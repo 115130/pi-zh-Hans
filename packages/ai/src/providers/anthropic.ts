@@ -69,8 +69,8 @@ function getCacheControl(
 const claudeCodeVersion = "2.1.75";
 
 // Claude Code 2.x tool names (canonical casing)
-// Source: https://cchistory.mariozechner.at/data/prompts-2.1.11.md
-// To update: https://github.com/badlogic/cchistory
+// Claude Code 2.x 工具名称（规范大小写）
+// 来源：https://cchistory.mariozechner.at/data/prompts-2.1.11.md
 const claudeCodeTools = [
 	"Read",
 	"Write",
@@ -747,8 +747,8 @@ export const streamSimpleAnthropic: StreamFunction<"anthropic-messages", SimpleS
 		return streamAnthropic(model, context, { ...base, thinkingEnabled: false } satisfies AnthropicOptions);
 	}
 
-	// For models with adaptive thinking: use an effort level.
-	// For older models: use budget-based thinking.
+	// undefined 表示调用者未请求输出上限；让辅助函数使用模型上限。
+	// 不要此处强制为 0，否则思考预算将变为整个 max_tokens 值。
 	if (model.compat?.forceAdaptiveThinking === true) {
 		const effort = mapThinkingLevelToEffort(model, options.reasoning);
 		return streamAnthropic(model, context, {
@@ -909,7 +909,7 @@ function buildParams(
 		stream: true,
 	};
 
-	// For OAuth tokens, we MUST include Claude Code identity
+	// 为非 OAuth 令牌的系统提示添加缓存控制
 	if (isOAuthToken) {
 		params.system = [
 			{

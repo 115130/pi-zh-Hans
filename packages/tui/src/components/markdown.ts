@@ -82,14 +82,14 @@ interface InlineStyleContext {
 
 export class Markdown implements Component {
 	private text: string;
-	private paddingX: number; // Left/right padding
-	private paddingY: number; // Top/bottom padding
+	private paddingX: number; // 左/右内边距
+	private paddingY: number; // 上/下内边距
 	private defaultTextStyle?: DefaultTextStyle;
 	private theme: MarkdownTheme;
 	private options: MarkdownOptions;
 	private defaultStylePrefix?: string;
 
-	// Cache for rendered output
+	// 渲染输出的缓存
 	private cachedText?: string;
 	private cachedWidth?: number;
 	private cachedLines?: string[];
@@ -122,31 +122,31 @@ export class Markdown implements Component {
 	}
 
 	render(width: number): string[] {
-		// Check cache
+		// 检查缓存
 		if (this.cachedLines && this.cachedText === this.text && this.cachedWidth === width) {
 			return this.cachedLines;
 		}
 
-		// Calculate available width for content (subtract horizontal padding)
+		// 计算内容可用宽度（减去水平内边距）
 		const contentWidth = Math.max(1, width - this.paddingX * 2);
 
-		// Don't render anything if there's no actual text
+		// 如果没有实际文本则不渲染任何内容
 		if (!this.text || this.text.trim() === "") {
 			const result: string[] = [];
-			// Update cache
+			// 更新缓存
 			this.cachedText = this.text;
 			this.cachedWidth = width;
 			this.cachedLines = result;
 			return result;
 		}
 
-		// Replace tabs with 3 spaces for consistent rendering
+		// 将制表符替换为 3 个空格以实现一致渲染
 		const normalizedText = this.text.replace(/\t/g, "   ");
 
-		// Parse markdown to HTML-like tokens
+		// 解析 Markdown 为类似 HTML 的令牌
 		const tokens = markdownParser.lexer(normalizedText);
 
-		// Convert tokens to styled terminal output
+		// 将令牌转换为样式化的终端输出
 		const renderedLines: string[] = [];
 
 		for (let i = 0; i < tokens.length; i++) {
@@ -158,7 +158,7 @@ export class Markdown implements Component {
 			}
 		}
 
-		// Wrap lines (NO padding, NO background yet)
+		// 换行（尚未添加内边距和背景）
 		const wrappedLines: string[] = [];
 		for (const line of renderedLines) {
 			if (isImageLine(line)) {
@@ -170,7 +170,7 @@ export class Markdown implements Component {
 			}
 		}
 
-		// Add margins and background to each wrapped line
+		// 为每个换行后的行添加外边距和背景
 		const leftMargin = " ".repeat(this.paddingX);
 		const rightMargin = " ".repeat(this.paddingX);
 		const bgFn = this.defaultTextStyle?.bgColor;
@@ -187,14 +187,14 @@ export class Markdown implements Component {
 			if (bgFn) {
 				contentLines.push(applyBackgroundToLine(lineWithMargins, width, bgFn));
 			} else {
-				// No background - just pad to width
+				// 无背景 - 仅填充至宽度
 				const visibleLen = visibleWidth(lineWithMargins);
 				const paddingNeeded = Math.max(0, width - visibleLen);
 				contentLines.push(lineWithMargins + " ".repeat(paddingNeeded));
 			}
 		}
 
-		// Add top/bottom padding (empty lines)
+		// 添加上/下内边距（空行）
 		const emptyLine = " ".repeat(width);
 		const emptyLines: string[] = [];
 		for (let i = 0; i < this.paddingY; i++) {
@@ -202,7 +202,7 @@ export class Markdown implements Component {
 			emptyLines.push(line);
 		}
 
-		// Combine top padding, content, and bottom padding
+		// 合并上内边距、内容、下内边距
 		const result = emptyLines.concat(contentLines, emptyLines);
 
 		// Update cache
@@ -226,12 +226,12 @@ export class Markdown implements Component {
 
 		let styled = text;
 
-		// Apply foreground color (NOT background - that's applied at padding stage)
+		// 应用前景色（不是背景色 - 背景色在内边距阶段应用）
 		if (this.defaultTextStyle.color) {
 			styled = this.defaultTextStyle.color(styled);
 		}
 
-		// Apply text decorations using this.theme
+		// 使用 this.theme 应用文本装饰
 		if (this.defaultTextStyle.bold) {
 			styled = this.theme.bold(styled);
 		}
@@ -309,8 +309,8 @@ export class Markdown implements Component {
 				const headingLevel = token.depth;
 				const headingPrefix = `${"#".repeat(headingLevel)} `;
 
-				// Build a heading-specific style context so inline tokens (codespan, bold, etc.)
-				// restore heading styling after their own ANSI resets instead of falling back to
+				// 构建标题特定的样式上下文，以便内联令牌（codespan、bold 等）
+				// 在自身 ANSI 重置后恢复标题样式，而不是回退到默认文本样式。
 				// the default text style.
 				let headingStyleFn: (text: string) => string;
 				if (headingLevel === 1) {
@@ -372,7 +372,7 @@ export class Markdown implements Component {
 			case "list": {
 				const listLines = this.renderList(token as Tokens.List, 0, width, styleContext);
 				lines.push(...listLines);
-				// Don't add spacing after lists if a space token follows
+				// （空格令牌会处理它）
 				// (the space token will handle it)
 				break;
 			}
@@ -397,8 +397,8 @@ export class Markdown implements Component {
 				// Calculate available width for quote content (subtract border "│ " = 2 chars)
 				const quoteContentWidth = Math.max(1, width - 2);
 
-				// Blockquotes contain block-level tokens (paragraph, list, code, etc.), so render
-				// children with renderToken() instead of renderInlineTokens().
+				// 而不是 renderInlineTokens() 来渲染子元素。
+				// 默认消息样式不应适用于引用内部。
 				// Default message style should not apply inside blockquotes.
 				const quoteInlineStyleContext: InlineStyleContext = {
 					applyText: (text: string) => text,
@@ -506,13 +506,13 @@ export class Markdown implements Component {
 					const linkText = this.renderInlineTokens(token.tokens || [], resolvedStyleContext);
 					const styledLink = this.theme.link(this.theme.underline(linkText));
 					if (getCapabilities().hyperlinks) {
-						// OSC 8: render as a clickable hyperlink. The URL is not printed inline,
+						// 所以无论 href 是否匹配，我们总是只显示链接文本。
 						// so we always show only the link text regardless of whether it matches href.
 						result += hyperlink(styledLink, token.href) + stylePrefix;
 					} else {
-						// Fallback: print URL in parentheses when text differs from href.
-						// Compare raw token.text (not styled) against href for the equality check.
-						// For mailto: links strip the prefix (autolinked emails use text="foo@bar.com"
+						// 比较未样式化的 token.text 与 href。
+						// 对于 mailto: 链接去掉前缀（自动链接的电子邮件使用 text="foo@bar.com"
+						// 但 href="mailto:foo@bar.com"）。
 						// but href="mailto:foo@bar.com").
 						const hrefForComparison = token.href.startsWith("mailto:") ? token.href.slice(7) : token.href;
 						if (token.text === token.href || token.text === hrefForComparison) {

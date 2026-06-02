@@ -1,6 +1,6 @@
 import { eastAsianWidth } from "get-east-asian-width";
 
-// segmenters (shared instance)
+// 分割器（共享实例）
 const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 const wordSegmenter = new Intl.Segmenter(undefined, { granularity: "word" });
 
@@ -27,11 +27,11 @@ export function getWordSegmenter(): Intl.Segmenter {
 function couldBeEmoji(segment: string): boolean {
 	const cp = segment.codePointAt(0)!;
 	return (
-		(cp >= 0x1f000 && cp <= 0x1fbff) || // Emoji and Pictograph
-		(cp >= 0x2300 && cp <= 0x23ff) || // Misc technical
-		(cp >= 0x2600 && cp <= 0x27bf) || // Misc symbols, dingbats
-		(cp >= 0x2b50 && cp <= 0x2b55) || // Specific stars/circles
-		segment.includes("\uFE0F") || // Contains VS16 (emoji presentation selector)
+		(cp >= 0x1f000 && cp <= 0x1fbff) || // 各类技术符号
+		(cp >= 0x2300 && cp <= 0x23ff) || // 各类符号、杂项符号
+		(cp >= 0x2600 && cp <= 0x27bf) || // 特定星形/圆形
+		(cp >= 0x2b50 && cp <= 0x2b55) || // 包含 VS16（表情符号呈现选择符）
+		segment.includes("\uFE0F") || // 多码点序列（ZWJ、肤色等）
 		segment.length > 2 // Multi-codepoint sequences (ZWJ, skin tones, etc.)
 	);
 }
@@ -370,7 +370,7 @@ class AnsiCodeTracker {
 	private hidden = false;
 	private strikethrough = false;
 	private fgColor: string | null = null; // Stores the full code like "31" or "38;5;240"
-	private bgColor: string | null = null; // Stores the full code like "41" or "48;5;240"
+	private bgColor: string | null = null; // OSC 8 超链接：\x1b]8;;<url>\x1b\\（打开）或 \x1b]8;;\x1b\\（关闭）。
 	private activeHyperlink: ActiveHyperlink | null = null;
 
 	process(ansiCode: string): void {
@@ -394,7 +394,7 @@ class AnsiCodeTracker {
 
 		const params = match[1];
 		if (params === "" || params === "0") {
-			// Full reset
+			// 解析参数（可以以分号分隔）
 			this.reset();
 			return;
 		}
@@ -405,7 +405,7 @@ class AnsiCodeTracker {
 		while (i < parts.length) {
 			const code = Number.parseInt(parts[i], 10);
 
-			// Handle 256-color and RGB codes which consume multiple parameters
+			// 256 色：38;5;N 或 48;5;N
 			if (code === 38 || code === 48) {
 				// 38;5;N (256 color fg) or 38;2;R;G;B (RGB fg)
 				// 48;5;N (256 color bg) or 48;2;R;G;B (RGB bg)
@@ -488,7 +488,7 @@ class AnsiCodeTracker {
 					break;
 				case 39:
 					this.fgColor = null;
-					break; // Default fg
+					break; // 标准前景色 30-37, 90-97
 				case 49:
 					this.bgColor = null;
 					break; // Default bg
@@ -617,7 +617,7 @@ function splitIntoTokensWithAnsi(text: string): string[] {
 		const charIsSpace = char === " ";
 
 		if (charIsSpace !== inWhitespace && current) {
-			// Switching between whitespace and non-whitespace, push current token
+			// 将任何挂起的 ANSI 代码附着到此可见字符
 			tokens.push(current);
 			current = "";
 		}
@@ -715,7 +715,7 @@ function wrapSingleLine(line: string, width: number): string[] {
 				currentVisibleLength = 0;
 			}
 
-			// Break long token - breakLongWord handles its own resets
+			// 检查添加此 token 是否会超出宽度
 			const broken = breakLongWord(token, width, tracker);
 			for (let i = 0; i < broken.length - 1; i++) {
 				wrapped.push(broken[i]!);
@@ -784,7 +784,7 @@ function breakLongWord(word: string, width: number, tracker: AnsiCodeTracker): s
 	let currentWidth = 0;
 
 	// First, separate ANSI codes from visible content
-	// We need to handle ANSI codes specially since they're not graphemes
+	// 查找下一个 ANSI 代码或字符串末尾
 	let i = 0;
 	const segments: Array<{ type: "ansi" | "grapheme"; value: string }> = [];
 
