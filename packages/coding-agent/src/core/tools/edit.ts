@@ -293,14 +293,13 @@ export function createEditToolDefinition(
 		name: "edit",
 		label: "edit",
 		description:
-			"Edit a single file using exact text replacement. Every edits[].oldText must match a unique, non-overlapping region of the original file. If two changes affect the same block or nearby lines, merge them into one edit instead of emitting overlapping edits. Do not include large unchanged regions just to connect distant changes.",
-		promptSnippet:
-			"Make precise file edits with exact text replacement, including multiple disjoint edits in one call",
+			"使用精确文本替换编辑单个文件。每个 edits[].oldText 必须匹配原文件中唯一且不重叠的区域。如果两次更改影响同一块或附近的代码行，请将它们合并为一次编辑，而不是发出重叠的编辑。不要包含大量未改动的区域来连接两个不相邻的更改。",
+		promptSnippet: "使用精确文本替换进行精确的文件编辑，支持在一次调用中进行多个不连续的编辑",
 		promptGuidelines: [
-			"Use edit for precise changes (edits[].oldText must match exactly)",
-			"When changing multiple separate locations in one file, use one edit call with multiple entries in edits[] instead of multiple edit calls",
-			"Each edits[].oldText is matched against the original file, not after earlier edits are applied. Do not emit overlapping or nested edits. Merge nearby changes into one edit.",
-			"Keep edits[].oldText as small as possible while still being unique in the file. Do not pad with large unchanged regions.",
+			"使用 edit 进行精确更改（edits[].oldText 必须精确匹配）",
+			"当在一个文件中更改多个独立位置时，使用一次 edit 调用并包含多个 edits[] 条目，而不是多次调用 edit",
+			"每个 edits[].oldText 是基于原文件匹配的，而非在先前编辑应用之后。不要发出重叠或嵌套的编辑。将相近的更改合并为一个编辑。",
+			"保持 edits[].oldText 尽可能短小，同时确保它在文件中唯一。不要用大量未更改的区域填充。",
 		],
 		parameters: editSchema,
 		renderShell: "self",

@@ -186,10 +186,9 @@ export function createWriteToolDefinition(
 	return {
 		name: "write",
 		label: "write",
-		description:
-			"Write content to a file. Creates the file if it doesn't exist, overwrites if it does. Automatically creates parent directories.",
-		promptSnippet: "Create or overwrite files",
-		promptGuidelines: ["Use write only for new files or complete rewrites."],
+		description: "将内容写入文件。如果文件不存在则创建，如果存在则覆盖。自动创建父目录。",
+		promptSnippet: "创建或覆盖文件",
+		promptGuidelines: ["仅对新文件或完整重写使用 write。"],
 		parameters: writeSchema,
 		async execute(
 			_toolCallId,
