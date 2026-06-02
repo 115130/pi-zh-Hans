@@ -1,5 +1,5 @@
 /**
- * System prompt construction and project context loading
+ * 系统提示词构建和项目上下文加载
  */
 
 import { getDocsPath, getExamplesPath, getReadmePath } from "../config.ts";
@@ -24,7 +24,7 @@ export interface BuildSystemPromptOptions {
 	skills?: Skill[];
 }
 
-/** Build the system prompt with tools, guidelines, and context */
+/** 使用工具、指南和上下文构建系统提示词 */
 export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const {
 		customPrompt,
@@ -92,7 +92,7 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const toolsList =
 		visibleTools.length > 0 ? visibleTools.map((name) => `- ${name}: ${toolSnippets![name]}`).join("\n") : "(none)";
 
-	// Build guidelines based on which tools are actually available
+	// 根据实际可用的工具构建准则列表
 	const guidelinesList: string[] = [];
 	const guidelinesSet = new Set<string>();
 	const addGuideline = (guideline: string): void => {
@@ -109,9 +109,9 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 	const hasLs = tools.includes("ls");
 	const hasRead = tools.includes("read");
 
-	// File exploration guidelines
+	// 文件探索准则
 	if (hasBash && !hasGrep && !hasFind && !hasLs) {
-		addGuideline("Use bash for file operations like ls, rg, find");
+		addGuideline("对文件操作使用 bash，如 ls、rg、find");
 	}
 
 	for (const guideline of promptGuidelines ?? []) {
@@ -121,53 +121,53 @@ export function buildSystemPrompt(options: BuildSystemPromptOptions): string {
 		}
 	}
 
-	// Always include these
-	addGuideline("Be concise in your responses");
-	addGuideline("Show file paths clearly when working with files");
+	// 始终包含以下内容
+	addGuideline("回复保持简洁");
+	addGuideline("操作文件时清晰显示文件路径");
 
 	const guidelines = guidelinesList.map((g) => `- ${g}`).join("\n");
 
-	let prompt = `You are an expert coding assistant operating inside pi, a coding agent harness. You help users by reading files, executing commands, editing code, and writing new files.
+	let prompt = `你是一名专家级编码助手，运行在 pi 编码智能体框架中。你通过读取文件、执行命令、编辑代码和写入新文件来帮助用户。
 
-Available tools:
+可用工具：
 ${toolsList}
 
-In addition to the tools above, you may have access to other custom tools depending on the project.
+除上述工具外，你还可能根据项目需要访问其他自定义工具。
 
-Guidelines:
+准则：
 ${guidelines}
 
-Pi documentation (read only when the user asks about pi itself, its SDK, extensions, themes, skills, or TUI):
-- Main documentation: ${readmePath}
-- Additional docs: ${docsPath}
-- Examples: ${examplesPath} (extensions, custom tools, SDK)
-- When reading pi docs or examples, resolve docs/... under Additional docs and examples/... under Examples, not the current working directory
-- When asked about: extensions (docs/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), pi packages (docs/packages.md)
-- When working on pi topics, read the docs and examples, and follow .md cross-references before implementing
-- Always read pi .md files completely and follow links to related docs (e.g., tui.md for TUI API details)`;
+Pi 文档（仅在用户询问 pi 本身、其 SDK、扩展、主题、技能或 TUI 时阅读）：
+- 主要文档：${readmePath}
+- 其他文档：${docsPath}
+- 示例：${examplesPath}（扩展、自定义工具、SDK）
+- 阅读 pi 文档或示例时，请在「其他文档」下解析 docs/...，在「示例」下解析 examples/...，而不是当前工作目录
+- 当被问及：扩展（docs/extensions.md、examples/extensions/）、主题（docs/themes.md）、技能（docs/skills.md）、提示模板（docs/prompt-templates.md）、TUI 组件（docs/tui.md）、快捷键（docs/keybindings.md）、SDK 集成（docs/sdk.md）、自定义提供者（docs/custom-provider.md）、添加模型（docs/models.md）、pi 包（docs/packages.md）
+- 处理 pi 相关主题时，请阅读文档和示例，并在实现前遵循 .md 交叉引用
+- 始终完整阅读 pi 的 .md 文件，并按照链接查看相关文档（例如 tui.md 了解 TUI API 详情）`;
 
 	if (appendSection) {
 		prompt += appendSection;
 	}
 
-	// Append project context files
+	// 附加项目上下文文件
 	if (contextFiles.length > 0) {
 		prompt += "\n\n<project_context>\n\n";
-		prompt += "Project-specific instructions and guidelines:\n\n";
+		prompt += "项目特定的指令和准则：\n\n";
 		for (const { path: filePath, content } of contextFiles) {
 			prompt += `<project_instructions path="${filePath}">\n${content}\n</project_instructions>\n\n`;
 		}
 		prompt += "</project_context>\n";
 	}
 
-	// Append skills section (only if read tool is available)
+	// 附加技能部分（仅在读取工具可用时）
 	if (hasRead && skills.length > 0) {
 		prompt += formatSkillsForPrompt(skills);
 	}
 
-	// Add date and working directory last
-	prompt += `\nCurrent date: ${date}`;
-	prompt += `\nCurrent working directory: ${promptCwd}`;
+	// 最后添加日期和工作目录
+	prompt += `\n当前日期：${date}`;
+	prompt += `\n当前工作目录：${promptCwd}`;
 
 	return prompt;
 }
