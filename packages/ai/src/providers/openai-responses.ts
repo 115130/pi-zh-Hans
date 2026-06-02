@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import type { ResponseCreateParamsStreaming } from "openai/resources/responses/responses.js";
-import { getEnvApiKey } from "../env-api-keys.ts";
 import { clampThinkingLevel } from "../models.ts";
 import type {
 	Api,
@@ -25,8 +24,8 @@ import { buildBaseOptions } from "./simple-options.ts";
 const OPENAI_TOOL_CALL_PROVIDERS = new Set(["openai", "openai-codex", "opencode"]);
 
 /**
- * 解析缓存保留偏好。
- * 默认值为 "short"，并为向后兼容使用 PI_CACHE_RETENTION。
+ * Resolve cache retention preference.
+ * Defaults to "short" and uses PI_CACHE_RETENTION for backward compatibility.
  */
 function resolveCacheRetention(cacheRetention?: CacheRetention): CacheRetention {
 	if (cacheRetention) {
@@ -57,7 +56,7 @@ function formatOpenAIResponsesError(error: unknown): string {
 		const status = (error as Error & { status?: unknown }).status;
 		const statusCode = typeof status === "number" ? status : undefined;
 		if (statusCode !== undefined) {
-			return `OpenAI API 错误 (${statusCode}): ${error.message}`;
+			return `OpenAI API error (${statusCode}): ${error.message}`;
 		}
 		return error.message;
 	}
@@ -68,7 +67,7 @@ function formatOpenAIResponsesError(error: unknown): string {
 	}
 }
 
-// OpenAI Responses 特定选项
+// OpenAI Responses-specific options
 export interface OpenAIResponsesOptions extends StreamOptions {
 	reasoningEffort?: "minimal" | "low" | "medium" | "high" | "xhigh";
 	reasoningSummary?: "auto" | "detailed" | "concise" | null;
@@ -76,7 +75,7 @@ export interface OpenAIResponsesOptions extends StreamOptions {
 }
 
 /**
- * 为 OpenAI Responses API 生成函数
+ * Generate function for OpenAI Responses API
  */
 export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIResponsesOptions> = (
 	model: Model<"openai-responses">,
@@ -85,7 +84,7 @@ export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIRes
 ): AssistantMessageEventStream => {
 	const stream = new AssistantMessageEventStream();
 
-	// 启动异步处理
+	// Start async processing
 	(async () => {
 		const output: AssistantMessage = {
 			role: "assistant",
@@ -106,8 +105,11 @@ export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIRes
 		};
 
 		try {
-			// 创建 OpenAI 客户端
-			const apiKey = options?.apiKey || getEnvApiKey(model.provider) || "";
+			// Create OpenAI client
+			const apiKey = options?.apiKey;
+			if (!apiKey) {
+				throw new Error(`No API key for provider: ${model.provider}`);
+			}
 			const cacheRetention = resolveCacheRetention(options?.cacheRetention);
 			const cacheSessionId = cacheRetention === "none" ? undefined : options?.sessionId;
 			const client = createClient(model, context, apiKey, options?.headers, cacheSessionId);
@@ -131,11 +133,11 @@ export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIRes
 			});
 
 			if (options?.signal?.aborted) {
-				throw new Error("请求已中止");
+				throw new Error("Request was aborted");
 			}
 
 			if (output.stopReason === "aborted" || output.stopReason === "error") {
-				throw new Error("发生未知错误");
+				throw new Error("An unknown error occurred");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason, message: output });
@@ -143,7 +145,7 @@ export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIRes
 		} catch (error) {
 			for (const block of output.content) {
 				delete (block as { index?: number }).index;
-				// partialJson 只是流式处理的临时缓冲区；不应持久化。
+				// partialJson is only a streaming scratch buffer; never persist it.
 				delete (block as { partialJson?: string }).partialJson;
 			}
 			output.stopReason = options?.signal?.aborted ? "aborted" : "error";
@@ -161,9 +163,9 @@ export const streamSimpleOpenAIResponses: StreamFunction<"openai-responses", Sim
 	context: Context,
 	options?: SimpleStreamOptions,
 ): AssistantMessageEventStream => {
-	const apiKey = options?.apiKey || getEnvApiKey(model.provider);
+	const apiKey = options?.apiKey;
 	if (!apiKey) {
-		throw new Error(`提供商 ${model.provider} 没有 API 密钥`);
+		throw new Error(`No API key for provider: ${model.provider}`);
 	}
 
 	const base = buildBaseOptions(model, options, apiKey);
@@ -179,17 +181,10 @@ export const streamSimpleOpenAIResponses: StreamFunction<"openai-responses", Sim
 function createClient(
 	model: Model<"openai-responses">,
 	context: Context,
-	apiKey?: string,
+	apiKey: string,
 	optionsHeaders?: Record<string, string>,
 	sessionId?: string,
 ) {
-	if (!apiKey) {
-		if (!process.env.OPENAI_API_KEY) {
-			throw new Error("需要 OpenAI API 密钥。请设置 OPENAI_API_KEY 环境变量或作为参数传入。");
-		}
-		apiKey = process.env.OPENAI_API_KEY;
-	}
-
 	const compat = getCompat(model);
 	const headers = { ...model.headers };
 	if (model.provider === "github-copilot") {
@@ -208,7 +203,7 @@ function createClient(
 		headers["x-client-request-id"] = sessionId;
 	}
 
-	// 最后合并选项头部，以便它们可以覆盖默认值
+	// Merge options headers last so they can override defaults
 	if (optionsHeaders) {
 		Object.assign(headers, optionsHeaders);
 	}

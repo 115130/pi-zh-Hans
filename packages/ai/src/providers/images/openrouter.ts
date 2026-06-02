@@ -6,7 +6,6 @@ import type {
 	ChatCompletionContentPartText,
 	ChatCompletionCreateParamsNonStreaming,
 } from "openai/resources/chat/completions.js";
-import { getEnvApiKey } from "../../env-api-keys.ts";
 import type {
 	AssistantImages,
 	ImageContent,
@@ -50,9 +49,9 @@ export const generateImagesOpenRouter: ImagesFunction<"openrouter-images", Image
 	};
 
 	try {
-		const apiKey = options?.apiKey || getEnvApiKey(model.provider);
+		const apiKey = options?.apiKey;
 		if (!apiKey) {
-			throw new Error(`没有可用于提供者 ${model.provider} 的 API 密钥`);
+			throw new Error(`No API key for provider: ${model.provider}`);
 		}
 		const client = createClient(model, apiKey, options?.headers);
 		let params = buildParams(model, context);

@@ -4,6 +4,7 @@ import { constants } from "fs";
 import { access as fsAccess, readFile as fsReadFile, writeFile as fsWriteFile } from "fs/promises";
 import { type Static, Type } from "typebox";
 import { renderDiff } from "../../modes/interactive/components/diff.ts";
+import type { Theme } from "../../modes/interactive/theme/theme.ts";
 import type { ToolDefinition } from "../extensions/types.ts";
 import {
 	applyEditsToNormalizedContent,
@@ -20,7 +21,7 @@ import {
 } from "./edit-diff.ts";
 import { withFileMutationQueue } from "./file-mutation-queue.ts";
 import { resolveToCwd } from "./path-utils.ts";
-import { invalidArgText, shortenPath, str } from "./render-utils.ts";
+import { renderToolPath, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
 
 type EditPreview = EditDiffResult | EditDiffError;
@@ -32,19 +33,20 @@ type EditRenderState = {
 const replaceEditSchema = Type.Object(
 	{
 		oldText: Type.String({
-			description: "要替换的精确文本。它在原文件中必须唯一，并且不能与同一次调用中的其他 edits[].oldText 重叠。",
+			description:
+				"Exact text for one targeted replacement. It must be unique in the original file and must not overlap with any other edits[].oldText in the same call.",
 		}),
-		newText: Type.String({ description: "此目标的替换文本。" }),
+		newText: Type.String({ description: "Replacement text for this targeted edit." }),
 	},
 	{ additionalProperties: false },
 );
 
 const editSchema = Type.Object(
 	{
-		path: Type.String({ description: "要编辑的文件路径（相对或绝对）" }),
+		path: Type.String({ description: "Path to the file to edit (relative or absolute)" }),
 		edits: Type.Array(replaceEditSchema, {
 			description:
-				"一个或多个替换。每个替换都基于原文件匹配，而非增量匹配。请不要包含重叠或嵌套的编辑。如果两次更改影响同一块或附近的代码行，请将它们合并为一次编辑。",
+				"One or more targeted replacements. Each edit is matched against the original file, not incrementally. Do not include overlapping or nested edits. If two changes touch the same block or nearby lines, merge them into one edit instead.",
 		}),
 	},
 	{ additionalProperties: false },
@@ -117,7 +119,7 @@ function prepareEditArguments(input: unknown): EditToolInput {
 
 function validateEditInput(input: EditToolInput): { path: string; edits: Edit[] } {
 	if (!Array.isArray(input.edits) || input.edits.length === 0) {
-		throw new Error("编辑工具输入无效：edits 必须至少包含一个替换。");
+		throw new Error("Edit tool input is invalid. edits must contain at least one replacement.");
 	}
 	return { path: input.path, edits: input.edits };
 }
@@ -190,22 +192,16 @@ function getRenderablePreviewInput(args: RenderableEditArgs | undefined): { path
 	return null;
 }
 
-function formatEditCall(
-	args: RenderableEditArgs | undefined,
-	theme: typeof import("../../modes/interactive/theme/theme.ts").theme,
-): string {
-	const invalidArg = invalidArgText(theme);
-	const rawPath = str(args?.file_path ?? args?.path);
-	const path = rawPath !== null ? shortenPath(rawPath) : null;
-	const pathDisplay = path === null ? invalidArg : path ? theme.fg("accent", path) : theme.fg("toolOutput", "...");
-	return `${theme.fg("toolTitle", theme.bold("编辑"))} ${pathDisplay}`;
+function formatEditCall(args: RenderableEditArgs | undefined, theme: Theme, cwd: string): string {
+	const pathDisplay = renderToolPath(str(args?.file_path ?? args?.path), theme, cwd);
+	return `${theme.fg("toolTitle", theme.bold("edit"))} ${pathDisplay}`;
 }
 
 function formatEditResult(
 	args: RenderableEditArgs | undefined,
 	preview: EditPreview | undefined,
 	result: EditToolResultLike,
-	theme: typeof import("../../modes/interactive/theme/theme.ts").theme,
+	theme: Theme,
 	isError: boolean,
 ): string | undefined {
 	const rawPath = str(args?.file_path ?? args?.path);
@@ -233,7 +229,7 @@ function formatEditResult(
 function getEditHeaderBg(
 	preview: EditPreview | undefined,
 	settledError: boolean | undefined,
-	theme: typeof import("../../modes/interactive/theme/theme.ts").theme,
+	theme: Theme,
 ): (text: string) => string {
 	if (preview) {
 		if ("error" in preview) {
@@ -250,11 +246,12 @@ function getEditHeaderBg(
 function buildEditCallComponent(
 	component: EditCallRenderComponent,
 	args: RenderableEditArgs | undefined,
-	theme: typeof import("../../modes/interactive/theme/theme.ts").theme,
+	theme: Theme,
+	cwd: string,
 ): EditCallRenderComponent {
 	component.setBgFn(getEditHeaderBg(component.preview, component.settledError, theme));
 	component.clear();
-	component.addChild(new Text(formatEditCall(args, theme), 0, 0));
+	component.addChild(new Text(formatEditCall(args, theme, cwd), 0, 0));
 
 	if (!component.preview) {
 		return component;
@@ -294,15 +291,16 @@ export function createEditToolDefinition(
 	const ops = options?.operations ?? defaultEditOperations;
 	return {
 		name: "edit",
-		label: "编辑",
+		label: "edit",
 		description:
-			"使用精确文本替换编辑单个文件。每个 edits[].oldText 必须匹配原文件中唯一且不重叠的区域。如果两次更改影响同一块或附近的代码行，请将它们合并为一次编辑，而不是发出重叠的编辑。不要包含大量未改动的区域来连接两个不相邻的更改。",
-		promptSnippet: "使用精确文本替换进行精确定位编辑，支持在一次调用中进行多个不连续的编辑",
+			"Edit a single file using exact text replacement. Every edits[].oldText must match a unique, non-overlapping region of the original file. If two changes affect the same block or nearby lines, merge them into one edit instead of emitting overlapping edits. Do not include large unchanged regions just to connect distant changes.",
+		promptSnippet:
+			"Make precise file edits with exact text replacement, including multiple disjoint edits in one call",
 		promptGuidelines: [
-			"使用 edit 进行精确更改（edits[].oldText 必须精确匹配）",
-			"当在一个文件中更改多个独立位置时，使用一次 edit 调用并包含多个 edits[] 条目，而不是多次调用 edit",
-			"每个 edits[].oldText 是基于原文件匹配的，而非在先前编辑应用之后。不要发出重叠或嵌套的编辑。将相近的更改合并为一个编辑。",
-			"保持 edits[].oldText 尽可能短小，同时确保它在文件中唯一。不要用大量未更改的区域填充。",
+			"Use edit for precise changes (edits[].oldText must match exactly)",
+			"When changing multiple separate locations in one file, use one edit call with multiple entries in edits[] instead of multiple edit calls",
+			"Each edits[].oldText is matched against the original file, not after earlier edits are applied. Do not emit overlapping or nested edits. Merge nearby changes into one edit.",
+			"Keep edits[].oldText as small as possible while still being unique in the file. Do not pad with large unchanged regions.",
 		],
 		parameters: editSchema,
 		renderShell: "self",
@@ -317,7 +315,7 @@ export function createEditToolDefinition(
 				// Checking signal.aborted after each await observes the same aborts while
 				// keeping the queue locked until the current operation has settled.
 				const throwIfAborted = (): void => {
-					if (signal?.aborted) throw new Error("操作已中止");
+					if (signal?.aborted) throw new Error("Operation aborted");
 				};
 
 				throwIfAborted();
@@ -328,8 +326,8 @@ export function createEditToolDefinition(
 				} catch (error: unknown) {
 					throwIfAborted();
 					const errorMessage =
-						error instanceof Error && "code" in error ? `错误代码：${error.code}` : String(error);
-					throw new Error(`无法编辑文件：${path}。${errorMessage}。`);
+						error instanceof Error && "code" in error ? `Error code: ${error.code}` : String(error);
+					throw new Error(`Could not edit file: ${path}. ${errorMessage}.`);
 				}
 				throwIfAborted();
 
@@ -355,7 +353,7 @@ export function createEditToolDefinition(
 					content: [
 						{
 							type: "text",
-							text: `成功替换了 ${path} 中的 ${edits.length} 个块。`,
+							text: `Successfully replaced ${edits.length} block(s) in ${path}.`,
 						},
 					],
 					details: { diff: diffResult.diff, patch, firstChangedLine: diffResult.firstChangedLine },
@@ -387,7 +385,7 @@ export function createEditToolDefinition(
 				});
 			}
 
-			return buildEditCallComponent(component, args, theme);
+			return buildEditCallComponent(component, args, theme, context.cwd);
 		},
 		renderResult(result, _options, theme, context) {
 			const callComponent = context.state.callComponent;
@@ -412,7 +410,12 @@ export function createEditToolDefinition(
 					changed = true;
 				}
 				if (changed) {
-					buildEditCallComponent(callComponent, context.args as RenderableEditArgs | undefined, theme);
+					buildEditCallComponent(
+						callComponent,
+						context.args as RenderableEditArgs | undefined,
+						theme,
+						context.cwd,
+					);
 				}
 			}
 

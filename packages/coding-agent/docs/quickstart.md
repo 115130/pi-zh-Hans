@@ -1,23 +1,23 @@
-# 快速入门
+# Quickstart
 
-本页面将引导您从安装到完成第一个实用的 Pi 会话。
+This page gets you from install to a useful first pi session.
 
-## 安装
+## Install
 
-Pi 以 npm 包的形式分发：
+Pi is distributed as an npm package:
 
 ```bash
 npm install -g --ignore-scripts @earendil-works/pi-coding-agent
 ```
 
-`--ignore-scripts` 在安装过程中禁用依赖生命周期脚本。Pi 在常规 npm 安装中不需要安装脚本。
+`--ignore-scripts` disables dependency lifecycle scripts during install. Pi does not require install scripts for normal npm installs.
 
-### 卸载
+### Uninstall
 
-使用安装 Pi 的包管理器。curl 安装器使用全局 npm，因此 curl 和 npm 安装的 Pi 可以通过 npm 卸载：
+Use the package manager that installed pi. The curl installer uses npm globally, so curl and npm installs are removed with npm:
 
 ```bash
-# curl 安装器或 npm install -g
+# curl installer or npm install -g
 npm uninstall -g @earendil-works/pi-coding-agent
 
 # pnpm
@@ -30,135 +30,136 @@ yarn global remove @earendil-works/pi-coding-agent
 bun uninstall -g @earendil-works/pi-coding-agent
 ```
 
-卸载 Pi 会保留设置、凭据、会话以及已安装的 Pi 包在 `~/.pi/agent/` 中。
+Uninstalling pi leaves settings, credentials, sessions, and installed pi packages in `~/.pi/agent/`.
 
-然后在您希望 Pi 工作的项目目录中启动它：
+Then start pi in the project directory you want it to work on:
 
 ```bash
 cd /path/to/project
 pi
 ```
 
-## 身份验证
+## Authenticate
 
-Pi 可以通过 `/login` 使用订阅提供商，或通过环境变量或身份验证文件使用 API 密钥提供商。
+Pi can use subscription providers through `/login`, or API-key providers through environment variables or the auth file.
 
-### 选项 1：订阅登录
+### Option 1: subscription login
 
-启动 Pi 并运行：
+Start pi and run:
 
 ```text
 /login
 ```
 
-然后选择一个提供商。内置的订阅登录包括 Claude Pro/Max、ChatGPT Plus/Pro (Codex) 和 GitHub Copilot。
+Then select a provider. Built-in subscription logins include Claude Pro/Max, ChatGPT Plus/Pro (Codex), and GitHub Copilot.
 
-### 选项 2：API 密钥
+### Option 2: API key
 
-在启动 Pi 之前设置 API 密钥：
+Set an API key before launching pi:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
 pi
 ```
 
-您也可以运行 `/login` 并选择一个 API 密钥提供商，将密钥存储在 `~/.pi/agent/auth.json` 中。
+You can also run `/login` and select an API-key provider to store the key in `~/.pi/agent/auth.json`.
 
-请参阅[提供商](providers.md)了解所有支持的提供商、环境变量以及云提供商设置。
+See [Providers](providers.md) for all supported providers, environment variables, and cloud-provider setup.
 
-## 第一个会话
+## First session
 
-当 Pi 启动后，输入一个请求并按 Enter：
+Once pi starts, type a request and press Enter:
 
 ```text
-总结这个仓库，并告诉我如何运行其检查。
+Summarize this repository and tell me how to run its checks.
 ```
 
-默认情况下，Pi 为模型提供四种工具：
+By default, pi gives the model four tools:
 
-- `read` - 读取文件
-- `write` - 创建或覆盖文件
-- `edit` - 修补文件
-- `bash` - 运行 shell 命令
+- `read` - read files
+- `write` - create or overwrite files
+- `edit` - patch files
+- `bash` - run shell commands
 
-其他内置的只读工具（`grep`、`find`、`ls`）可通过工具选项使用。Pi 会在您当前的工作目录中运行，并可以修改其中的文件。如果您希望轻松回滚，请使用 git 或其他检查点工作流程。
+Additional built-in read-only tools (`grep`, `find`, `ls`) are available through tool options. Pi runs in your current working directory and can modify files there. Use git or another checkpointing workflow if you want easy rollback.
 
-## 为 Pi 提供项目说明
+## Give pi project instructions
 
-Pi 在启动时加载上下文文件。添加一个 `AGENTS.md` 文件来告诉它如何在项目中工作：
+Pi loads context files at startup. Add an `AGENTS.md` file to tell it how to work in a project:
 
 ```markdown
-# 项目说明
+# Project Instructions
 
-- 代码更改后运行 `npm run check`。
-- 不要在本机运行生产迁移。
-- 保持回复简洁。
+- Run `npm run check` after code changes.
+- Do not run production migrations locally.
+- Keep responses concise.
 ```
 
-Pi 加载：
+Pi loads:
 
-- `~/.pi/agent/AGENTS.md` 作为全局说明
-- 父目录和当前目录中的 `AGENTS.md` 或 `CLAUDE.md`
+- `~/.pi/agent/AGENTS.md` for global instructions
+- `AGENTS.md` or `CLAUDE.md` from parent directories and the current directory
 
-更改上下文文件后，重新启动 Pi，或运行 `/reload`。
+Restart pi, or run `/reload`, after changing context files.
 
-## 常见尝试事项
+## Common things to try
 
-### 引用文件
+### Reference files
 
-在编辑器中输入 `@` 可以模糊搜索文件，或者在命令行中传递文件：
+Type `@` in the editor to fuzzy-search files, or pass files on the command line:
 
 ```bash
-pi @README.md "总结这个"
-pi @src/app.ts @src/app.test.ts "一起审查这两个"
+pi @README.md "Summarize this"
+pi @src/app.ts @src/app.test.ts "Review these together"
 ```
 
-图像可以通过 Ctrl+V（Windows 上为 Alt+V）粘贴，或拖放到支持的终端中。
+Images can be pasted with Ctrl+V (Alt+V on Windows) or dragged into supported terminals.
 
-### 运行 shell 命令
+### Run shell commands
 
-在交互模式下：
+In interactive mode:
 
 ```text
 !npm run lint
 ```
 
-命令输出会发送给模型。使用 `!!command` 可以运行命令但不将其输出添加到模型上下文中。
+The command output is sent to the model. Use `!!command` to run a command without adding its output to the model context.
 
-### 切换模型
+### Switch models
 
-使用 `/model` 或 Ctrl+L 选择模型。使用 Shift+Tab 循环切换思考级别。使用 Ctrl+P / Shift+Ctrl+P 循环切换域内模型。
+Use `/model` or Ctrl+L to choose a model. Use Shift+Tab to cycle thinking level. Use Ctrl+P / Shift+Ctrl+P to cycle through scoped models.
 
-### 稍后继续
+### Continue later
 
-会话会自动保存：
-
-```bash
-pi -c                  # 继续最近的会话
-pi -r                  # 浏览之前的会话
-pi --session <path|id> # 打开特定会话
-```
-
-在 Pi 内部，使用 `/resume`、`/new`、`/tree`、`/fork` 和 `/clone` 来管理会话。
-
-### 非交互模式
-
-用于单次提示：
+Sessions are saved automatically:
 
 ```bash
-pi -p "总结这个代码库"
-cat README.md | pi -p "总结这段文字"
-pi -p @screenshot.png "这张图片里有什么？"
+pi -c                  # Continue most recent session
+pi -r                  # Browse previous sessions
+pi --name "my task"    # Set session display name at startup
+pi --session <path|id> # Open a specific session
 ```
 
-使用 `--mode json` 获取 JSON 事件输出，或使用 `--mode rpc` 进行进程集成。
+Inside pi, use `/resume`, `/new`, `/tree`, `/fork`, and `/clone` to manage sessions.
 
-## 下一步
+### Non-interactive mode
 
-- [使用 Pi](usage.md) - 交互模式、斜杠命令、会话、上下文文件和 CLI 参考。
-- [提供商](providers.md) - 身份验证和模型设置。
-- [设置](settings.md) - 全局和项目配置。
-- [快捷键](keybindings.md) - 快捷键和自定义。
-- [Pi 包](packages.md) - 安装共享扩展、技能、提示和主题。
+For one-shot prompts:
 
-平台说明：[Windows](windows.md)、[Termux](termux.md)、[tmux](tmux.md)、[终端设置](terminal-setup.md)、[Shell 别名](shell-aliases.md)。
+```bash
+pi -p "Summarize this codebase"
+cat README.md | pi -p "Summarize this text"
+pi -p @screenshot.png "What's in this image?"
+```
+
+Use `--mode json` for JSON event output or `--mode rpc` for process integration.
+
+## Next steps
+
+- [Using Pi](usage.md) - interactive mode, slash commands, sessions, context files, and CLI reference.
+- [Providers](providers.md) - authentication and model setup.
+- [Settings](settings.md) - global and project configuration.
+- [Keybindings](keybindings.md) - shortcuts and customization.
+- [Pi Packages](packages.md) - install shared extensions, skills, prompts, and themes.
+
+Platform notes: [Windows](windows.md), [Termux](termux.md), [tmux](tmux.md), [Terminal setup](terminal-setup.md), [Shell aliases](shell-aliases.md).

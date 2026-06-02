@@ -4,16 +4,16 @@ import { mkdir as fsMkdir, writeFile as fsWriteFile } from "fs/promises";
 import { dirname } from "path";
 import { type Static, Type } from "typebox";
 import { keyHint } from "../../modes/interactive/components/keybinding-hints.ts";
-import { getLanguageFromPath, highlightCode } from "../../modes/interactive/theme/theme.ts";
+import { getLanguageFromPath, highlightCode, type Theme } from "../../modes/interactive/theme/theme.ts";
 import type { ToolDefinition, ToolRenderResultOptions } from "../extensions/types.ts";
 import { withFileMutationQueue } from "./file-mutation-queue.ts";
 import { resolveToCwd } from "./path-utils.ts";
-import { invalidArgText, normalizeDisplayText, replaceTabs, shortenPath, str } from "./render-utils.ts";
+import { normalizeDisplayText, renderToolPath, replaceTabs, str } from "./render-utils.ts";
 import { wrapToolDefinition } from "./tool-definition-wrapper.ts";
 
 const writeSchema = Type.Object({
-	path: Type.String({ description: "要写入的文件路径（相对或绝对）" }),
-	content: Type.String({ description: "要写入文件的内容" }),
+	path: Type.String({ description: "Path to the file to write (relative or absolute)" }),
+	content: Type.String({ description: "Content to write to the file" }),
 });
 
 export type WriteToolInput = Static<typeof writeSchema>;
@@ -131,17 +131,17 @@ function trimTrailingEmptyLines(lines: string[]): string[] {
 function formatWriteCall(
 	args: { path?: string; file_path?: string; content?: string } | undefined,
 	options: ToolRenderResultOptions,
-	theme: typeof import("../../modes/interactive/theme/theme.ts").theme,
+	theme: Theme,
 	cache: WriteHighlightCache | undefined,
+	cwd: string,
 ): string {
 	const rawPath = str(args?.file_path ?? args?.path);
 	const fileContent = str(args?.content);
-	const path = rawPath !== null ? shortenPath(rawPath) : null;
-	const invalidArg = invalidArgText(theme);
-	let text = `${theme.fg("toolTitle", theme.bold("写入"))} ${path === null ? invalidArg : path ? theme.fg("accent", path) : theme.fg("toolOutput", "...")}`;
+	const pathDisplay = renderToolPath(rawPath, theme, cwd);
+	let text = `${theme.fg("toolTitle", theme.bold("write"))} ${pathDisplay}`;
 
 	if (fileContent === null) {
-		text += `\n\n${theme.fg("error", "[无效的 content 参数 - 应为字符串]")}`;
+		text += `\n\n${theme.fg("error", "[invalid content arg - expected string]")}`;
 	} else if (fileContent) {
 		const lang = rawPath ? getLanguageFromPath(rawPath) : undefined;
 		const renderedLines = lang
@@ -154,7 +154,7 @@ function formatWriteCall(
 		const remaining = lines.length - maxLines;
 		text += `\n\n${displayLines.map((line) => (lang ? line : theme.fg("toolOutput", replaceTabs(line)))).join("\n")}`;
 		if (remaining > 0) {
-			text += `${theme.fg("muted", `\n... (剩余 ${remaining} 行，共 ${totalLines} 行，`)} ${keyHint("app.tools.expand", "展开")})`;
+			text += `${theme.fg("muted", `\n... (${remaining} more lines, ${totalLines} total,`)} ${keyHint("app.tools.expand", "to expand")})`;
 		}
 	}
 
@@ -163,7 +163,7 @@ function formatWriteCall(
 
 function formatWriteResult(
 	result: { content: Array<{ type: string; text?: string; data?: string; mimeType?: string }>; isError?: boolean },
-	theme: typeof import("../../modes/interactive/theme/theme.ts").theme,
+	theme: Theme,
 ): string | undefined {
 	if (!result.isError) {
 		return undefined;
@@ -185,10 +185,11 @@ export function createWriteToolDefinition(
 	const ops = options?.operations ?? defaultWriteOperations;
 	return {
 		name: "write",
-		label: "写入",
-		description: "将内容写入文件。如果文件不存在则创建，如果存在则覆盖。自动创建父目录。",
-		promptSnippet: "创建或覆盖文件",
-		promptGuidelines: ["仅对新文件或完整重写使用“写入”。"],
+		label: "write",
+		description:
+			"Write content to a file. Creates the file if it doesn't exist, overwrites if it does. Automatically creates parent directories.",
+		promptSnippet: "Create or overwrite files",
+		promptGuidelines: ["Use write only for new files or complete rewrites."],
 		parameters: writeSchema,
 		async execute(
 			_toolCallId,
@@ -205,7 +206,7 @@ export function createWriteToolDefinition(
 				// Checking signal.aborted after each await observes the same aborts while
 				// keeping the queue locked until the current operation has settled.
 				const throwIfAborted = (): void => {
-					if (signal?.aborted) throw new Error("操作已中止");
+					if (signal?.aborted) throw new Error("Operation aborted");
 				};
 
 				throwIfAborted();
@@ -218,7 +219,7 @@ export function createWriteToolDefinition(
 				throwIfAborted();
 
 				return {
-					content: [{ type: "text", text: `成功写入 ${content.length} 字节到 ${path}` }],
+					content: [{ type: "text", text: `Successfully wrote ${content.length} bytes to ${path}` }],
 					details: undefined,
 				};
 			});
@@ -242,6 +243,7 @@ export function createWriteToolDefinition(
 					{ expanded: context.expanded, isPartial: context.isPartial },
 					theme,
 					component.cache,
+					context.cwd,
 				),
 			);
 			return component;
