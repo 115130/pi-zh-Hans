@@ -369,9 +369,9 @@ export class AgentSession {
 		const isOAuth = this._modelRegistry.isUsingOAuth(model);
 		if (isOAuth) {
 			throw new Error(
-				`Authentication failed for "${model.provider}". ` +
-					`Credentials may have expired or network is unavailable. ` +
-					`Run '/login ${model.provider}' to re-authenticate.`,
+				`"${model.provider}" 认证失败。` +
+					`凭据可能已过期或网络不可用。` +
+					`请运行 '/login ${model.provider}' 重新认证。`,
 			);
 		}
 		throw new Error(formatNoApiKeyFoundMessage(model.provider));
@@ -1050,9 +1050,9 @@ export class AgentSession {
 				const isOAuth = this._modelRegistry.isUsingOAuth(this.model);
 				if (isOAuth) {
 					throw new Error(
-						`Authentication failed for "${this.model.provider}". ` +
-							`Credentials may have expired or network is unavailable. ` +
-							`Run '/login ${this.model.provider}' to re-authenticate.`,
+						`"${this.model.provider}" 认证失败。` +
+							`凭据可能已过期或网络不可用。` +
+							`请运行 '/login ${this.model.provider}' 重新认证。`,
 					);
 				}
 				throw new Error(formatNoApiKeyFoundMessage(this.model.provider));

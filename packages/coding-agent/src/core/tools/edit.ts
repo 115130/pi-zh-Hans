@@ -46,7 +46,7 @@ const editSchema = Type.Object(
 		path: Type.String({ description: "要编辑的文件路径（相对或绝对）" }),
 		edits: Type.Array(replaceEditSchema, {
 			description:
-				"One or more targeted replacements. Each edit is matched against the original file, not incrementally. Do not include overlapping or nested edits. If two changes touch the same block or nearby lines, merge them into one edit instead.",
+				"一个或多个目标替换。每次替换都基于原文件独立匹配，而非增量匹配。如果两次更改影响同一块或附近的代码行，请将它们合并为一次编辑。",
 		}),
 	},
 	{ additionalProperties: false },
