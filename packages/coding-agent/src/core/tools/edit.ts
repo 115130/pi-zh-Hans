@@ -36,14 +36,14 @@ const replaceEditSchema = Type.Object(
 			description:
 				"一次替换的精确原始文本。它在原文件中必须唯一，且不能与同一次调用中的其他 edits[].oldText 重叠。",
 		}),
-		newText: Type.String({ description: "Replacement text for this targeted edit." }),
+		newText: Type.String({ description: "此目标编辑的替换文本。" }),
 	},
 	{ additionalProperties: false },
 );
 
 const editSchema = Type.Object(
 	{
-		path: Type.String({ description: "Path to the file to edit (relative or absolute)" }),
+		path: Type.String({ description: "要编辑的文件路径（相对或绝对）" }),
 		edits: Type.Array(replaceEditSchema, {
 			description:
 				"One or more targeted replacements. Each edit is matched against the original file, not incrementally. Do not include overlapping or nested edits. If two changes touch the same block or nearby lines, merge them into one edit instead.",
@@ -119,7 +119,7 @@ function prepareEditArguments(input: unknown): EditToolInput {
 
 function validateEditInput(input: EditToolInput): { path: string; edits: Edit[] } {
 	if (!Array.isArray(input.edits) || input.edits.length === 0) {
-		throw new Error("Edit tool input is invalid. edits must contain at least one replacement.");
+		throw new Error("编辑工具输入无效。edits 必须包含至少一个替换。");
 	}
 	return { path: input.path, edits: input.edits };
 }
@@ -314,7 +314,7 @@ export function createEditToolDefinition(
 				// Checking signal.aborted after each await observes the same aborts while
 				// keeping the queue locked until the current operation has settled.
 				const throwIfAborted = (): void => {
-					if (signal?.aborted) throw new Error("Operation aborted");
+					if (signal?.aborted) throw new Error("操作已取消");
 				};
 
 				throwIfAborted();
@@ -352,7 +352,7 @@ export function createEditToolDefinition(
 					content: [
 						{
 							type: "text",
-							text: `Successfully replaced ${edits.length} block(s) in ${path}.`,
+							text: `已成功替换 ${edits.length} 个块到 ${path}。`,
 						},
 					],
 					details: { diff: diffResult.diff, patch, firstChangedLine: diffResult.firstChangedLine },

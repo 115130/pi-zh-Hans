@@ -357,7 +357,7 @@ export class AgentSession {
 	}> {
 		const result = await this._modelRegistry.getApiKeyAndHeaders(model);
 		if (!result.ok) {
-			if (result.error.startsWith("No API key found")) {
+			if (result.error.startsWith("未找到 API 密钥")) {
 				throw new Error(formatNoApiKeyFoundMessage(model.provider));
 			}
 			throw new Error(result.error);

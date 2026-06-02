@@ -472,11 +472,11 @@ export class AgentHarness<
 	private validateUniqueNames(names: string[], message: string): void {
 		const duplicates = findDuplicateNames(names);
 		if (duplicates.length > 0)
-			throw new AgentHarnessError("invalid_argument", `${message}: ${duplicates.join(", ")}`);
+			throw new AgentHarnessError("invalid_argument", `${message}：${duplicates.join(", ")}`);
 	}
 
 	private validateToolNames(toolNames: string[], tools: Map<string, TTool> = this.tools): void {
-		this.validateUniqueNames(toolNames, "Duplicate active tool name(s)");
+		this.validateUniqueNames(toolNames, "重复的活动工具名称");
 		const missing = toolNames.filter((name) => !tools.has(name));
 		if (missing.length > 0) throw new AgentHarnessError("invalid_argument", `未知工具: ${missing.join(", ")}`);
 	}

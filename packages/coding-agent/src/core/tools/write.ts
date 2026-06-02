@@ -205,7 +205,7 @@ export function createWriteToolDefinition(
 				// Checking signal.aborted after each await observes the same aborts while
 				// keeping the queue locked until the current operation has settled.
 				const throwIfAborted = (): void => {
-					if (signal?.aborted) throw new Error("Operation aborted");
+					if (signal?.aborted) throw new Error("操作已取消");
 				};
 
 				throwIfAborted();
@@ -218,7 +218,7 @@ export function createWriteToolDefinition(
 				throwIfAborted();
 
 				return {
-					content: [{ type: "text", text: `Successfully wrote ${content.length} bytes to ${path}` }],
+					content: [{ type: "text", text: `已成功写入 ${content.length} 字节到 ${path}` }],
 					details: undefined,
 				};
 			});
