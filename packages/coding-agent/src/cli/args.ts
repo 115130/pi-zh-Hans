@@ -272,109 +272,109 @@ ${chalk.bold("Options:")}
 
 Extensions can register additional flags (e.g., --plan from plan-mode extension).${extensionFlagsText}
 
-${chalk.bold("Examples:")}
-  # Interactive mode
+${chalk.bold("示例:")}
+  # 交互模式
   ${APP_NAME}
 
-  # Interactive mode with initial prompt
-  ${APP_NAME} "List all .ts files in src/"
+  # 带初始提示词的交互模式
+  ${APP_NAME} "列出 src/ 下的所有 .ts 文件"
 
-  # Include files in initial message
-  ${APP_NAME} @prompt.md @image.png "What color is the sky?"
+  # 在初始消息中包含文件
+  ${APP_NAME} @prompt.md @image.png "天空是什么颜色？"
 
-  # Non-interactive mode (process and exit)
-  ${APP_NAME} -p "List all .ts files in src/"
+  # 非交互模式（处理后退出）
+  ${APP_NAME} -p "列出 src/ 下的所有 .ts 文件"
 
-  # Multiple messages (interactive)
-  ${APP_NAME} "Read package.json" "What dependencies do we have?"
+  # 多条消息（交互模式）
+  ${APP_NAME} "读取 package.json" "我们有哪些依赖？"
 
-  # Continue previous session
-  ${APP_NAME} --continue "What did we discuss?"
+  # 继续之前的会话
+  ${APP_NAME} --continue "我们刚才讨论了什么？"
 
-  # Start a named session
-  ${APP_NAME} --name "Refactor auth module"
+  # 启动命名会话
+  ${APP_NAME} --name "重构认证模块"
 
-  # Use different model
-  ${APP_NAME} --provider openai --model gpt-4o-mini "Help me refactor this code"
+  # 使用不同的模型
+  ${APP_NAME} --provider openai --model gpt-4o-mini "帮我重构这段代码"
 
-  # Use model with provider prefix (no --provider needed)
-  ${APP_NAME} --model openai/gpt-4o "Help me refactor this code"
+  # 使用带提供者前缀的模型（无需 --provider）
+  ${APP_NAME} --model openai/gpt-4o "帮我重构这段代码"
 
-  # Use model with thinking level shorthand
-  ${APP_NAME} --model sonnet:high "Solve this complex problem"
+  # 使用带思考级别简写的模型
+  ${APP_NAME} --model sonnet:high "解决这个复杂问题"
 
-  # Limit model cycling to specific models
+  # 限制模型循环到特定模型
   ${APP_NAME} --models claude-sonnet,claude-haiku,gpt-4o
 
-  # Limit to a specific provider with glob pattern
+  # 使用通配符限制到特定提供者
   ${APP_NAME} --models "github-copilot/*"
 
-  # Cycle models with fixed thinking levels
+  # 使用固定思考级别循环模型
   ${APP_NAME} --models sonnet:high,haiku:low
 
-  # Start with a specific thinking level
-  ${APP_NAME} --thinking high "Solve this complex problem"
+  # 以特定思考级别启动
+  ${APP_NAME} --thinking high "解决这个复杂问题"
 
-  # Read-only mode (no file modifications possible)
-  ${APP_NAME} --tools read,grep,find,ls -p "Review the code in src/"
+  # 只读模式（无法修改文件）
+  ${APP_NAME} --tools read,grep,find,ls -p "审查 src/ 下的代码"
 
-  # Disable one tool while keeping the rest available
+  # 禁用一个工具同时保持其他工具可用
   ${APP_NAME} --exclude-tools ask_question
 
-  # Export a session file to HTML
-  ${APP_NAME} --export ~/${CONFIG_DIR_NAME}/agent/sessions/--path--/session.jsonl
+  # 将会话文件导出为 HTML
+  ${APP_NAME} --export ~/${CONFIG_DIR_NAME}/agent/sessions/--路径--/session.jsonl
   ${APP_NAME} --export session.jsonl output.html
 
-${chalk.bold("Environment Variables:")}
-  ANTHROPIC_API_KEY                - Anthropic Claude API key
-  ANTHROPIC_OAUTH_TOKEN            - Anthropic OAuth token (alternative to API key)
-  OPENAI_API_KEY                   - OpenAI GPT API key
-  AZURE_OPENAI_API_KEY             - Azure OpenAI API key
-  AZURE_OPENAI_BASE_URL            - Azure OpenAI/Cognitive Services base URL (e.g. https://{resource}.openai.azure.com)
-  AZURE_OPENAI_RESOURCE_NAME       - Azure OpenAI resource name (alternative to base URL)
-  AZURE_OPENAI_API_VERSION         - Azure OpenAI API version (default: v1)
-  AZURE_OPENAI_DEPLOYMENT_NAME_MAP - Azure OpenAI model=deployment map (comma-separated)
-  DEEPSEEK_API_KEY                 - DeepSeek API key
-  GEMINI_API_KEY                   - Google Gemini API key
-  GROQ_API_KEY                     - Groq API key
-  CEREBRAS_API_KEY                 - Cerebras API key
-  XAI_API_KEY                      - xAI Grok API key
-  FIREWORKS_API_KEY                - Fireworks API key
-  TOGETHER_API_KEY                 - Together AI API key
-  OPENROUTER_API_KEY               - OpenRouter API key
-  AI_GATEWAY_API_KEY               - Vercel AI Gateway API key
-  ZAI_API_KEY                      - ZAI API key
-  MISTRAL_API_KEY                  - Mistral API key
-  MINIMAX_API_KEY                  - MiniMax API key
-  MOONSHOT_API_KEY                 - Moonshot AI API key
-  OPENCODE_API_KEY                 - OpenCode Zen/OpenCode Go API key
-  KIMI_API_KEY                     - Kimi For Coding API key
-  CLOUDFLARE_API_KEY               - Cloudflare API token (Workers AI and AI Gateway)
-  CLOUDFLARE_ACCOUNT_ID            - Cloudflare account id (required for both)
-  CLOUDFLARE_GATEWAY_ID            - Cloudflare AI Gateway slug (required for AI Gateway)
-  XIAOMI_API_KEY                   - Xiaomi MiMo API key (api.xiaomimimo.com billing)
-  XIAOMI_TOKEN_PLAN_CN_API_KEY     - Xiaomi MiMo Token Plan API key (China region)
-  XIAOMI_TOKEN_PLAN_AMS_API_KEY    - Xiaomi MiMo Token Plan API key (Amsterdam region)
-  XIAOMI_TOKEN_PLAN_SGP_API_KEY    - Xiaomi MiMo Token Plan API key (Singapore region)
-  AWS_PROFILE                      - AWS profile for Amazon Bedrock
-  AWS_ACCESS_KEY_ID                - AWS access key for Amazon Bedrock
-  AWS_SECRET_ACCESS_KEY            - AWS secret key for Amazon Bedrock
-  AWS_BEARER_TOKEN_BEDROCK         - Bedrock API key (bearer token)
-  AWS_REGION                       - AWS region for Amazon Bedrock (e.g., us-east-1)
-  ${ENV_AGENT_DIR.padEnd(32)} - Config directory (default: ~/${CONFIG_DIR_NAME}/agent)
-  ${ENV_SESSION_DIR.padEnd(32)} - Session storage directory (overridden by --session-dir)
-  PI_PACKAGE_DIR                   - Override package directory (for Nix/Guix store paths)
-  PI_OFFLINE                       - Disable startup network operations when set to 1/true/yes
-  PI_TELEMETRY                     - Override install telemetry when set to 1/true/yes or 0/false/no
-  PI_SHARE_VIEWER_URL              - Base URL for /share command (default: https://pi.dev/session/)
+${chalk.bold("环境变量:")}
+  ANTHROPIC_API_KEY                - Anthropic Claude API 密钥
+  ANTHROPIC_OAUTH_TOKEN            - Anthropic OAuth 令牌（API 密钥的替代）
+  OPENAI_API_KEY                   - OpenAI GPT API 密钥
+  AZURE_OPENAI_API_KEY             - Azure OpenAI API 密钥
+  AZURE_OPENAI_BASE_URL            - Azure OpenAI/Cognitive Services 基础 URL（例如 https://{资源}.openai.azure.com）
+  AZURE_OPENAI_RESOURCE_NAME       - Azure OpenAI 资源名称（基础 URL 的替代）
+  AZURE_OPENAI_API_VERSION         - Azure OpenAI API 版本（默认：v1）
+  AZURE_OPENAI_DEPLOYMENT_NAME_MAP - Azure OpenAI 模型=部署映射（逗号分隔）
+  DEEPSEEK_API_KEY                 - DeepSeek API 密钥
+  GEMINI_API_KEY                   - Google Gemini API 密钥
+  GROQ_API_KEY                     - Groq API 密钥
+  CEREBRAS_API_KEY                 - Cerebras API 密钥
+  XAI_API_KEY                      - xAI Grok API 密钥
+  FIREWORKS_API_KEY                - Fireworks API 密钥
+  TOGETHER_API_KEY                 - Together AI API 密钥
+  OPENROUTER_API_KEY               - OpenRouter API 密钥
+  AI_GATEWAY_API_KEY               - Vercel AI 网关 API 密钥
+  ZAI_API_KEY                      - ZAI API 密钥
+  MISTRAL_API_KEY                  - Mistral API 密钥
+  MINIMAX_API_KEY                  - MiniMax API 密钥
+  MOONSHOT_API_KEY                 - Moonshot AI API 密钥
+  OPENCODE_API_KEY                 - OpenCode Zen/OpenCode Go API 密钥
+  KIMI_API_KEY                     - Kimi For Coding API 密钥
+  CLOUDFLARE_API_KEY               - Cloudflare API 令牌（Workers AI 和 AI Gateway）
+  CLOUDFLARE_ACCOUNT_ID            - Cloudflare 帐户 ID（两者都需要）
+  CLOUDFLARE_GATEWAY_ID            - Cloudflare AI Gateway slug（AI Gateway 需要）
+  XIAOMI_API_KEY                   - 小米 MiMo API 密钥（api.xiaomimimo.com 计费）
+  XIAOMI_TOKEN_PLAN_CN_API_KEY     - 小米 MiMo Token Plan API 密钥（中国区域）
+  XIAOMI_TOKEN_PLAN_AMS_API_KEY    - 小米 MiMo Token Plan API 密钥（阿姆斯特丹区域）
+  XIAOMI_TOKEN_PLAN_SGP_API_KEY    - 小米 MiMo Token Plan API 密钥（新加坡区域）
+  AWS_PROFILE                      - Amazon Bedrock 的 AWS 配置文件
+  AWS_ACCESS_KEY_ID                - Amazon Bedrock 的 AWS 访问密钥
+  AWS_SECRET_ACCESS_KEY            - Amazon Bedrock 的 AWS 秘密密钥
+  AWS_BEARER_TOKEN_BEDROCK         - Bedrock API 密钥（bearer token）
+  AWS_REGION                       - Amazon Bedrock 的 AWS 区域（例如 us-east-1）
+  ${ENV_AGENT_DIR.padEnd(32)} - 配置目录（默认：~/${CONFIG_DIR_NAME}/agent）
+  ${ENV_SESSION_DIR.padEnd(32)} - 会话存储目录（被 --session-dir 覆盖）
+  PI_PACKAGE_DIR                   - 覆盖包目录（用于 Nix/Guix store 路径）
+  PI_OFFLINE                       - 设为 1/true/yes 时禁用启动网络操作
+  PI_TELEMETRY                     - 设为 1/true/yes 或 0/false/no 时覆盖安装遥测
+  PI_SHARE_VIEWER_URL              - /share 命令的基础 URL（默认：https://pi.dev/session/）
 
-${chalk.bold("Built-in Tool Names:")}
-  read   - Read file contents
-  bash   - Execute bash commands
-  edit   - Edit files with find/replace
-  write  - Write files (creates/overwrites)
-  grep   - Search file contents (read-only, off by default)
-  find   - Find files by glob pattern (read-only, off by default)
-  ls     - List directory contents (read-only, off by default)
+${chalk.bold("内置工具名称:")}
+  read   - 读取文件内容
+  bash   - 执行 bash 命令
+  edit   - 通过查找/替换编辑文件
+  write  - 写入文件（创建/覆盖）
+  grep   - 搜索文件内容（只读，默认关闭）
+  find   - 按通配符模式查找文件（只读，默认关闭）
+  ls     - 列出目录内容（只读，默认关闭）
 `);
 }
