@@ -224,7 +224,7 @@ function validateSessionIdFlags(parsed: Args): void {
 	].filter((flag): flag is string => flag !== undefined);
 
 	if (conflictingFlags.length > 0) {
-		console.error(chalk.red(`Error: --session-id cannot be combined with ${conflictingFlags.join(", ")}`));
+		console.error(chalk.red(`错误: --session-id 不能与 ${conflictingFlags.join(", ")} 同时使用`));
 		process.exit(1);
 	}
 
@@ -261,7 +261,7 @@ async function createSessionManager(
 		if (parsed.sessionId) {
 			const existingTarget = await findLocalSessionByExactId(parsed.sessionId, cwd, sessionDir);
 			if (existingTarget) {
-				console.error(chalk.red(`Session already exists with id '${parsed.sessionId}'`));
+				console.error(chalk.red(`会话 id '${parsed.sessionId}' 已存在`));
 				process.exit(1);
 			}
 		}
