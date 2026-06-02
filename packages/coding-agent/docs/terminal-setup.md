@@ -12,6 +12,12 @@ Pi 会在可用时启用增强按键报告。如果 Terminal.app 仍为 `Shift+E
 
 此后备方案仅在 Pi 与 Terminal.app 运行于同一台 Mac 上时生效。无法通过远程 SSH 检测本地键盘。
 
+## Apple Terminal
+
+Pi enables enhanced key reporting when available. If Terminal.app still sends plain Return for `Shift+Enter`, pi uses a local macOS modifier fallback to treat that Return as `Shift+Enter`.
+
+This fallback only works when pi runs on the same Mac as Terminal.app. It cannot detect the local keyboard over remote SSH.
+
 ## Ghostty
 
 添加到你的 Ghostty 配置中（macOS 上为 `~/Library/Application Support/com.mitchellh.ghostty/config`，Linux 上为 `~/.config/ghostty/config`）：

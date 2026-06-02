@@ -33,6 +33,7 @@ import type {
 	StreamOptions,
 	Usage,
 } from "../types.ts";
+import { combineAbortSignals } from "../utils/abort-signals.ts";
 import {
 	appendAssistantMessageDiagnostic,
 	createAssistantMessageDiagnostic,
@@ -53,6 +54,8 @@ const JWT_CLAIM_PATH = "https://api.openai.com/auth" as const;
 const DEFAULT_MAX_RETRIES = 0;
 const BASE_DELAY_MS = 1000;
 const DEFAULT_MAX_RETRY_DELAY_MS = 60_000;
+const DEFAULT_SSE_HEADER_TIMEOUT_MS = 10_000;
+const DEFAULT_WEBSOCKET_CONNECT_TIMEOUT_MS = 15_000;
 const CODEX_TOOL_CALL_PROVIDERS = new Set(["openai", "openai-codex", "opencode"]);
 const WEBSOCKET_MESSAGE_TOO_BIG_CLOSE_CODE = 1009;
 
@@ -152,15 +155,37 @@ function capRetryDelayMs(delayMs: number, options?: StreamOptions): number {
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
 	return new Promise((resolve, reject) => {
 		if (signal?.aborted) {
-			reject(new Error("请求已被中止"));
+			reject(new Error("Request was aborted"));
 			return;
 		}
 		const timeout = setTimeout(resolve, ms);
 		signal?.addEventListener("abort", () => {
 			clearTimeout(timeout);
-			reject(new Error("请求已被中止"));
+			reject(new Error("Request was aborted"));
 		});
 	});
+}
+
+function normalizeTimeoutMs(value: number | undefined): number | undefined {
+	if (value === undefined) return undefined;
+	if (!Number.isFinite(value) || value < 0) {
+		throw new Error(`Invalid timeoutMs: ${String(value)}`);
+	}
+	return Math.floor(value);
+}
+
+function createSSEHeaderTimeout(): { signal: AbortSignal; clear: () => void; error: () => Error | undefined } {
+	const controller = new AbortController();
+	let error: Error | undefined;
+	const timeout = setTimeout(() => {
+		error = new Error(`Codex SSE response headers timed out after ${DEFAULT_SSE_HEADER_TIMEOUT_MS}ms`);
+		controller.abort(error);
+	}, DEFAULT_SSE_HEADER_TIMEOUT_MS);
+	return {
+		signal: controller.signal,
+		clear: () => clearTimeout(timeout),
+		error: () => error,
+	};
 }
 
 // ============================================================================
@@ -196,7 +221,7 @@ export const streamOpenAICodexResponses: StreamFunction<"openai-codex-responses"
 		try {
 			const apiKey = options?.apiKey || getEnvApiKey(model.provider) || "";
 			if (!apiKey) {
-				throw new Error(`未找到提供者 ${model.provider} 的 API 密钥`);
+				throw new Error(`No API key for provider: ${model.provider}`);
 			}
 
 			const accountId = extractAccountId(apiKey);
@@ -215,6 +240,8 @@ export const streamOpenAICodexResponses: StreamFunction<"openai-codex-responses"
 				websocketRequestId,
 			);
 			const bodyJson = JSON.stringify(body);
+			const idleTimeoutMs = normalizeTimeoutMs(options?.timeoutMs);
+			const websocketConnectTimeoutMs = normalizeTimeoutMs(options?.websocketConnectTimeoutMs);
 			const transport = options?.transport || "auto";
 			const websocketDisabledForSession = transport !== "sse" && isWebSocketSseFallbackActive(options?.sessionId);
 			if (websocketDisabledForSession) {
@@ -234,11 +261,13 @@ export const streamOpenAICodexResponses: StreamFunction<"openai-codex-responses"
 						() => {
 							websocketStarted = true;
 						},
+						idleTimeoutMs,
+						websocketConnectTimeoutMs,
 						options,
 					);
 
 					if (options?.signal?.aborted) {
-						throw new Error("请求已被中止");
+						throw new Error("Request was aborted");
 					}
 					stream.push({
 						type: "done",
@@ -270,23 +299,33 @@ export const streamOpenAICodexResponses: StreamFunction<"openai-codex-responses"
 				}
 			}
 
-			// 使用重试逻辑处理限速和临时错误
+			// Fetch with retry logic for rate limits and transient errors
 			let response: Response | undefined;
 			let lastError: Error | undefined;
 			const maxRetries = options?.maxRetries ?? DEFAULT_MAX_RETRIES;
 
 			for (let attempt = 0; attempt <= maxRetries; attempt++) {
 				if (options?.signal?.aborted) {
-					throw new Error("请求已被中止");
+					throw new Error("Request was aborted");
 				}
 
 				try {
-					response = await fetch(resolveCodexUrl(model.baseUrl), {
-						method: "POST",
-						headers: sseHeaders,
-						body: bodyJson,
-						signal: options?.signal,
-					});
+					const headerTimeout = createSSEHeaderTimeout();
+					const combinedSignal = combineAbortSignals([options?.signal, headerTimeout.signal]);
+					try {
+						response = await fetch(resolveCodexUrl(model.baseUrl), {
+							method: "POST",
+							headers: sseHeaders,
+							body: bodyJson,
+							signal: combinedSignal.signal,
+						});
+					} catch (error) {
+						const timeoutError = headerTimeout.error();
+						throw timeoutError && !options?.signal?.aborted ? timeoutError : error;
+					} finally {
+						combinedSignal.cleanup();
+						headerTimeout.clear();
+					}
 					await options?.onResponse?.(
 						{ status: response.status, headers: headersToRecord(response.headers) },
 						model,
@@ -310,7 +349,7 @@ export const streamOpenAICodexResponses: StreamFunction<"openai-codex-responses"
 						continue;
 					}
 
-					// 在最后一次尝试或不可重试的错误时解析错误以获取友好消息
+					// Parse error for friendly message on final attempt or non-retryable error
 					const fakeResponse = new Response(errorText, {
 						status: response.status,
 						statusText: response.statusText,
@@ -319,13 +358,13 @@ export const streamOpenAICodexResponses: StreamFunction<"openai-codex-responses"
 					throw new Error(info.friendlyMessage || info.message);
 				} catch (error) {
 					if (error instanceof Error) {
-						if (error.name === "AbortError" || error.message === "请求已被中止") {
-							throw new Error("请求已被中止");
+						if (error.name === "AbortError" || error.message === "Request was aborted") {
+							throw new Error("Request was aborted");
 						}
 					}
 					lastError = error instanceof Error ? error : new Error(String(error));
-					// 网络错误可重试
-					if (attempt < maxRetries && !lastError.message.includes("用量限制")) {
+					// Network errors are retryable
+					if (attempt < maxRetries && !lastError.message.includes("usage limit")) {
 						const delayMs = BASE_DELAY_MS * 2 ** attempt;
 						await sleep(delayMs, options?.signal);
 						continue;
@@ -335,25 +374,25 @@ export const streamOpenAICodexResponses: StreamFunction<"openai-codex-responses"
 			}
 
 			if (!response?.ok) {
-				throw lastError ?? new Error("重试后仍失败");
+				throw lastError ?? new Error("Failed after retries");
 			}
 
 			if (!response.body) {
-				throw new Error("无响应体");
+				throw new Error("No response body");
 			}
 
 			stream.push({ type: "start", partial: output });
 			await processStream(response, output, stream, model, options);
 
 			if (options?.signal?.aborted) {
-				throw new Error("请求已被中止");
+				throw new Error("Request was aborted");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason as "stop" | "length" | "toolUse", message: output });
 			stream.end();
 		} catch (error) {
 			for (const block of output.content) {
-				// partialJson 只是流式处理的临时缓冲区；不要持久化它。
+				// partialJson is only a streaming scratch buffer; never persist it.
 				delete (block as { partialJson?: string }).partialJson;
 			}
 			output.stopReason = options?.signal?.aborted ? "aborted" : "error";
@@ -373,7 +412,7 @@ export const streamSimpleOpenAICodexResponses: StreamFunction<"openai-codex-resp
 ): AssistantMessageEventStream => {
 	const apiKey = options?.apiKey || getEnvApiKey(model.provider);
 	if (!apiKey) {
-		throw new Error(`未找到提供者 ${model.provider} 的 API 密钥`);
+		throw new Error(`No API key for provider: ${model.provider}`);
 	}
 
 	const base = buildBaseOptions(model, options, apiKey);
@@ -403,7 +442,7 @@ function buildRequestBody(
 		model: model.id,
 		store: false,
 		stream: true,
-		instructions: context.systemPrompt || "你是一名有用的助手。",
+		instructions: context.systemPrompt || "You are a helpful assistant.",
 		input: messages,
 		text: { verbosity: options?.textVerbosity || "low" },
 		include: ["reasoning.encrypted_content"],
@@ -548,7 +587,7 @@ async function* mapCodexEvents(events: AsyncIterable<Record<string, unknown>>): 
 		if (type === "error") {
 			const code = (event as { code?: string }).code || "";
 			const message = (event as { message?: string }).message || "";
-			throw new CodexApiError(`Codex 错误：${message || code || JSON.stringify(event)}`, {
+			throw new CodexApiError(`Codex error: ${message || code || JSON.stringify(event)}`, {
 				code: code || undefined,
 				payload: event,
 			});
@@ -558,7 +597,7 @@ async function* mapCodexEvents(events: AsyncIterable<Record<string, unknown>>): 
 			const response = (event as { response?: { error?: { code?: string; message?: string } } }).response;
 			const code = response?.error?.code;
 			const message = response?.error?.message;
-			throw new CodexApiError(message || "Codex 响应失败", { code, payload: event });
+			throw new CodexApiError(message || "Codex response failed", { code, payload: event });
 		}
 
 		if (type === "response.done" || type === "response.completed" || type === "response.incomplete") {
@@ -611,7 +650,7 @@ async function* parseSSE(response: Response): AsyncGenerator<Record<string, unkn
 						try {
 							yield JSON.parse(data) as Record<string, unknown>;
 						} catch (cause) {
-							throw new CodexProtocolError(`无效的 Codex SSE JSON：${formatThrownValue(cause)}`, {
+							throw new CodexProtocolError(`Invalid Codex SSE JSON: ${formatThrownValue(cause)}`, {
 								cause,
 								payload: data,
 							});
@@ -766,8 +805,8 @@ let _cachedWebsocket: WebSocketConstructor | null = null;
 async function getWebSocketConstructor(): Promise<WebSocketConstructor | null> {
 	if (_cachedWebsocket) return _cachedWebsocket;
 
-	// bun 不尊重 http 代理环境变量，参见 https://github.com/oven-sh/bun/issues/15489
-	// TODO: 当 bun 支持 WebSocket 代理环境变量时移除此项。
+	// bun doesn't respect http proxy envs, ref: https://github.com/oven-sh/bun/issues/15489
+	// TODO: remove this when bun supports proxy envs in websocket.
 	if (
 		process?.versions?.bun &&
 		(process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.http_proxy || process.env.https_proxy)
@@ -817,7 +856,7 @@ function getWebSocketReadyState(socket: WebSocketLike): number | undefined {
 
 function isWebSocketReusable(socket: WebSocketLike): boolean {
 	const readyState = getWebSocketReadyState(socket);
-	// 如果 readyState 不可用，假设运行时保持连接打开/可重用。
+	// If readyState is unavailable, assume the runtime keeps it open/reusable.
 	return readyState === undefined || readyState === 1;
 }
 
@@ -838,10 +877,15 @@ function scheduleSessionWebSocketExpiry(sessionId: string, entry: CachedWebSocke
 	}, SESSION_WEBSOCKET_CACHE_TTL_MS);
 }
 
-async function connectWebSocket(url: string, headers: Headers, signal?: AbortSignal): Promise<WebSocketLike> {
+async function connectWebSocket(
+	url: string,
+	headers: Headers,
+	signal?: AbortSignal,
+	connectTimeoutMs = DEFAULT_WEBSOCKET_CONNECT_TIMEOUT_MS,
+): Promise<WebSocketLike> {
 	const WebSocketCtor = await getWebSocketConstructor();
 	if (!WebSocketCtor) {
-		throw new Error("此运行时中 WebSocket 传输不可用");
+		throw new Error("WebSocket transport is not available in this runtime");
 	}
 
 	const wsHeaders = headersToRecord(headers);
@@ -849,6 +893,7 @@ async function connectWebSocket(url: string, headers: Headers, signal?: AbortSig
 
 	return new Promise<WebSocketLike>((resolve, reject) => {
 		let settled = false;
+		let timeout: ReturnType<typeof setTimeout> | undefined;
 		let socket: WebSocketLike;
 
 		try {
@@ -858,6 +903,25 @@ async function connectWebSocket(url: string, headers: Headers, signal?: AbortSig
 			return;
 		}
 
+		const cleanup = () => {
+			if (timeout) {
+				clearTimeout(timeout);
+				timeout = undefined;
+			}
+			socket.removeEventListener("open", onOpen);
+			socket.removeEventListener("error", onError);
+			socket.removeEventListener("close", onClose);
+			signal?.removeEventListener("abort", onAbort);
+		};
+		const fail = (error: Error, closeReason?: string) => {
+			if (settled) return;
+			settled = true;
+			cleanup();
+			if (closeReason) {
+				closeWebSocketSilently(socket, 1000, closeReason);
+			}
+			reject(error);
+		};
 		const onOpen: WebSocketListener = () => {
 			if (settled) return;
 			settled = true;
@@ -865,38 +929,28 @@ async function connectWebSocket(url: string, headers: Headers, signal?: AbortSig
 			resolve(socket);
 		};
 		const onError: WebSocketListener = (event) => {
-			const error = extractWebSocketError(event);
-			if (settled) return;
-			settled = true;
-			cleanup();
-			reject(error);
+			fail(extractWebSocketError(event));
 		};
 		const onClose: WebSocketListener = (event) => {
-			const error = extractWebSocketCloseError(event);
-			if (settled) return;
-			settled = true;
-			cleanup();
-			reject(error);
+			fail(extractWebSocketCloseError(event));
 		};
 		const onAbort = () => {
-			if (settled) return;
-			settled = true;
-			cleanup();
-			socket.close(1000, "aborted");
-			reject(new Error("请求已被中止"));
-		};
-
-		const cleanup = () => {
-			socket.removeEventListener("open", onOpen);
-			socket.removeEventListener("error", onError);
-			socket.removeEventListener("close", onClose);
-			signal?.removeEventListener("abort", onAbort);
+			fail(new Error("Request was aborted"), "aborted");
 		};
 
 		socket.addEventListener("open", onOpen);
 		socket.addEventListener("error", onError);
 		socket.addEventListener("close", onClose);
 		signal?.addEventListener("abort", onAbort);
+
+		if (connectTimeoutMs > 0) {
+			timeout = setTimeout(() => {
+				fail(new Error(`WebSocket connect timeout after ${connectTimeoutMs}ms`), "connect_timeout");
+			}, connectTimeoutMs);
+		}
+		if (signal?.aborted) {
+			onAbort();
+		}
 	});
 }
 
@@ -905,6 +959,7 @@ async function acquireWebSocket(
 	headers: Headers,
 	sessionId: string | undefined,
 	signal?: AbortSignal,
+	connectTimeoutMs?: number,
 ): Promise<{
 	socket: WebSocketLike;
 	entry?: CachedWebSocketConnection;
@@ -912,17 +967,11 @@ async function acquireWebSocket(
 	release: (options?: { keep?: boolean }) => void;
 }> {
 	if (!sessionId) {
-		const socket = await connectWebSocket(url, headers, signal);
+		const socket = await connectWebSocket(url, headers, signal, connectTimeoutMs);
 		return {
 			socket,
 			reused: false,
-			release: ({ keep } = {}) => {
-				if (keep === false) {
-					closeWebSocketSilently(socket);
-					return;
-				}
-				closeWebSocketSilently(socket);
-			},
+			release: () => closeWebSocketSilently(socket),
 		};
 	}
 
@@ -950,7 +999,7 @@ async function acquireWebSocket(
 			};
 		}
 		if (cached.busy) {
-			const socket = await connectWebSocket(url, headers, signal);
+			const socket = await connectWebSocket(url, headers, signal, connectTimeoutMs);
 			return {
 				socket,
 				reused: false,
@@ -965,7 +1014,7 @@ async function acquireWebSocket(
 		}
 	}
 
-	const socket = await connectWebSocket(url, headers, signal);
+	const socket = await connectWebSocket(url, headers, signal, connectTimeoutMs);
 	const entry: CachedWebSocketConnection = { socket, busy: true };
 	websocketSessionCache.set(sessionId, entry);
 	return {
@@ -1005,7 +1054,7 @@ function extractWebSocketError(event: unknown): Error {
 			}
 		}
 	}
-	return new Error("WebSocket 错误");
+	return new Error("WebSocket error");
 }
 
 function extractWebSocketCloseError(event: unknown): Error {
@@ -1016,15 +1065,15 @@ function extractWebSocketCloseError(event: unknown): Error {
 		const codeText = typeof code === "number" ? ` ${code}` : "";
 		let reasonText = typeof reason === "string" && reason.length > 0 ? ` ${reason}` : "";
 		if (!reasonText && code === WEBSOCKET_MESSAGE_TOO_BIG_CLOSE_CODE) {
-			reasonText = " 消息过大";
+			reasonText = " message too big";
 		}
-		return new WebSocketCloseError(`WebSocket 已关闭${codeText}${reasonText}`.trim(), {
+		return new WebSocketCloseError(`WebSocket closed${codeText}${reasonText}`.trim(), {
 			code: typeof code === "number" ? code : undefined,
 			reason: typeof reason === "string" && reason.length > 0 ? reason : undefined,
 			wasClean: typeof wasClean === "boolean" ? wasClean : undefined,
 		});
 	}
-	return new Error("WebSocket 已关闭");
+	return new Error("WebSocket closed");
 }
 
 async function decodeWebSocketData(data: unknown): Promise<string | null> {
@@ -1044,7 +1093,11 @@ async function decodeWebSocketData(data: unknown): Promise<string | null> {
 	return null;
 }
 
-async function* parseWebSocket(socket: WebSocketLike, signal?: AbortSignal): AsyncGenerator<Record<string, unknown>> {
+async function* parseWebSocket(
+	socket: WebSocketLike,
+	signal?: AbortSignal,
+	idleTimeoutMs?: number,
+): AsyncGenerator<Record<string, unknown>> {
 	const queue: Record<string, unknown>[] = [];
 	let pending: (() => void) | null = null;
 	let done = false;
@@ -1074,7 +1127,7 @@ async function* parseWebSocket(socket: WebSocketLike, signal?: AbortSignal): Asy
 				queue.push(parsed);
 				wake();
 			} catch (cause) {
-				failed = new CodexProtocolError(`无效的 Codex WebSocket JSON：${formatThrownValue(cause)}`, {
+				failed = new CodexProtocolError(`Invalid Codex WebSocket JSON: ${formatThrownValue(cause)}`, {
 					cause,
 					payload: text,
 				});
@@ -1104,7 +1157,7 @@ async function* parseWebSocket(socket: WebSocketLike, signal?: AbortSignal): Asy
 	};
 
 	const onAbort = () => {
-		failed = new Error("请求已被中止");
+		failed = new Error("Request was aborted");
 		done = true;
 		wake();
 	};
@@ -1117,15 +1170,30 @@ async function* parseWebSocket(socket: WebSocketLike, signal?: AbortSignal): Asy
 	try {
 		while (true) {
 			if (signal?.aborted) {
-				throw new Error("请求已被中止");
+				throw new Error("Request was aborted");
 			}
 			if (queue.length > 0) {
 				yield queue.shift()!;
 				continue;
 			}
 			if (done) break;
-			await new Promise<void>((resolve) => {
+			let timeout: ReturnType<typeof setTimeout> | undefined;
+			await new Promise<void>((resolve, reject) => {
 				pending = resolve;
+				if (idleTimeoutMs !== undefined && idleTimeoutMs > 0) {
+					timeout = setTimeout(() => {
+						const error = new Error(`WebSocket idle timeout after ${idleTimeoutMs}ms`);
+						failed = error;
+						done = true;
+						pending = null;
+						closeWebSocketSilently(socket, 1000, "idle_timeout");
+						reject(error);
+					}, idleTimeoutMs);
+				}
+			}).finally(() => {
+				if (timeout) {
+					clearTimeout(timeout);
+				}
 			});
 		}
 
@@ -1133,7 +1201,7 @@ async function* parseWebSocket(socket: WebSocketLike, signal?: AbortSignal): Asy
 			throw failed;
 		}
 		if (!sawCompletion) {
-			throw new Error("WebSocket 流在 response.completed 之前关闭");
+			throw new Error("WebSocket stream closed before response.completed");
 		}
 	} finally {
 		socket.removeEventListener("message", onMessage);
@@ -1222,9 +1290,17 @@ async function processWebSocketStream(
 	stream: AssistantMessageEventStream,
 	model: Model<"openai-codex-responses">,
 	onStart: () => void,
+	idleTimeoutMs: number | undefined,
+	websocketConnectTimeoutMs: number | undefined,
 	options?: OpenAICodexResponsesOptions,
 ): Promise<void> {
-	const { socket, entry, reused, release } = await acquireWebSocket(url, headers, options?.sessionId, options?.signal);
+	const { socket, entry, reused, release } = await acquireWebSocket(
+		url,
+		headers,
+		options?.sessionId,
+		options?.signal,
+		websocketConnectTimeoutMs,
+	);
 	let keepConnection = true;
 	const useCachedContext = options?.transport === "websocket-cached" || options?.transport === "auto";
 	// ChatGPT Codex Responses rejects `store: true` ("Store must be set to false").
@@ -1253,7 +1329,7 @@ async function processWebSocketStream(
 		socket.send(JSON.stringify({ type: "response.create", ...requestBody }));
 		await processResponsesStream(
 			startWebSocketOutputOnFirstEvent(
-				mapCodexEvents(parseWebSocket(socket, options?.signal)),
+				mapCodexEvents(parseWebSocket(socket, options?.signal, idleTimeoutMs)),
 				output,
 				stream,
 				onStart,
@@ -1296,7 +1372,7 @@ async function processWebSocketStream(
 
 async function parseErrorResponse(response: Response): Promise<{ message: string; friendlyMessage?: string }> {
 	const raw = await response.text();
-	let message = raw || response.statusText || "请求失败";
+	let message = raw || response.statusText || "Request failed";
 	let friendlyMessage: string | undefined;
 
 	try {
@@ -1307,12 +1383,12 @@ async function parseErrorResponse(response: Response): Promise<{ message: string
 		if (err) {
 			const code = err.code || err.type || "";
 			if (/usage_limit_reached|usage_not_included|rate_limit_exceeded/i.test(code) || response.status === 429) {
-				const plan = err.plan_type ? `（${err.plan_type.toLowerCase()} 套餐）` : "";
+				const plan = err.plan_type ? ` (${err.plan_type.toLowerCase()} plan)` : "";
 				const mins = err.resets_at
 					? Math.max(0, Math.round((err.resets_at * 1000 - Date.now()) / 60000))
 					: undefined;
-				const when = mins !== undefined ? ` 请在约 ${mins} 分钟后重试。` : "";
-				friendlyMessage = `您已达到 ChatGPT 用量限制${plan}。${when}`.trim();
+				const when = mins !== undefined ? ` Try again in ~${mins} min.` : "";
+				friendlyMessage = `You have hit your ChatGPT usage limit${plan}.${when}`.trim();
 			}
 			message = err.message || friendlyMessage || message;
 		}
@@ -1328,13 +1404,13 @@ async function parseErrorResponse(response: Response): Promise<{ message: string
 function extractAccountId(token: string): string {
 	try {
 		const parts = token.split(".");
-		if (parts.length !== 3) throw new Error("无效的令牌");
+		if (parts.length !== 3) throw new Error("Invalid token");
 		const payload = JSON.parse(atob(parts[1]));
 		const accountId = payload?.[JWT_CLAIM_PATH]?.chatgpt_account_id;
-		if (!accountId) throw new Error("令牌中未找到账户 ID");
+		if (!accountId) throw new Error("No account ID in token");
 		return accountId;
 	} catch {
-		throw new Error("无法从令牌提取 accountId");
+		throw new Error("Failed to extract accountId from token");
 	}
 }
 

@@ -13,14 +13,14 @@ export interface CompactionSettings {
 }
 
 export interface BranchSummarySettings {
-	reserveTokens?: number; // default: 16384 (为提示和LLM响应保留的令牌数)
-	skipPrompt?: boolean; // default: false - 当为true时，跳过"总结分支?"提示并默认不总结
+	reserveTokens?: number; // default: 16384 (tokens reserved for prompt + LLM response)
+	skipPrompt?: boolean; // default: false - when true, skips "Summarize branch?" prompt and defaults to no summary
 }
 
 export interface ProviderRetrySettings {
-	timeoutMs?: number; // SDK/提供者请求超时（毫秒）
-	maxRetries?: number; // SDK/提供者重试次数
-	maxRetryDelayMs?: number; // default: 60000 (失败前服务器请求的最大延迟)
+	timeoutMs?: number; // SDK/provider request timeout in milliseconds
+	maxRetries?: number; // SDK/provider retry attempts
+	maxRetryDelayMs?: number; // default: 60000 (max server-requested delay before failing)
 }
 
 export interface RetrySettings {
@@ -31,15 +31,15 @@ export interface RetrySettings {
 }
 
 export interface TerminalSettings {
-	showImages?: boolean; // default: true (仅当终端支持图像时相关)
-	imageWidthCells?: number; // default: 60 (终端单元格中首选的内联图像宽度)
-	clearOnShrink?: boolean; // default: false (内容缩小时清除空行)
-	showTerminalProgress?: boolean; // default: false (OSC 9;4 终端进度指示器)
+	showImages?: boolean; // default: true (only relevant if terminal supports images)
+	imageWidthCells?: number; // default: 60 (preferred inline image width in terminal cells)
+	clearOnShrink?: boolean; // default: false (clear empty rows when content shrinks)
+	showTerminalProgress?: boolean; // default: false (OSC 9;4 terminal progress indicators)
 }
 
 export interface ImageSettings {
-	autoResize?: boolean; // default: true (将图像调整为最大2000x2000以获得更好的模型兼容性)
-	blockImages?: boolean; // default: false - 当为true时，阻止所有图像发送到LLM提供者
+	autoResize?: boolean; // default: true (resize images to 2000x2000 max for better model compatibility)
+	blockImages?: boolean; // default: false - when true, prevents all images from being sent to LLM providers
 }
 
 export interface ThinkingBudgetsSettings {
@@ -60,9 +60,9 @@ export interface WarningSettings {
 export type TransportSetting = Transport;
 
 /**
- * npm/git 包的源。
- * - 字符串形式：从包中加载所有资源
- * - 对象形式：过滤要加载的资源
+ * Package source for npm/git packages.
+ * - String form: load all resources from the package
+ * - Object form: filter which resources to load
  */
 export type PackageSource =
 	| string
@@ -87,34 +87,35 @@ export interface Settings {
 	branchSummary?: BranchSummarySettings;
 	retry?: RetrySettings;
 	hideThinkingBlock?: boolean;
-	shellPath?: string; // 自定义 shell 路径（例如，Windows 上的 Cygwin 用户）
+	shellPath?: string; // Custom shell path (e.g., for Cygwin users on Windows)
 	quietStartup?: boolean;
-	shellCommandPrefix?: string; // 在每个 bash 命令前添加的前缀（例如，"shopt -s expand_aliases" 以支持别名）
-	npmCommand?: string[]; // 用于 npm 包查找/安装操作的命令，argv 样式（例如，["mise", "exec", "node@20", "--", "npm"]）
-	collapseChangelog?: boolean; // 更新后显示精简的变更日志（使用 /changelog 查看完整）
-	enableInstallTelemetry?: boolean; // 默认: true - 在检测到更新后发送匿名版本/更新 ping
-	packages?: PackageSource[]; // npm/git 包源数组（字符串或带过滤的对象）
-	extensions?: string[]; // 本地扩展文件路径或目录数组
-	skills?: string[]; // 本地技能文件路径或目录数组
-	prompts?: string[]; // 本地提示模板路径或目录数组
-	themes?: string[]; // 本地主题文件路径或目录数组
-	enableSkillCommands?: boolean; // 默认: true - 将技能注册为 /skill:name 命令
+	shellCommandPrefix?: string; // Prefix prepended to every bash command (e.g., "shopt -s expand_aliases" for alias support)
+	npmCommand?: string[]; // Command used for npm package lookup/install operations, argv-style (e.g., ["mise", "exec", "node@20", "--", "npm"])
+	collapseChangelog?: boolean; // Show condensed changelog after update (use /changelog for full)
+	enableInstallTelemetry?: boolean; // default: true - anonymous version/update ping after changelog-detected updates
+	packages?: PackageSource[]; // Array of npm/git package sources (string or object with filtering)
+	extensions?: string[]; // Array of local extension file paths or directories
+	skills?: string[]; // Array of local skill file paths or directories
+	prompts?: string[]; // Array of local prompt template paths or directories
+	themes?: string[]; // Array of local theme file paths or directories
+	enableSkillCommands?: boolean; // default: true - register skills as /skill:name commands
 	terminal?: TerminalSettings;
 	images?: ImageSettings;
-	enabledModels?: string[]; // 用于循环的模型模式（与 --models CLI 标志格式相同）
-	doubleEscapeAction?: "fork" | "tree" | "none"; // 空编辑器双击退出操作（默认：'tree'）
-	treeFilterMode?: "default" | "no-tools" | "user-only" | "labeled-only" | "all"; // 打开 /tree 时的默认筛选器
-	thinkingBudgets?: ThinkingBudgetsSettings; // 思考级别的自定义 token 预算
-	editorPaddingX?: number; // 输入编辑器的水平内边距（默认：0）
-	autocompleteMaxVisible?: number; // 自动完成下拉菜单中可见的最大项数（默认：5）
-	showHardwareCursor?: boolean; // 在仍为 IME 定位时显示终端光标
+	enabledModels?: string[]; // Model patterns for cycling (same format as --models CLI flag)
+	doubleEscapeAction?: "fork" | "tree" | "none"; // Action for double-escape with empty editor (default: "tree")
+	treeFilterMode?: "default" | "no-tools" | "user-only" | "labeled-only" | "all"; // Default filter when opening /tree
+	thinkingBudgets?: ThinkingBudgetsSettings; // Custom token budgets for thinking levels
+	editorPaddingX?: number; // Horizontal padding for input editor (default: 0)
+	autocompleteMaxVisible?: number; // Max visible items in autocomplete dropdown (default: 5)
+	showHardwareCursor?: boolean; // Show terminal cursor while still positioning it for IME
 	markdown?: MarkdownSettings;
 	warnings?: WarningSettings;
-	sessionDir?: string; // 自定义会话存储目录（与 --session-dir CLI 标志格式相同）
-	httpIdleTimeoutMs?: number; // HTTP 头部/正文空闲超时（毫秒）；0 禁用
+	sessionDir?: string; // Custom session storage directory (same format as --session-dir CLI flag)
+	httpIdleTimeoutMs?: number; // HTTP header/body idle timeout in milliseconds; 0 disables it
+	websocketConnectTimeoutMs?: number; // WebSocket connect/open handshake timeout in milliseconds; 0 disables it
 }
 
-/** 深度合并设置：项目/覆盖优先，嵌套对象递归合并 */
+/** Deep merge settings: project/overrides take precedence, nested objects merge recursively */
 function deepMergeSettings(base: Settings, overrides: Settings): Settings {
 	const result: Settings = { ...base };
 
@@ -143,6 +144,17 @@ function deepMergeSettings(base: Settings, overrides: Settings): Settings {
 	}
 
 	return result;
+}
+
+function parseTimeoutSetting(value: unknown, settingName: string): number | undefined {
+	const timeoutMs = parseHttpIdleTimeoutMs(value);
+	if (timeoutMs !== undefined) {
+		return timeoutMs;
+	}
+	if (value !== undefined) {
+		throw new Error(`Invalid ${settingName} setting: ${String(value)}`);
+	}
+	return undefined;
 }
 
 export type SettingsScope = "global" | "project";
@@ -191,7 +203,7 @@ export class FileSettingsStorage implements SettingsStorage {
 			}
 		}
 
-		throw (lastError as Error) ?? new Error("无法获取设置锁");
+		throw (lastError as Error) ?? new Error("Failed to acquire settings lock");
 	}
 
 	withLock(scope: SettingsScope, fn: (current: string | undefined) => string | undefined): void {
@@ -722,20 +734,12 @@ export class SettingsManager {
 	}
 
 	getHttpIdleTimeoutMs(): number {
-		const value = this.settings.httpIdleTimeoutMs;
-		const timeoutMs = parseHttpIdleTimeoutMs(value);
-		if (timeoutMs !== undefined) {
-			return timeoutMs;
-		}
-		if (value !== undefined) {
-			throw new Error(`无效的 httpIdleTimeoutMs 设置: ${String(value)}`);
-		}
-		return DEFAULT_HTTP_IDLE_TIMEOUT_MS;
+		return parseTimeoutSetting(this.settings.httpIdleTimeoutMs, "httpIdleTimeoutMs") ?? DEFAULT_HTTP_IDLE_TIMEOUT_MS;
 	}
 
 	setHttpIdleTimeoutMs(timeoutMs: number): void {
 		if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
-			throw new Error(`无效的 httpIdleTimeoutMs 设置: ${String(timeoutMs)}`);
+			throw new Error(`Invalid httpIdleTimeoutMs setting: ${String(timeoutMs)}`);
 		}
 		this.globalSettings.httpIdleTimeoutMs = Math.floor(timeoutMs);
 		this.markModified("httpIdleTimeoutMs");
@@ -748,6 +752,10 @@ export class SettingsManager {
 			maxRetries: this.settings.retry?.provider?.maxRetries,
 			maxRetryDelayMs: this.settings.retry?.provider?.maxRetryDelayMs ?? 60000,
 		};
+	}
+
+	getWebSocketConnectTimeoutMs(): number | undefined {
+		return parseTimeoutSetting(this.settings.websocketConnectTimeoutMs, "websocketConnectTimeoutMs");
 	}
 
 	getHideThinkingBlock(): boolean {
