@@ -54,29 +54,32 @@ export interface BedrockOptions extends StreamOptions {
 	region?: string;
 	profile?: string;
 	toolChoice?: "auto" | "any" | "none" | { type: "tool"; name: string };
-	/* 参见 https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html 获取支持的模型列表。 */
+	/* See https://docs.aws.amazon.com/bedrock/latest/userguide/inference-reasoning.html for supported models. */
 	reasoning?: ThinkingLevel;
-	/* 每个思考等级的定制 token 预算。覆盖默认预算。 */
+	/* Custom token budgets per thinking level. Overrides default budgets. */
 	thinkingBudgets?: ThinkingBudgets;
-	/* 仅 Claude 4.x 模型支持，参见 https://docs.aws.amazon.com/bedrock/latest/userguide/claude-messages-extended-thinking.html#claude-messages-extended-thinking-tool-use-interleaved */
+	/* Only supported by Claude 4.x models, see https://docs.aws.amazon.com/bedrock/latest/userguide/claude-messages-extended-thinking.html#claude-messages-extended-thinking-tool-use-interleaved */
 	interleavedThinking?: boolean;
 	/**
-	 * 控制响应中如何返回 Claude 的思考内容。
-	 * - "summarized": 思考块包含汇总后的思考文本（此处为默认值）。
-	 * - "omitted": 思考内容被省略，但签名仍会返回以实现多轮连续性，从而减少到第一个文本 token 的时间。
+	 * Controls how Claude's thinking content is returned in responses.
+	 * - "summarized": Thinking blocks contain summarized thinking text (default here).
+	 * - "omitted": Thinking content is redacted but the signature still travels back
+	 *   for multi-turn continuity, reducing time-to-first-text-token.
 	 *
-	 * 注意：Anthropic 的 API 对于 Claude Opus 4.7 和 Mythos Preview 默认为 "omitted"。此处我们默认为 "summarized" 以保持与旧版 Claude 4 模型的行为一致。仅适用于 Bedrock 上的 Claude 模型。
+	 * Note: Anthropic's API default for Claude Opus 4.8 and Mythos Preview is
+	 * "omitted". We default to "summarized" here to keep behavior consistent with
+	 * older Claude 4 models. Only applies to Claude models on Bedrock.
 	 */
 	thinkingDisplay?: BedrockThinkingDisplay;
-	/** 附加到推理请求的键值对，用于成本分配标记。
-	 * 键：最多 64 个字符，不能以 `aws:` 开头。值：最多 256 个字符。最多 50 对。
-	 * 标签会出现在 AWS Cost Explorer 的分摊成本分配数据中。
+	/** Key-value pairs attached to the inference request for cost allocation tagging.
+	 * Keys: max 64 chars, no `aws:` prefix. Values: max 256 chars. Max 50 pairs.
+	 * Tags appear in AWS Cost Explorer split cost allocation data.
 	 * @see https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ConverseStream.html */
 	requestMetadata?: Record<string, string>;
-	/** Bedrock API 密钥认证的 Bearer token。
-	 * 设置后，跳过 SigV4 签名，改为发送 Authorization: Bearer <token>。
-	 * 需要在 token 的身份上拥有 `bedrock:CallWithBearerToken` IAM 权限。
-	 * 通过 AWS_BEARER_TOKEN_BEDROCK 环境变量设置或直接传入。
+	/** Bearer token for Bedrock API key authentication.
+	 * When set, bypasses SigV4 signing and sends Authorization: Bearer <token> instead.
+	 * Requires `bedrock:CallWithBearerToken` IAM permission on the token's identity.
+	 * Set via AWS_BEARER_TOKEN_BEDROCK env var or pass directly.
 	 * @see https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonbedrock.html */
 	bearerToken?: string;
 }
@@ -123,21 +126,22 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 			hasConfiguredProfile,
 		);
 
-		// 仅在未配置 region/profile 时固定标准 AWS Bedrock runtime 端点。
-		// 这样可以保留 #3402 中的自定义端点（VPC/代理），而不会强制内置目录默认值（如 us-east-1）覆盖 AWS_REGION/AWS_PROFILE。
+		// Only pin standard AWS Bedrock runtime endpoints when no region/profile is configured.
+		// This preserves custom endpoints (VPC/proxy) from #3402 without forcing built-in
+		// catalog defaults such as us-east-1 to override AWS_REGION/AWS_PROFILE.
 		if (useExplicitEndpoint) {
 			config.endpoint = model.baseUrl;
 		}
 
-		// 解析 Bedrock API 密钥认证的 bearer token。
+		// Resolve bearer token for Bedrock API key auth.
 		const bearerToken = options.bearerToken || process.env.AWS_BEARER_TOKEN_BEDROCK || undefined;
 		const useBearerToken = bearerToken !== undefined && process.env.AWS_BEDROCK_SKIP_AUTH !== "1";
 
-		// 仅在 Node.js/Bun 环境中
+		// in Node.js/Bun environment only
 		if (typeof process !== "undefined" && (process.versions?.node || process.versions?.bun)) {
-			// Region 解析：显式选项 > 环境变量 > SDK 默认链。
-			// 当设置了 AWS_PROFILE 时，将 region 留空以便 SDK 从 aws 配置文件中解析。
-			// 否则回退到 us-east-1。
+			// Region resolution: explicit option > env vars > SDK default chain.
+			// When AWS_PROFILE is set, we leave region undefined so the SDK can
+			// resovle it from aws profile configs. Otherwise fall back to us-east-1.
 			if (configuredRegion) {
 				config.region = configuredRegion;
 			} else if (endpointRegion && useExplicitEndpoint) {
@@ -146,7 +150,7 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 				config.region = "us-east-1";
 			}
 
-			// 支持无需认证的代理
+			// Support proxies that don't need authentication
 			if (process.env.AWS_BEDROCK_SKIP_AUTH === "1") {
 				config.credentials = {
 					accessKeyId: "dummy-access-key",
@@ -156,15 +160,17 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 
 			const proxyAgents = createHttpProxyAgentsForTarget(model.baseUrl);
 			if (proxyAgents) {
-				// Bedrock runtime 从 v3.798.0 开始默认使用 NodeHttp2Handler，后者基于 `http2` 模块，不支持 http agent。
-				// 使用 NodeHttpHandler 来支持 HTTP(S) 代理 agent。
+				// Bedrock runtime uses NodeHttp2Handler by default since v3.798.0, which is based
+				// on `http2` module and has no support for http agent.
+				// Use NodeHttpHandler to support HTTP(S) proxy agents.
 				config.requestHandler = new NodeHttpHandler(proxyAgents);
 			} else if (process.env.AWS_BEDROCK_FORCE_HTTP1 === "1") {
-				// 某些自定义端点需要 HTTP/1.1 而非 HTTP/2
+				// Some custom endpoints require HTTP/1.1 instead of HTTP/2
 				config.requestHandler = new NodeHttpHandler();
 			}
 		} else {
-			// 非 Node 环境（浏览器）：回退到 us-east-1，因为没有可用的配置文件解析。
+			// Non-Node environment (browser): fall back to us-east-1 since
+			// there's no config file resolution available.
 			config.region =
 				configuredRegion || (endpointRegion && useExplicitEndpoint ? endpointRegion : undefined) || "us-east-1";
 		}
@@ -208,7 +214,7 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 			for await (const item of response.stream!) {
 				if (item.messageStart) {
 					if (item.messageStart.role !== ConversationRole.ASSISTANT) {
-						throw new Error("意料之外的助手消息开始，但收到了用户消息开始");
+						throw new Error("Unexpected assistant message start but got user message start instead");
 					}
 					stream.push({ type: "start", partial: output });
 				} else if (item.contentBlockStart) {
@@ -235,11 +241,11 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 			}
 
 			if (options.signal?.aborted) {
-				throw new Error("请求已中止");
+				throw new Error("Request was aborted");
 			}
 
 			if (output.stopReason === "error" || output.stopReason === "aborted") {
-				throw new Error("发生未知错误");
+				throw new Error("An unknown error occurred");
 			}
 
 			stream.push({ type: "done", reason: output.stopReason, message: output });
@@ -247,7 +253,7 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 		} catch (error) {
 			for (const block of output.content) {
 				delete (block as Block).index;
-				// partialJson 只是流式处理的临时缓冲区，不会持久化。
+				// partialJson is only a streaming scratch buffer; never persist it.
 				delete (block as Block).partialJson;
 			}
 			output.stopReason = options.signal?.aborted ? "aborted" : "error";
@@ -261,22 +267,25 @@ export const streamBedrock: StreamFunction<"bedrock-converse-stream", BedrockOpt
 };
 
 /**
- * Bedrock SDK 异常名称的人类可读前缀。
- * 下游的 agent-session 重试逻辑会匹配 `server.?error` 和 `service.?unavailable` 这样的模式，
- * 因此我们保留传统的错误前缀格式，而不使用原始的 SDK 异常名称。
+ * Human-readable prefixes for Bedrock SDK exception names.
+ * The downstream retry logic in agent-session matches patterns like
+ * `server.?error` and `service.?unavailable`, so we preserve the legacy
+ * prefix format rather than using the raw SDK exception name.
  */
 const BEDROCK_ERROR_PREFIXES: Record<string, string> = {
-	InternalServerException: "内部服务器错误",
-	ModelStreamErrorException: "模型流错误",
-	ValidationException: "验证错误",
-	ThrottlingException: "限流错误",
-	ServiceUnavailableException: "服务不可用",
+	InternalServerException: "Internal server error",
+	ModelStreamErrorException: "Model stream error",
+	ValidationException: "Validation error",
+	ThrottlingException: "Throttling error",
+	ServiceUnavailableException: "Service unavailable",
 };
 
 /**
- * 使用人类可读前缀格式化 Bedrock 错误。
- * AWS SDK 异常（来自 `client.send()` 以及流事件项）都继承自 BedrockRuntimeServiceException。
- * 我们将 `.name` 映射到稳定的人类可读前缀，以便下游消费者（重试逻辑、上下文溢出检测）可以通过简单的字符串匹配来区分错误类别。
+ * Format a Bedrock error with a human-readable prefix.
+ * AWS SDK exceptions (both from `client.send()` and from stream event items)
+ * extend BedrockRuntimeServiceException. We map the `.name` to a stable
+ * human-readable prefix so downstream consumers (retry logic, context-overflow
+ * detection) can distinguish error categories via simple string matching.
  */
 function formatBedrockError(error: unknown): string {
 	const message = error instanceof Error ? error.message : JSON.stringify(error);
@@ -306,8 +315,8 @@ export const streamSimpleBedrock: StreamFunction<"bedrock-converse-stream", Simp
 			} satisfies BedrockOptions);
 		}
 
-		// Undefined 表示调用者没有请求输出上限；让辅助函数使用模型上限。
-		// 不要强制设为 0，否则思考预算将占用整个 maxTokens 值。
+		// Undefined means the caller did not request an output cap; let the helper use the model cap.
+		// Do not coerce to 0 here, or the thinking budget would become the entire maxTokens value.
 		const adjusted = adjustMaxTokensForThinking(
 			base.maxTokens,
 			model.maxTokens,
@@ -368,7 +377,7 @@ function handleContentBlockDelta(
 	let block = blocks[index];
 
 	if (delta?.text !== undefined) {
-		// 如果还不存在文本块，则创建一个，因为 `handleContentBlockStart` 不会为文本块发送
+		// If no text block exists yet, create one, as `handleContentBlockStart` is not sent for text blocks
 		if (!block) {
 			const newBlock: Block = { type: "text", text: "", index: contentBlockIndex };
 			output.content.push(newBlock);
@@ -449,7 +458,8 @@ function handleContentBlockStop(
 			break;
 		case "toolCall":
 			block.arguments = parseStreamingJson(block.partialJson);
-			// 就地完成并清除临时缓冲区，以便重放时只携带解析后的参数。
+			// Finalize in-place and strip the scratch buffer so replay only
+			// carries parsed arguments.
 			delete (block as Block).partialJson;
 			stream.push({ type: "toolcall_end", contentIndex: index, toolCall: block, partial: output });
 			break;
@@ -457,8 +467,9 @@ function handleContentBlockStop(
 }
 
 /**
- * 检查模型是否支持自适应思考（Opus 4.6+, Sonnet 4.6）。
- * 同时检查 model ID 和 model name，以支持其 ARN 不包含模型名称的应用程序推理配置文件。
+ * Check if the model supports adaptive thinking (Opus 4.6+, Sonnet 4.6).
+ * Checks both model ID and model name to support application inference profiles
+ * whose ARNs don't contain the model name.
  */
 function getModelMatchCandidates(modelId: string, modelName?: string): string[] {
 	const values = modelName ? [modelId, modelName] : [modelId];
@@ -470,12 +481,14 @@ function getModelMatchCandidates(modelId: string, modelName?: string): string[] 
 
 function supportsAdaptiveThinking(modelId: string, modelName?: string): boolean {
 	const candidates = getModelMatchCandidates(modelId, modelName);
-	return candidates.some((s) => s.includes("opus-4-6") || s.includes("opus-4-7") || s.includes("sonnet-4-6"));
+	return candidates.some(
+		(s) => s.includes("opus-4-6") || s.includes("opus-4-7") || s.includes("opus-4-8") || s.includes("sonnet-4-6"),
+	);
 }
 
 function supportsNativeXhighEffort(model: Model<"bedrock-converse-stream">): boolean {
 	const candidates = getModelMatchCandidates(model.id, model.name);
-	return candidates.some((s) => s.includes("opus-4-7"));
+	return candidates.some((s) => s.includes("opus-4-7") || s.includes("opus-4-8"));
 }
 
 function mapThinkingLevelToEffort(
@@ -501,8 +514,8 @@ function mapThinkingLevelToEffort(
 }
 
 /**
- * 解析缓存保留偏好。
- * 默认值为 "short"，并出于向后兼容性使用 PI_CACHE_RETENTION。
+ * Resolve cache retention preference.
+ * Defaults to "short" and uses PI_CACHE_RETENTION for backward compatibility.
  */
 function resolveCacheRetention(cacheRetention?: CacheRetention): CacheRetention {
 	if (cacheRetention) {
@@ -515,8 +528,9 @@ function resolveCacheRetention(cacheRetention?: CacheRetention): CacheRetention 
 }
 
 /**
- * 检查模型是否为 Bedrock 上的 Anthropic Claude 模型。
- * 同时检查 model ID 和 model name，以支持其 ARN 不包含模型名称的应用程序推理配置文件。
+ * Check if the model is an Anthropic Claude model on Bedrock.
+ * Checks both model ID and model name to support application inference profiles
+ * whose ARNs don't contain the model name.
  */
 function isAnthropicClaudeModel(model: Model<"bedrock-converse-stream">): boolean {
 	const id = model.id.toLowerCase();
@@ -531,26 +545,28 @@ function isAnthropicClaudeModel(model: Model<"bedrock-converse-stream">): boolea
 }
 
 /**
- * 检查模型是否支持提示缓存。
- * 支持：Claude 3.5 Haiku、Claude 3.7 Sonnet、Claude 4.x 模型
+ * Check if the model supports prompt caching.
+ * Supported: Claude 3.5 Haiku, Claude 3.7 Sonnet, Claude 4.x models
  *
- * 对于基础模型和系统定义的推理配置文件，模型 ID/ARN 包含模型名称，因此我们可以在本地判断。
+ * For base models and system-defined inference profiles the model ID / ARN
+ * contains the model name, so we can decide locally.
  *
- * 对于应用程序推理配置文件（其 ARN 不包含模型名称），也会检查 model.name（通过 models.json 或 registerProvider 由用户控制）。
- * 作为最后手段，设置 AWS_BEDROCK_FORCE_CACHE=1 以启用缓存点。
- * Amazon Nova 模型具有自动缓存功能，不需要显式缓存点。
+ * For application inference profiles (whose ARNs don't contain the model name),
+ * also checks model.name which is user-controlled via models.json or registerProvider.
+ * As a last resort, set AWS_BEDROCK_FORCE_CACHE=1 to enable cache points.
+ * Amazon Nova models have automatic caching and don't need explicit cache points.
  */
 function supportsPromptCaching(model: Model<"bedrock-converse-stream">): boolean {
 	const candidates = getModelMatchCandidates(model.id, model.name);
 
 	const hasClaudeRef = candidates.some((s) => s.includes("claude"));
 	if (!hasClaudeRef) {
-		// 应用程序推理配置文件的 ARN 不包含模型名称。
-		// 允许用户通过环境变量强制启用缓存点。
+		// Application inference profiles don't contain the model name in the ARN.
+		// Allow users to force cache points via environment variable.
 		if (typeof process !== "undefined" && process.env.AWS_BEDROCK_FORCE_CACHE === "1") return true;
 		return false;
 	}
-	// Claude 4.x 模型（opus-4, sonnet-4, haiku-4）
+	// Claude 4.x models (opus-4, sonnet-4, haiku-4)
 	if (candidates.some((s) => s.includes("-4-"))) return true;
 	// Claude 3.7 Sonnet
 	if (candidates.some((s) => s.includes("claude-3-7-sonnet"))) return true;
@@ -560,12 +576,12 @@ function supportsPromptCaching(model: Model<"bedrock-converse-stream">): boolean
 }
 
 /**
- * 检查模型是否支持 reasoningContent 中的思考签名。
- * 只有 Anthropic Claude 模型支持签名字段。
- * 其他模型（OpenAI、Qwen、Minimax、Moonshot 等）会拒绝它并返回错误：
+ * Check if the model supports thinking signatures in reasoningContent.
+ * Only Anthropic Claude models support the signature field.
+ * Other models (OpenAI, Qwen, Minimax, Moonshot, etc.) reject it with:
  * "This model doesn't support the reasoningContent.reasoningText.signature field"
  *
- * 同时检查 model ID 和 model name，以支持应用程序推理配置文件。
+ * Checks both model ID and model name to support application inference profiles.
  */
 function supportsThinkingSignature(model: Model<"bedrock-converse-stream">): boolean {
 	return isAnthropicClaudeModel(model);
@@ -580,7 +596,7 @@ function buildSystemPrompt(
 
 	const blocks: SystemContentBlock[] = [{ text: sanitizeSurrogates(systemPrompt) }];
 
-	// 当缓存启用时，为支持的 Claude 模型添加缓存点
+	// Add cache point for supported Claude models when caching is enabled
 	if (cacheRetention !== "none" && supportsPromptCaching(model)) {
 		blocks.push({
 			cachePoint: { type: CachePointType.DEFAULT, ...(cacheRetention === "long" ? { ttl: CacheTTL.ONE_HOUR } : {}) },
@@ -633,8 +649,8 @@ function convertMessages(
 				break;
 			}
 			case "assistant": {
-				// 跳过内容为空的助手消息（例如来自中止的请求）
-				// Bedrock 拒绝内容数组为空的消息
+				// Skip assistant messages with empty content (e.g., from aborted requests)
+				// Bedrock rejects messages with empty content arrays
 				if (m.content.length === 0) {
 					continue;
 				}
@@ -642,7 +658,7 @@ function convertMessages(
 				for (const c of m.content) {
 					switch (c.type) {
 						case "text":
-							// 跳过空文本块
+							// Skip empty text blocks
 							if (c.text.trim().length === 0) continue;
 							contentBlocks.push({ text: sanitizeSurrogates(c.text) });
 							break;
@@ -652,15 +668,15 @@ function convertMessages(
 							});
 							break;
 						case "thinking":
-							// 跳过空思考块
+							// Skip empty thinking blocks
 							if (c.thinking.trim().length === 0) continue;
-							// 只有 Anthropic 模型支持 reasoningText 中的签名字段。
-							// 对于其他模型，我们省略签名以避免出现以下错误：
+							// Only Anthropic models support the signature field in reasoningText.
+							// For other models, we omit the signature to avoid errors like:
 							// "This model doesn't support the reasoningContent.reasoningText.signature field"
 							if (supportsThinkingSignature(model)) {
-								// 签名在思考增量之后到达。如果部分或外部
-								// 持久化的消息缺少签名，Bedrock 会拒绝重放的
-								// 推理块。回退到纯文本，与 Anthropic 一致。
+								// Signatures arrive after thinking deltas. If a partial or externally
+								// persisted message lacks a signature, Bedrock rejects the replayed
+								// reasoning block. Fall back to plain text, matching Anthropic.
 								if (!c.thinkingSignature || c.thinkingSignature.trim().length === 0) {
 									contentBlocks.push({ text: sanitizeSurrogates(c.thinking) });
 								} else {
@@ -685,7 +701,7 @@ function convertMessages(
 							continue;
 					}
 				}
-				// 如果所有内容块都被过滤掉则跳过
+				// Skip if all content blocks were filtered out
 				if (contentBlocks.length === 0) {
 					continue;
 				}
@@ -696,11 +712,11 @@ function convertMessages(
 				break;
 			}
 			case "toolResult": {
-				// 将所有连续的 toolResult 消息合并为一条用户消息
-				// Bedrock 要求所有工具结果都在一条消息中
+				// Collect all consecutive toolResult messages into a single user message
+				// Bedrock requires all tool results to be in one message
 				const toolResults: ContentBlock.ToolResultMember[] = [];
 
-				// 添加当前工具结果，包含所有内容块
+				// Add current tool result with all content blocks combined
 				toolResults.push({
 					toolResult: {
 						toolUseId: m.toolCallId,
@@ -713,7 +729,7 @@ function convertMessages(
 					},
 				});
 
-				// 向前查找连续的 toolResult 消息
+				// Look ahead for consecutive toolResult messages
 				let j = i + 1;
 				while (j < transformedMessages.length && transformedMessages[j].role === "toolResult") {
 					const nextMsg = transformedMessages[j] as ToolResultMessage;
@@ -731,7 +747,7 @@ function convertMessages(
 					j++;
 				}
 
-				// 跳过已处理的消息
+				// Skip the messages we've already processed
 				i = j - 1;
 
 				result.push({
@@ -745,7 +761,7 @@ function convertMessages(
 		}
 	}
 
-	// 当缓存启用时，为支持的 Claude 模型的最后一条用户消息添加缓存点
+	// Add cache point to the last user message for supported Claude models when caching is enabled
 	if (cacheRetention !== "none" && supportsPromptCaching(model) && result.length > 0) {
 		const lastMessage = result[result.length - 1];
 		if (lastMessage.role === ConversationRole.USER && lastMessage.content) {
@@ -869,8 +885,8 @@ function buildAdditionalModelRequestFields(
 	}
 
 	if (isAnthropicClaudeModel(model)) {
-		// GovCloud Bedrock 目前拒绝 Claude thinking.display 字段。
-		// 在 GovCloud Converse 架构更新前，在此场景下省略该字段。
+		// GovCloud Bedrock currently rejects the Claude thinking.display field.
+		// Omit it there until the GovCloud Converse schema catches up.
 		const display = isGovCloudBedrockTarget(model, options) ? undefined : (options.thinkingDisplay ?? "summarized");
 		const result: Record<string, any> = supportsAdaptiveThinking(model.id, model.name)
 			? {
@@ -883,10 +899,10 @@ function buildAdditionalModelRequestFields(
 						low: 2048,
 						medium: 8192,
 						high: 16384,
-						xhigh: 16384, // Claude 不支持 xhigh，限制为 high
+						xhigh: 16384, // Claude doesn't support xhigh, clamp to high
 					};
 
-					// 自定义预算覆盖默认值（xhigh 不在 ThinkingBudgets 中，使用 high）
+					// Custom budgets override defaults (xhigh not in ThinkingBudgets, use high)
 					const level = options.reasoning === "xhigh" ? "high" : options.reasoning;
 					const budget = options.thinkingBudgets?.[level] ?? defaultBudgets[options.reasoning];
 
@@ -926,7 +942,7 @@ function createImageBlock(mimeType: string, data: string) {
 			format = ImageFormat.WEBP;
 			break;
 		default:
-			throw new Error(`未知图片类型：${mimeType}`);
+			throw new Error(`Unknown image type: ${mimeType}`);
 	}
 
 	const binaryString = atob(data);
