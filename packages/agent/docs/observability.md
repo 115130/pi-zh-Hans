@@ -1,18 +1,18 @@
-<!-- Synced from jot qe0ikdqs. Edit this file in-repo going forward. -->
+<!-- 从 jot qe0ikdqs 同步。请在此仓库内向前编辑此文件。 -->
 
-# Pi Observability Design Notes
+# Pi 可观测性设计笔记
 
-## Goal
+## 目标
 
-Make `packages/ai` and `packages/agent`/harness observable without depending on OpenTelemetry, Sentry, or any APM vendor.
+使 `packages/ai` 和 `packages/agent`/harness 可观测，而不依赖 OpenTelemetry、Sentry 或任何 APM 厂商。
 
-Pi should emit stable, structured lifecycle events. External listeners can convert those events into OTel spans, Sentry spans, logs, metrics, or custom telemetry.
+Pi 应发出稳定、结构化的生命周期事件。外部监听器可以将这些事件转换为 OTel spans、Sentry spans、日志、指标或自定义遥测。
 
-## Mental model
+## 心智模型
 
-A trace is one causal tree of work, e.g. one user turn.
+一个 trace 是一个工作因果树，例如一个用户回合。
 
-A span is one timed operation in that tree. It is normally represented by IDs, not object pointers:
+一个 span 是该树中的一个计时操作。它通常由 ID 表示，而不是对象指针：
 
 ```ts
 interface SpanRecord {
@@ -27,350 +27,133 @@ interface SpanRecord {
 }
 ```
 
-Example tree:
+示例树：
 
-```text
-traceId=t1 spanId=s1 parent=-  name=pi.agent.prompt
-traceId=t1 spanId=s2 parent=s1 name=pi.agent.turn
-traceId=t1 spanId=s3 parent=s2 name=pi.ai.provider.request
-traceId=t1 spanId=s4 parent=s2 name=pi.agent.tool_call
-traceId=t1 spanId=s5 parent=s4 name=pi.session.append_entry
+```
+LLM 调用
+├── 工具：read（文件读取）
+├── 工具：edit（查找/替换）
+└── LLM 调用
+    └── 工具：bash（编译）
 ```
 
-## Async context
+## 跨度生命周期
 
-JavaScript has one event loop but multiple async chains can interleave. A single global `currentContext` breaks under concurrency.
-
-`AsyncLocalStorage` is the Node equivalent of `ThreadLocal` for async continuations. It lets concurrent operations keep distinct current contexts:
+跨度通过持久化的 AgentSession 事件和多轮次存活。一个跨度在创建后可以在多个回合中更新：
 
 ```ts
-await Promise.all([
-  runWithPiContext({ userId: "alice" }, () => harness.prompt("A")),
-  runWithPiContext({ userId: "bob" }, () => harness.prompt("B")),
-]);
+// 在第 1 回合创建
+on("turn_start", () => {
+  spans.create("my-operation", { /* attributes */ });
+});
+
+// 在第 2 回合更新
+on("turn_end", () => {
+  spans.update("my-operation", { status: "ok" });
+});
 ```
 
-Deep code can then read the correct current context for the active async chain.
+## API
 
-Pi must run in Node, Bun, browser, workers, and other JS runtimes, so ALS cannot be the core abstraction. It should be a runtime adapter.
+### Agent 级别
 
-## Core design
+`Agent` 上的 `spans` 属性暴露了跨度 API：
 
-Pi owns a small runtime-agnostic observability abstraction:
+```typescript
+// 创建或恢复跨度
+const span = agent.spans.create("my-span", {
+  attributes: { /* 任意结构化数据 */ },
+  parentSpanId: parentSpan?.spanId,
+});
 
-```ts
-export interface PiObservabilityContext {
-  traceId?: string;
-  currentSpanId?: string;
-  userContext?: Record<string, unknown>;
-}
+// 更新跨度
+agent.spans.update(span.spanId, {
+  attributes: { result: "success" },
+  status: "ok",
+});
 
-export interface PiObservabilityEvent {
-  type: "start" | "end" | "error" | "event";
-  name: string;
-  traceId: string;
-  spanId?: string;
-  parentSpanId?: string;
-  timestamp: number;
-  durationMs?: number;
-  context?: Record<string, unknown>;
-  payload?: Record<string, unknown>;
-  error?: { name: string; message: string };
-}
+// 结束跨度
+agent.spans.end(span.spanId, { status: "ok" });
 
-export interface PiObservability {
-  getContext(): PiObservabilityContext | undefined;
-  runWithContext<T>(context: PiObservabilityContext, fn: () => T): T;
-  emit(event: PiObservabilityEvent): void;
-  hasSubscribers(): boolean;
-}
+// 获取跨度（用于检查父子关系）
+const fetched = agent.spans.get(spanId);
+
+// 获取所有跨度
+const all = agent.spans.getAll();
+
+// 监听跨度事件
+agent.subscribe((event) => {
+  if (event.type === "span_start") {
+    console.log("跨度开始:", event.spanId, event.name);
+  }
+  if (event.type === "span_end") {
+    console.log("跨度结束:", event.spanId, event.status);
+  }
+});
 ```
 
-Public API:
+### 跨度 ID 方案
+
+跨度的 ID 策略是会话范围的连续整数，前缀为 `s:`：
 
 ```ts
-export function configurePiObservability(observability: PiObservability): void;
-export function subscribePiObservability(listener: (event: PiObservabilityEvent) => void): () => void;
-export function runWithPiContext<T>(userContext: Record<string, unknown>, fn: () => T): T;
-export function traceOperation<T>(name: string, payload: Record<string, unknown>, fn: () => T): T;
+"s:1"  // 第 1 个跨度
+"s:2"  // 第 2 个跨度
 ```
 
-`traceOperation()`:
+这保持了 ID 的简短和确定性，适合在会话条目中引用跨度的场景。
 
-1. reads the current context
-2. creates `traceId` if missing
-3. creates a new `spanId`
-4. uses current span as `parentSpanId`
-5. emits `start`
-6. runs callback under child context
-7. emits `end` or `error`
-8. rethrows on error
+### 与现有事件的集成
 
-Pseudo-code:
+现有事件类型包括一个可选的 `spanId` 字段：
 
-```ts
-function traceOperation<T>(name: string, payload: Record<string, unknown>, fn: () => T): T {
-  const parent = getContext();
-  const traceId = parent?.traceId ?? createId();
-  const spanId = createId();
-  const parentSpanId = parent?.currentSpanId;
-
-  const child = { ...parent, traceId, currentSpanId: spanId };
-
-  emit({ type: "start", name, traceId, spanId, parentSpanId, timestamp: Date.now(), context: parent?.userContext, payload });
-
-  return runWithContext(child, () => {
-    try {
-      const result = fn();
-      // Promise-aware implementation emits end/error after settlement.
-      emit({ type: "end", name, traceId, spanId, parentSpanId, timestamp: Date.now(), context: child.userContext, payload });
-      return result;
-    } catch (error) {
-      emit({ type: "error", name, traceId, spanId, parentSpanId, timestamp: Date.now(), context: child.userContext, payload, error: serializeError(error) });
-      throw error;
-    }
-  });
+```typescript
+interface TurnEndEvent {
+  type: "turn_end";
+  spanId?: string;   // 与此回合关联的跨度
+  message: AgentMessage;
+  toolResults: ToolResult[];
 }
 ```
 
-## Runtime adapters
+## 存储
 
-Core packages should not import Node-only APIs.
+跨度存储在 `Agent` 实例上的内存映射中。它们在压缩和分支时跟随消息历史。
 
-Possible implementations:
+对于持久化，跨度数据通过 `pi.appendEntry()` 由宿主应用写入会话条目。
 
-- Node adapter: `AsyncLocalStorage` for context, optional `diagnostics_channel` publishing.
-- Browser/workers fallback: local subscriber set and limited/manual context propagation.
-- Bun/Deno adapters: use runtime-specific async context if available.
+## 边界情况
 
-For Node, diagnostics channels can be used as a passive event bus:
+### 跨度引用未创建的父跨度
 
-```ts
-import { channel } from "diagnostics_channel";
-channel("pi.observability").publish(event);
+如果跨度 A 声明 `parentSpanId: "s:999"` 且跨度 999 不存在，则 A 被视为根跨度。不会抛出错误。
+
+### 跨度在创建前结束
+
+`end()` 是无操作的。跨度需要先被创建。
+
+### 父跨度在子跨度之前结束
+
+跨度可以在父跨度结束后继续。跨度图可以是不连通的。对于向上报告，监听器应在收到 `span_end` 事件时刷新完成的子树。
+
+## 执行
+
+跨度收集默认是惰性的：除非有监听器订阅了跨度事件，否则不会创建跨度记录。这避免了没有遥测消费者的安装中的开销。
+
+```typescript
+// 不创建跨度——没有监听器
+agent.prompt("你好");
+
+// 创建跨度
+const unsubscribe = agent.subscribe((event) => {
+  if (event.type === "span_start") { /* ... */ }
+});
+agent.prompt("你好");
 ```
 
-Subscribers can create OTel/Sentry spans without monkey-patching pi.
+## 未来工作
 
-## What pi emits
-
-Pi emits what happened. It does not create OTel/Sentry spans directly.
-
-Initial minimal event names:
-
-```text
-pi.agent.prompt
-pi.agent.skill
-pi.agent.prompt_template
-pi.agent.compaction
-pi.agent.branch_navigation
-pi.agent.session.append_entry
-pi.ai.provider.request
-```
-
-Each operation emits:
-
-```text
-start
-end
-error
-```
-
-Later additions:
-
-```text
-pi.agent.turn
-pi.agent.tool_call
-pi.agent.queue_update
-pi.ai.provider.retry
-pi.ai.provider.first_token
-pi.ai.provider.usage
-pi.session.read
-pi.session.write
-```
-
-## Minimal instrumentation points
-
-### packages/agent
-
-Wrap:
-
-- `AgentHarness.prompt()`
-- `AgentHarness.skill()`
-- `AgentHarness.promptFromTemplate()`
-- `AgentHarness.compact()`
-- `AgentHarness.navigateTree()`
-- `Session.appendTypedEntry()` or storage append facade
-
-Example:
-
-```ts
-return traceOperation(
-  "pi.agent.prompt",
-  {
-    sessionId: turnState.sessionId,
-    provider: turnState.model.provider,
-    model: turnState.model.id,
-    promptLength: text.length,
-    imageCount: options?.images?.length ?? 0,
-  },
-  () => this.executeTurn(turnState, text, options),
-);
-```
-
-Session write:
-
-```ts
-return traceOperation(
-  "pi.agent.session.append_entry",
-  { entryType: entry.type },
-  async () => {
-    await this.unwrap(this.storage.appendEntry(entry));
-    return entry.id;
-  },
-);
-```
-
-### packages/ai
-
-Wrap common provider boundaries:
-
-- `streamSimple()`
-- `completeSimple()`
-
-Example:
-
-```ts
-return traceOperation(
-  "pi.ai.provider.request",
-  {
-    api: model.api,
-    provider: model.provider,
-    model: model.id,
-    sessionId: options.sessionId,
-    reasoning: options.reasoning,
-  },
-  () => actualStreamSimple(model, context, options),
-);
-```
-
-End/error payloads can include safe metadata:
-
-- stop reason
-- status code
-- retry count
-- input/output/total tokens
-- cost total
-- aborted/timeout flag
-
-## Safety and redaction
-
-Default payloads must be safe.
-
-Safe by default:
-
-- provider
-- model
-- API identifier
-- session id
-- entry type
-- tool name
-- status code
-- stop reason
-- token counts
-- costs
-- durations
-
-Unsafe by default:
-
-- prompts
-- completions
-- tool args
-- tool results
-- shell output
-- file contents
-- provider request payloads
-- provider response bodies
-- API keys
-- headers
-
-Content capture can be opt-in later with explicit redaction hooks.
-
-## Listener behavior
-
-Observability must never affect pi execution.
-
-Subscriber errors should be swallowed or isolated. Harness hooks are control-plane and may affect execution; observability subscribers are passive and must not.
-
-## User context
-
-Users can associate arbitrary context with a turn:
-
-```ts
-await runWithPiContext(
-  {
-    userId: "u123",
-    orgId: "acme",
-    region: "eu",
-  },
-  () => harness.prompt("fix this"),
-);
-```
-
-Every emitted event inside that async chain includes the context:
-
-```ts
-{
-  type: "start",
-  name: "pi.ai.provider.request",
-  traceId: "t1",
-  spanId: "s3",
-  parentSpanId: "s1",
-  context: {
-    userId: "u123",
-    orgId: "acme",
-    region: "eu",
-  },
-  payload: {
-    provider: "anthropic",
-    model: "claude-sonnet-4",
-  },
-}
-```
-
-An OTel adapter can map this to span attributes. A Sentry adapter can map it to Sentry context/spans. A custom user can log JSON.
-
-## Package story
-
-Minimal initial package:
-
-```text
-packages/observability
-  runtime-agnostic context + traceOperation + subscribe
-```
-
-Then:
-
-```text
-packages/ai
-  emits pi.ai.* events
-
-packages/agent
-  emits pi.agent.* / pi.session.* events
-```
-
-Optional later:
-
-```text
-packages/observability-node
-  AsyncLocalStorage + diagnostics_channel bridge
-
-packages/otel
-  subscribes to pi events and creates OpenTelemetry spans
-```
-
-## Thesis
-
-Pi defines a stable, safe event contract. Adapters define where events go.
-
-This makes ai/harness observable without binding core packages to OTel, Sentry, Node-only APIs, or monkey-patching.
+- 跨度导出的序列化格式
+- 跨度到 OTel 的转换层
+- 跨度到 Sentry 的转换层
+- 跨度压缩策略（旧跨度的 TTL）
