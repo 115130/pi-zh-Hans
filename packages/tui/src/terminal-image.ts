@@ -30,7 +30,7 @@ export interface ImageRenderOptions {
 
 let cachedCapabilities: TerminalCapabilities | null = null;
 
-// Default cell dimensions - updated by TUI when terminal responds to query
+// 默认 cell dimensions - updated by TUI when terminal responds to query
 let cellDimensions: CellDimensions = { widthPx: 9, heightPx: 18 };
 
 export function getCellDimensions(): CellDimensions {
@@ -42,7 +42,7 @@ export function setCellDimensions(dims: CellDimensions): void {
 }
 
 /**
- * Checks whether the attached tmux client forwards OSC 8 hyperlinks to the
+ * 检查是否转发 OSC 8 超链接 the attached tmux client forwards OSC 8 hyperlinks to the
  * outer terminal. tmux only re-emits them when its `client_termfeatures` lists
  * `hyperlinks`, and strips them otherwise. On any error fallbacks `false`.
  */

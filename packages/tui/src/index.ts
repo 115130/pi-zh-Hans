@@ -1,6 +1,6 @@
-// Core TUI interfaces and classes
+// 核心 TUI 接口 and classes
 
-// Autocomplete support
+// 自动完成支持
 export {
 	type AutocompleteItem,
 	type AutocompleteProvider,
@@ -8,7 +8,7 @@ export {
 	CombinedAutocompleteProvider,
 	type SlashCommand,
 } from "./autocomplete.ts";
-// Components
+// 组件
 export { Box } from "./components/box.ts";
 export { CancellableLoader } from "./components/cancellable-loader.ts";
 export { Editor, type EditorOptions, type EditorTheme } from "./components/editor.ts";
@@ -102,5 +102,5 @@ export {
 	type SizeValue,
 	TUI,
 } from "./tui.ts";
-// Utilities
+// 工具函数
 export { truncateToWidth, visibleWidth, wrapTextWithAnsi } from "./utils.ts";

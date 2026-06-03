@@ -41,7 +41,7 @@ export interface GoogleOptions extends StreamOptions {
 	};
 }
 
-// Counter for generating unique tool call IDs
+// 用于生成唯一 tool call IDs
 let toolCallCounter = 0;
 
 export const streamGoogle: StreamFunction<"google-generative-ai", GoogleOptions> = (

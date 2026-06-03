@@ -23,7 +23,7 @@ function isPasteMarker(segment: string): boolean {
 }
 
 /**
- * A segmenter that wraps Intl.Segmenter and merges graphemes that fall
+ * 包装 Intl.Segmenter 的分段器 Intl.Segmenter and merges graphemes that fall
  * within paste markers into single atomic segments.  This makes cursor
  * movement, deletion, word-wrap, etc. treat paste markers as single units.
  *
@@ -243,7 +243,7 @@ export class Editor implements Component, Focusable {
 	// Border color (can be changed dynamically)
 	public borderColor: (str: string) => string;
 
-	// Autocomplete support
+	// 自动完成支持
 	private autocompleteProvider?: AutocompleteProvider;
 	private autocompleteList?: SelectList;
 	private autocompleteState: "regular" | "force" | null = null;
@@ -259,7 +259,7 @@ export class Editor implements Component, Focusable {
 	private pastes: Map<number, string> = new Map();
 	private pasteCounter: number = 0;
 
-	// Bracketed paste mode buffering
+	// 括号粘贴模式 buffering
 	private pasteBuffer: string = "";
 	private isInPaste: boolean = false;
 

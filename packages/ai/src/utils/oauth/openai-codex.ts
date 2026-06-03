@@ -1,8 +1,8 @@
 /**
- * OpenAI Codex (ChatGPT OAuth) flow
+ * OpenAI Codex OAuth 流程 (ChatGPT OAuth) flow
  *
- * NOTE: This module uses Node.js crypto and http for the OAuth callback.
- * It is only intended for CLI use, not browser environments.
+ * 注意：此模块使用 Node.js crypto uses Node.js crypto and http for the OAuth callback.
+ * 仅用于 CLI 环境 for CLI use, not browser environments.
  */
 
 // NEVER convert to top-level imports - breaks browser/Vite builds

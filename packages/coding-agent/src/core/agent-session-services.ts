@@ -12,9 +12,9 @@ import type { SessionManager } from "./session-manager.ts";
 import { SettingsManager } from "./settings-manager.ts";
 
 /**
- * Non-fatal issues collected while creating services or sessions.
+ * 非致命问题 collected while creating services or sessions.
  *
- * Runtime creation returns diagnostics to the caller instead of printing or
+ * 运行时创建时返回诊断信息 returns diagnostics to the caller instead of printing or
  * exiting. The app layer decides whether warnings should be shown and whether
  * errors should abort startup.
  */

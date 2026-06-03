@@ -6,15 +6,15 @@ import { spawnProcessSync } from "./utils/child-process.ts";
 import { normalizePath } from "./utils/paths.ts";
 
 // =============================================================================
-// Package Detection
+// 包检测
 // =============================================================================
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 /**
- * Detect if we're running as a Bun compiled binary.
- * Bun binaries have import.meta.url containing "$bunfs", "~BUN", or "%7EBUN" (Bun's virtual filesystem path)
+ * 检测是否在 Bun 编译二进制中运行 as a Bun compiled binary.
+ * Bun 二进制文件的 import.meta.url 包含 import.meta.url containing "$bunfs", "~BUN", or "%7EBUN" (Bun's virtual filesystem path)
  */
 export const isBunBinary =
 	import.meta.url.includes("$bunfs") || import.meta.url.includes("~BUN") || import.meta.url.includes("%7EBUN");

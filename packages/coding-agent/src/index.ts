@@ -1,8 +1,8 @@
-// Core session management
+// 核心会话管理
 
 export { type Args, parseArgs } from "./cli/args.ts";
 
-// Config paths
+// 配置路径
 export { getAgentDir, VERSION } from "./config.ts";
 export {
 	AgentSession,
@@ -15,7 +15,7 @@ export {
 	parseSkillBlock,
 	type SessionStats,
 } from "./core/agent-session.ts";
-// Auth and model registry
+// 认证和模型注册表
 export {
 	type ApiKeyCredential,
 	type AuthCredential,

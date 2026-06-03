@@ -14,18 +14,18 @@ interface InputState {
 }
 
 /**
- * Input component - single-line text input with horizontal scrolling
+ * 输入组件 - single-line text input with horizontal scrolling
  */
 export class Input implements Component, Focusable {
 	private value: string = "";
-	private cursor: number = 0; // Cursor position in the value
+	private cursor: number = 0; // 光标位置 in the value
 	public onSubmit?: (value: string) => void;
 	public onEscape?: () => void;
 
 	/** Focusable interface - set by TUI when focus changes */
 	focused: boolean = false;
 
-	// Bracketed paste mode buffering
+	// 括号粘贴模式 buffering
 	private pasteBuffer: string = "";
 	private isInPaste: boolean = false;
 

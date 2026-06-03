@@ -32,7 +32,7 @@ const MISTRAL_TOOL_CALL_ID_LENGTH = 9;
 const MAX_MISTRAL_ERROR_BODY_CHARS = 4000;
 
 /**
- * Provider-specific options for the Mistral API.
+ * 提供商特定选项 for the Mistral API.
  */
 type MistralReasoningEffort = "none" | "high";
 
@@ -43,7 +43,7 @@ export interface MistralOptions extends StreamOptions {
 }
 
 /**
- * Stream responses from Mistral using `chat.stream`.
+ * 从提供的 URL 流式响应 Mistral using `chat.stream`.
  */
 export const streamMistral: StreamFunction<"mistral-conversations", MistralOptions> = (
 	model: Model<"mistral-conversations">,
@@ -61,7 +61,7 @@ export const streamMistral: StreamFunction<"mistral-conversations", MistralOptio
 				throw new Error(`提供商 ${model.provider} 的 API 密钥未设置`);
 			}
 
-			// Intentionally per-request: avoids shared SDK mutable state across concurrent consumers.
+			// 按请求单独处理： avoids shared SDK mutable state across concurrent consumers.
 			const mistral = new Mistral({
 				apiKey,
 				serverURL: model.baseUrl,

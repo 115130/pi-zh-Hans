@@ -61,7 +61,7 @@ export interface BedrockOptions extends StreamOptions {
 	/* Only supported by Claude 4.x models, see https://docs.aws.amazon.com/bedrock/latest/userguide/claude-messages-extended-thinking.html#claude-messages-extended-thinking-tool-use-interleaved */
 	interleavedThinking?: boolean;
 	/**
-	 * Controls how Claude's thinking content is returned in responses.
+	 * 控制 Claude 思考内容的返回方式 thinking content is returned in responses.
 	 * - "summarized": Thinking blocks contain summarized thinking text (default here).
 	 * - "omitted": Thinking content is redacted but the signature still travels back
 	 *   for multi-turn continuity, reducing time-to-first-text-token.
@@ -553,8 +553,8 @@ function mapThinkingLevelToEffort(
 }
 
 /**
- * Resolve cache retention preference.
- * Defaults to "short" and uses PI_CACHE_RETENTION for backward compatibility.
+ * 解析缓存保留偏好 preference.
+ * 默认为 "short" and uses PI_CACHE_RETENTION for backward compatibility.
  */
 function resolveCacheRetention(cacheRetention?: CacheRetention): CacheRetention {
 	if (cacheRetention) {
@@ -938,7 +938,7 @@ function buildAdditionalModelRequestFields(
 						low: 2048,
 						medium: 8192,
 						high: 16384,
-						xhigh: 16384, // Claude doesn't support xhigh, clamp to high
+						xhigh: 16384, // Claude 不支持 xhigh，限制为 high
 					};
 
 					// Custom budgets override defaults (xhigh not in ThinkingBudgets, use high)

@@ -67,7 +67,7 @@ export interface AzureOpenAIResponsesOptions extends StreamOptions {
 }
 
 /**
- * Generate function for Azure OpenAI Responses API
+ * 生成函数 Azure OpenAI Responses API
  */
 export const streamAzureOpenAIResponses: StreamFunction<"azure-openai-responses", AzureOpenAIResponsesOptions> = (
 	model: Model<"azure-openai-responses">,
@@ -76,7 +76,7 @@ export const streamAzureOpenAIResponses: StreamFunction<"azure-openai-responses"
 ): AssistantMessageEventStream => {
 	const stream = new AssistantMessageEventStream();
 
-	// Start async processing
+	// 开始异步处理
 	(async () => {
 		const deploymentName = resolveDeploymentName(model, options);
 

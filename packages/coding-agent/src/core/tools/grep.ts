@@ -254,7 +254,7 @@ export function createGrepToolDefinition(
 								const lineText = lines[current - 1] ?? "";
 								const sanitized = lineText.replace(/\r/g, "");
 								const isMatchLine = current === lineNumber;
-								// Truncate long lines so grep output stays compact.
+								// 截断长行 so grep output stays compact.
 								const { text: truncatedText, wasTruncated } = truncateLine(sanitized);
 								if (wasTruncated) linesTruncated = true;
 								if (isMatchLine) block.push(`${relativePath}:${current}: ${truncatedText}`);

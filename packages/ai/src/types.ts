@@ -88,8 +88,8 @@ export interface StreamOptions {
 	signal?: AbortSignal;
 	apiKey?: string;
 	/**
-	 * Preferred transport for providers that support multiple transports.
-	 * Providers that do not support this option ignore it.
+	 * 首选的传输方式 for providers that support multiple transports.
+	 * 不支持此选项的提供商 support this option ignore it.
 	 */
 	transport?: Transport;
 	/**

@@ -159,8 +159,8 @@ interface ResourceAccumulator {
 }
 
 /**
- * Compute a numeric precedence rank for a resource based on its metadata.
- * Lower rank = higher precedence. Used to sort resolved resources so that
+ * 计算数值优先级 precedence rank for a resource based on its metadata.
+ * 越低越优先 = higher precedence. Used to sort resolved resources so that
  * name-collision resolution ("first wins") produces the correct outcome.
  *
  * Precedence (highest to lowest):

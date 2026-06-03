@@ -1,5 +1,5 @@
 /**
- * One-time migrations that run on startup.
+ * 一次性迁移 that run on startup.
  */
 
 import chalk from "chalk";

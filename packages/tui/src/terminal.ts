@@ -48,13 +48,13 @@ export function normalizeAppleTerminalInput(data: string, isAppleTerminal: boole
 }
 
 /**
- * Minimal terminal interface for TUI
+ * 最小终端接口 for TUI
  */
 export interface Terminal {
-	// Start the terminal with input and resize handlers
+	// 启动终端 with input and resize handlers
 	start(onInput: (data: string) => void, onResize: () => void): void;
 
-	// Stop the terminal and restore state
+	// 停止终端 and restore state
 	stop(): void;
 
 	/**
@@ -75,7 +75,7 @@ export interface Terminal {
 	// Whether Kitty keyboard protocol is active
 	get kittyProtocolActive(): boolean;
 
-	// Cursor positioning (relative to current position)
+	// 光标位置ing (relative to current position)
 	moveBy(lines: number): void; // Move cursor up (negative) or down (positive) by N lines
 
 	// Cursor visibility

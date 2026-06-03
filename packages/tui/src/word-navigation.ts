@@ -3,7 +3,7 @@ import { getWordSegmenter, isWhitespaceChar, PUNCTUATION_REGEX } from "./utils.t
 const wordSegmenter = getWordSegmenter();
 
 /**
- * Options for word navigation functions.
+ * 单词导航选项 functions.
  * When omitted, uses the default Intl.Segmenter word segmentation.
  */
 export interface WordNavigationOptions {
@@ -14,7 +14,7 @@ export interface WordNavigationOptions {
 }
 
 /**
- * Find the cursor position after moving one word backward from `cursor` in `text`.
+ * 查找光标位置 position after moving one word backward from `cursor` in `text`.
  * Skips trailing whitespace, then stops at the next word/punctuation boundary.
  *
  * Pure function - does not mutate any state.
@@ -70,7 +70,7 @@ export function findWordBackward(text: string, cursor: number, options?: WordNav
 }
 
 /**
- * Find the cursor position after moving one word forward from `cursor` in `text`.
+ * 查找光标位置 position after moving one word forward from `cursor` in `text`.
  * Skips leading whitespace, then stops at the next word/punctuation boundary.
  *
  * Pure function - does not mutate any state.

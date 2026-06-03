@@ -1,5 +1,5 @@
 /**
- * Extension runner - executes extensions and manages their lifecycle.
+ * 扩展运行器 - executes extensions and manages their lifecycle.
  */
 
 import type { AgentMessage } from "@earendil-works/pi-agent-core";

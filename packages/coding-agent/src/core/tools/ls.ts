@@ -124,7 +124,7 @@ export function createLsToolDefinition(
 						const dirPath = resolveToCwd(path || ".", cwd);
 						const effectiveLimit = limit ?? DEFAULT_LIMIT;
 
-						// Check if path exists.
+						// 检查路径是否存在.
 						if (!(await ops.exists(dirPath))) {
 							reject(new Error(`路径不存在：${dirPath}`));
 							return;

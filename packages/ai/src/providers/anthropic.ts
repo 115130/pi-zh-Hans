@@ -37,8 +37,8 @@ import { adjustMaxTokensForThinking, buildBaseOptions } from "./simple-options.t
 import { transformMessages } from "./transform-messages.ts";
 
 /**
- * Resolve cache retention preference.
- * Defaults to "short" and uses PI_CACHE_RETENTION for backward compatibility.
+ * 解析缓存保留偏好 preference.
+ * 默认为 "short" and uses PI_CACHE_RETENTION for backward compatibility.
  */
 function resolveCacheRetention(cacheRetention?: CacheRetention): CacheRetention {
 	if (cacheRetention) {
@@ -65,7 +65,7 @@ function getCacheControl(
 	};
 }
 
-// Stealth mode: Mimic Claude Code's tool naming exactly
+// 隐身模式： Mimic Claude Code's tool naming exactly
 const claudeCodeVersion = "2.1.75";
 
 // Claude Code 2.x tool names (canonical casing)
@@ -954,7 +954,7 @@ function buildParams(
 	// Configure thinking mode: adaptive, budget-based, or explicitly disabled.
 	if (model.reasoning) {
 		if (options?.thinkingEnabled) {
-			// Default to "summarized" so Opus 4.7 and Mythos Preview behave like
+			// 默认 to "summarized" so Opus 4.7 and Mythos Preview behave like
 			// older Claude 4 models (whose API default is also "summarized").
 			const display: AnthropicThinkingDisplay = options.thinkingDisplay ?? "summarized";
 			if (model.compat?.forceAdaptiveThinking === true) {
@@ -1130,7 +1130,7 @@ function convertMessages(
 			// Look ahead for consecutive toolResult messages
 			let j = i + 1;
 			while (j < transformedMessages.length && transformedMessages[j].role === "toolResult") {
-				const nextMsg = transformedMessages[j] as ToolResultMessage; // We know it's a toolResult
+				const nextMsg = transformedMessages[j] as ToolResultMessage; // 我们知道是 toolResult
 				toolResults.push({
 					type: "tool_result",
 					tool_use_id: nextMsg.toolCallId,
@@ -1217,11 +1217,11 @@ function mapStopReason(reason: Anthropic.Messages.StopReason | string): StopReas
 			return "toolUse";
 		case "refusal":
 			return "error";
-		case "pause_turn": // Stop is good enough -> resubmit
+		case "pause_turn": // Stop 足够 -> 重新提交
 			return "stop";
 		case "stop_sequence":
-			return "stop"; // We don't supply stop sequences, so this should never happen
-		case "sensitive": // Content flagged by safety filters (not yet in SDK types)
+			return "stop"; // 我们不会提供停止序列，因此不应发生
+		case "sensitive": // 内容被安全过滤器标记（尚未在 SDK 类型中）
 			return "error";
 		default:
 			// Handle unknown stop reasons gracefully (API may add new values)

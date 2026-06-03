@@ -34,7 +34,7 @@ import { sanitizeSurrogates } from "../utils/sanitize-unicode.ts";
 import { transformMessages } from "./transform-messages.ts";
 
 // =============================================================================
-// Utilities
+// 工具函数
 // =============================================================================
 
 function encodeTextSignatureV1(id: string, phase?: TextSignatureV1["phase"]): string {
@@ -57,7 +57,7 @@ function parseTextSignature(
 				return { id: parsed.id };
 			}
 		} catch {
-			// Fall through to legacy plain-string handling.
+			// 回退到旧版 plain-string handling.
 		}
 	}
 	return { id: signature };
@@ -84,7 +84,7 @@ export interface ConvertResponsesToolsOptions {
 }
 
 // =============================================================================
-// Message conversion
+// 消息转换
 // =============================================================================
 
 export function convertResponsesMessages<TApi extends Api>(

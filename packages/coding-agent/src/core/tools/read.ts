@@ -237,7 +237,7 @@ export function createReadToolDefinition(
 						try {
 							const absolutePath = await resolveReadPathAsync(path, cwd);
 							if (aborted) return;
-							// Check if file exists and is readable.
+							// 检查文件是否存在 and is readable.
 							await ops.access(absolutePath);
 							if (aborted) return;
 							const mimeType = ops.detectImageMimeType ? await ops.detectImageMimeType(absolutePath) : undefined;

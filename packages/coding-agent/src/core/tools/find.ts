@@ -210,7 +210,7 @@ export function createFindToolDefinition(
 							return;
 						}
 
-						// Default implementation uses fd.
+						// 默认 implementation uses fd.
 						const fdPath = await ensureTool("fd", true);
 						if (signal?.aborted) {
 							settle(() => reject(new Error("操作已中止")));

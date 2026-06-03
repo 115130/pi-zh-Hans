@@ -1,7 +1,7 @@
 import type { AssistantMessage } from "../types.ts";
 
 /**
- * Regex patterns to detect context overflow errors from different providers.
+ * 用于检测的正则模式 context overflow errors from different providers.
  *
  * These patterns match error messages returned when the input exceeds
  * the model's context window.

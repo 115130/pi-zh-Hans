@@ -1,5 +1,5 @@
 /**
- * RPC Client for programmatic access to the coding agent.
+ * RPC 客户端，用于编程访问 access to the coding agent.
  *
  * Spawns the agent in RPC mode and provides a typed API for all operations.
  */
@@ -14,7 +14,7 @@ import { attachJsonlLineReader, serializeJsonLine } from "./jsonl.ts";
 import type { RpcCommand, RpcResponse, RpcSessionState, RpcSlashCommand } from "./rpc-types.ts";
 
 // ============================================================================
-// Types
+// 类型定义
 // ============================================================================
 
 /** Distributive Omit that works with union types */

@@ -24,8 +24,8 @@ import { buildBaseOptions } from "./simple-options.ts";
 const OPENAI_TOOL_CALL_PROVIDERS = new Set(["openai", "openai-codex", "opencode"]);
 
 /**
- * Resolve cache retention preference.
- * Defaults to "short" and uses PI_CACHE_RETENTION for backward compatibility.
+ * 解析缓存保留偏好 preference.
+ * 默认为 "short" and uses PI_CACHE_RETENTION for backward compatibility.
  */
 function resolveCacheRetention(cacheRetention?: CacheRetention): CacheRetention {
 	if (cacheRetention) {
@@ -75,7 +75,7 @@ export interface OpenAIResponsesOptions extends StreamOptions {
 }
 
 /**
- * Generate function for OpenAI Responses API
+ * 生成函数 OpenAI Responses API
  */
 export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIResponsesOptions> = (
 	model: Model<"openai-responses">,
@@ -84,7 +84,7 @@ export const streamOpenAIResponses: StreamFunction<"openai-responses", OpenAIRes
 ): AssistantMessageEventStream => {
 	const stream = new AssistantMessageEventStream();
 
-	// Start async processing
+	// 开始异步处理
 	(async () => {
 		const output: AssistantMessage = {
 			role: "assistant",

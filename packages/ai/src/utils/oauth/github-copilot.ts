@@ -1,5 +1,5 @@
 /**
- * GitHub Copilot OAuth flow
+ * GitHub Copilot OAuth 流程
  */
 
 import { getModels } from "../../models.ts";

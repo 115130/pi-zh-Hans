@@ -6,7 +6,7 @@ import type {
 	ResponseStreamEvent,
 } from "openai/resources/responses/responses.js";
 
-// NEVER convert to top-level runtime imports - breaks browser/Vite builds
+// 不要转为顶层运行时导入 imports - breaks browser/Vite builds
 let _os: typeof NodeOs | null = null;
 
 type DynamicImport = (specifier: string) => Promise<unknown>;
@@ -45,7 +45,7 @@ import { convertResponsesMessages, convertResponsesTools, processResponsesStream
 import { buildBaseOptions } from "./simple-options.ts";
 
 // ============================================================================
-// Configuration
+// 配置
 // ============================================================================
 
 const DEFAULT_CODEX_BASE_URL = "https://chatgpt.com/backend-api";
@@ -68,7 +68,7 @@ const CODEX_RESPONSE_STATUSES = new Set<CodexResponseStatus>([
 ]);
 
 // ============================================================================
-// Types
+// 类型定义
 // ============================================================================
 
 export interface OpenAICodexResponsesOptions extends StreamOptions {
