@@ -7,83 +7,83 @@
   <a href="https://discord.com/invite/3cU7Bz4UPx"><img alt="Discord" src="https://img.shields.io/badge/discord-community-5865F2?style=flat-square&logo=discord&logoColor=white" /></a>
 </p>
 <p align="center">
-  <a href="https://pi.dev">pi.dev</a> domain graciously donated by
+  <a href="https://pi.dev">pi.dev</a> 域名由以下组织友情捐赠
   <br /><br />
-  <a href="https://exe.dev"><img src="packages/coding-agent/docs/images/exy.png" alt="Exy mascot" width="48" /><br />exe.dev</a>
+  <a href="https://exe.dev"><img src="packages/coding-agent/docs/images/exy.png" alt="Exy 吉祥物" width="48" /><br />exe.dev</a>
 </p>
 
-> New issues and PRs from new contributors are auto-closed by default. Maintainers review auto-closed issues daily. See [CONTRIBUTING.md](CONTRIBUTING.md).
+> 新贡献者提交的 Issue 和 PR 默认自动关闭。维护者每日都会审核这些自动关闭的 Issue。详情请见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ---
 
-# Pi Agent Harness Mono Repo
+# Pi 代理框架单体仓库
 
-This is the home of the pi agent harness project including our self extensible coding agent.
+这里是 pi 代理框架项目的所在地，包含我们可扩展的编码代理。
 
-* **[@earendil-works/pi-coding-agent](packages/coding-agent)**: Interactive coding agent CLI
-* **[@earendil-works/pi-agent-core](packages/agent)**: Agent runtime with tool calling and state management
-* **[@earendil-works/pi-ai](packages/ai)**: Unified multi-provider LLM API (OpenAI, Anthropic, Google, …)
+* **[@earendil-works/pi-coding-agent](packages/coding-agent)**：交互式编码代理命令行工具
+* **[@earendil-works/pi-agent-core](packages/agent)**：支持工具调用和状态管理的代理运行时
+* **[@earendil-works/pi-ai](packages/ai)**：统一的多提供商 LLM API（OpenAI、Anthropic、Google 等）
 
-To learn more about pi:
+进一步了解 pi：
 
-* [Visit pi.dev](https://pi.dev), the project website with demos
-* [Read the documentation](https://pi.dev/docs/latest), but you can also ask the agent to explain itself
+* [访问 pi.dev](https://pi.dev)——项目官网，含演示
+* [阅读文档](https://pi.dev/docs/latest)，你也可以直接让代理自己解释
 
-## Share your OSS coding agent sessions
+## 分享你的开源编码代理会话
 
-If you use pi or other coding agents for open source work, please share your sessions.
+如果你在开源项目中使用 pi 或其他编码代理，欢迎分享你的会话。
 
-Public OSS session data helps improve coding agents with real-world tasks, tool use, failures, and fixes instead of toy benchmarks.
+公开的开源会话数据有助于用真实世界的任务、工具使用场景和故障修复来改进编码代理，而不是依赖玩具级的基准测试。
 
-For the full explanation, see [this post on X](https://x.com/badlogicgames/status/2037811643774652911).
+详细说明请参见 [X 上的这篇文章](https://x.com/badlogicgames/status/2037811643774652911)。
 
-To publish sessions, use [`badlogic/pi-share-hf`](https://github.com/badlogic/pi-share-hf). Read its README.md for setup instructions. All you need is a Hugging Face account, the Hugging Face CLI, and `pi-share-hf`.
+要发布会话，请使用 [`badlogic/pi-share-hf`](https://github.com/badlogic/pi-share-hf)。阅读其 README.md 了解设置步骤。你只需要一个 Hugging Face 账号、Hugging Face 命令行工具和 `pi-share-hf`。
 
-You can also watch [this video](https://x.com/badlogicgames/status/2041151967695634619), where I show how I publish my `pi-mono` sessions.
+也可以观看[这个视频](https://x.com/badlogicgames/status/2041151967695634619)，里面演示了如何发布我的 `pi-mono` 会话。
 
-I regularly publish my own `pi-mono` work sessions here:
+我定期在这里发布自己的 `pi-mono` 工作会话：
 
-- [badlogicgames/pi-mono on Hugging Face](https://huggingface.co/datasets/badlogicgames/pi-mono)
+- [badlogicgames/pi-mono 上的 Hugging Face 数据集](https://huggingface.co/datasets/badlogicgames/pi-mono)
 
-## All Packages
+## 所有包
 
-| Package | Description |
-|---------|-------------|
-| **[@earendil-works/pi-ai](packages/ai)** | Unified multi-provider LLM API (OpenAI, Anthropic, Google, etc.) |
-| **[@earendil-works/pi-agent-core](packages/agent)** | Agent runtime with tool calling and state management |
-| **[@earendil-works/pi-coding-agent](packages/coding-agent)** | Interactive coding agent CLI |
-| **[@earendil-works/pi-tui](packages/tui)** | Terminal UI library with differential rendering |
+| 包 | 说明 |
+|---------|------|
+| **[@earendil-works/pi-ai](packages/ai)** | 统一的多提供商 LLM API（OpenAI、Anthropic、Google 等） |
+| **[@earendil-works/pi-agent-core](packages/agent)** | 支持工具调用和状态管理的代理运行时 |
+| **[@earendil-works/pi-coding-agent](packages/coding-agent)** | 交互式编码代理命令行工具 |
+| **[@earendil-works/pi-tui](packages/tui)** | 支持差分渲染的终端 UI 库 |
 
-For Slack/chat automation and workflows see [earendil-works/pi-chat](https://github.com/earendil-works/pi-chat).
+Slack/聊天自动化和工作流相关请参见 [earendil-works/pi-chat](https://github.com/earendil-works/pi-chat)。
 
-## Contributing
+## 参与贡献
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and [AGENTS.md](AGENTS.md) for project-specific rules (for both humans and agents).
+贡献指南请见 [CONTRIBUTING.md](CONTRIBUTING.md)，项目规则（面向人和代理）请见 [AGENTS.md](AGENTS.md)。
 
-## Development
+## 开发
 
 ```bash
-npm install --ignore-scripts  # Install all dependencies without running lifecycle scripts
-npm run build        # Build all packages
-npm run check        # Lint, format, and type check
-./test.sh            # Run tests (skips LLM-dependent tests without API keys)
-./pi-test.sh         # Run pi from sources (can be run from any directory)
+npm install --ignore-scripts  # 安装所有依赖，不执行生命周期脚本
+npm run build                 # 构建所有包
+npm run check                 # 代码检查、格式化和类型检查
+./test.sh                     # 运行测试（无 API 密钥时跳过依赖 LLM 的测试）
+./pi-test.sh                  # 从源码运行 pi（可在任意目录执行）
 ```
 
-## Supply-chain hardening
+## 供应链安全
 
-We treat npm dependency changes as reviewed code changes.
+我们将 npm 依赖变更视同代码变更来审核。
 
-- Direct external dependencies are pinned to exact versions. Internal workspace packages remain version-ranged.
-- `.npmrc` sets `save-exact=true` and `min-release-age=2` to avoid same-day dependency releases during npm resolution.
-- `package-lock.json` is the dependency ground truth. Pre-commit blocks accidental lockfile commits unless `PI_ALLOW_LOCKFILE_CHANGE=1` is set.
-- `npm run check` verifies pinned direct deps, native TypeScript import compatibility, and the generated coding-agent shrinkwrap.
-- The published CLI package includes `packages/coding-agent/npm-shrinkwrap.json`, generated from the root lockfile, to pin transitive deps for npm users.
-- Release smoke tests use `npm run release:local` to build, pack, and create isolated npm and Bun installs outside the repo before publishing.
-- Local release installs, documented npm installs, and `pi update --self` use `--ignore-scripts` where supported.
-- CI installs with `npm ci --ignore-scripts`, and a scheduled GitHub workflow runs `npm audit --omit=dev` plus `npm audit signatures --omit=dev`.
-- Shrinkwrap generation has an explicit allowlist for dependency lifecycle scripts; new lifecycle-script deps fail checks until reviewed.
+- 直接外部依赖固定到精确版本。内部工作区包保持版本范围。
+- `.npmrc` 设置了 `save-exact=true` 和 `min-release-age=2`，避免在 npm 解析时用到当天的依赖发布。
+- `package-lock.json` 是依赖的权威来源。pre-commit 会拦截意外的锁文件提交，除非设置了 `PI_ALLOW_LOCKFILE_CHANGE=1`。
+- `npm run check` 会验证固定的直接依赖、原生 TypeScript 导入兼容性以及生成的 coding-agent shrinkwrap。
+- 发布的 CLI 包包含 `packages/coding-agent/npm-shrinkwrap.json`（从根锁文件生成），为 npm 用户锁定传递依赖。
+- 发布冒烟测试使用 `npm run release:local` 在发布前构建、打包，并在仓库外创建隔离的 npm 和 Bun 安装。
+- 本地发布安装、文档中记录的 npm 安装以及 `pi update --self` 在支持处使用 `--ignore-scripts`。
+- CI 使用 `npm ci --ignore-scripts` 安装，定时运行的 GitHub 工作流会执行 `npm audit --omit=dev` 和 `npm audit signatures --omit=dev`。
+- Shrinkwrap 生成包含依赖生命周期脚本的显式白名单；带有生命周期脚本的新依赖在审核前会检查失败。
 
-## License
+## 许可证
 
 MIT
