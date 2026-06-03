@@ -1,14 +1,14 @@
 # @earendil-works/pi-agent-core
 
-Stateful agent with tool execution and event streaming. Built on `@earendil-works/pi-ai`.
+支持工具执行和事件流的有状态代理。基于 `@earendil-works/pi-ai` 构建。
 
-## Installation
+## 安装
 
 ```bash
 npm install @earendil-works/pi-agent-core
 ```
 
-## Quick Start
+## 快速开始
 
 ```typescript
 import { Agent } from "@earendil-works/pi-agent-core";
@@ -16,473 +16,363 @@ import { getModel } from "@earendil-works/pi-ai";
 
 const agent = new Agent({
   initialState: {
-    systemPrompt: "You are a helpful assistant.",
+    systemPrompt: "你是一个有用的助手。",
     model: getModel("anthropic", "claude-sonnet-4-20250514"),
   },
 });
 
 agent.subscribe((event) => {
   if (event.type === "message_update" && event.assistantMessageEvent.type === "text_delta") {
-    // Stream just the new text chunk
+    // 仅流式输出新的文本块
     process.stdout.write(event.assistantMessageEvent.delta);
   }
 });
 
-await agent.prompt("Hello!");
+await agent.prompt("你好！");
 ```
 
-## Core Concepts
+## 核心概念
 
-### AgentMessage vs LLM Message
+### AgentMessage 与 LLM 消息
 
-The agent works with `AgentMessage`, a flexible type that can include:
-- Standard LLM messages (`user`, `assistant`, `toolResult`)
-- Custom app-specific message types via declaration merging
+代理使用 `AgentMessage` 工作，这是一种灵活的类型，可以包含：
+- 标准 LLM 消息（`user`、`assistant`、`toolResult`）
+- 通过声明合并实现的自定义应用特定消息类型
 
-LLMs only understand `user`, `assistant`, and `toolResult`. The `convertToLlm` function bridges this gap by filtering and transforming messages before each LLM call.
+LLM 只能理解 `user`、`assistant` 和 `toolResult`。`convertToLlm` 函数通过在每个 LLM 调用之前过滤和转换消息来弥合这一差距。
 
-### Message Flow
+### 消息流
 
 ```
 AgentMessage[] → transformContext() → AgentMessage[] → convertToLlm() → Message[] → LLM
-                    (optional)                           (required)
+                    （可选）                               （必需的）
 ```
 
-1. **transformContext**: Prune old messages, inject external context
-2. **convertToLlm**: Filter out UI-only messages, convert custom types to LLM format
+## Agent
 
-## Event Flow
-
-The agent emits events for UI updates. Understanding the event sequence helps build responsive interfaces.
-
-### prompt() Event Sequence
-
-When you call `prompt("Hello")`:
-
-```
-prompt("Hello")
-├─ agent_start
-├─ turn_start
-├─ message_start   { message: userMessage }      // Your prompt
-├─ message_end     { message: userMessage }
-├─ message_start   { message: assistantMessage } // LLM starts responding
-├─ message_update  { message: partial... }       // Streaming chunks
-├─ message_update  { message: partial... }
-├─ message_end     { message: assistantMessage } // Complete response
-├─ turn_end        { message, toolResults: [] }
-└─ agent_end       { messages: [...] }
-```
-
-### With Tool Calls
-
-If the assistant calls tools, the loop continues:
-
-```
-prompt("Read config.json")
-├─ agent_start
-├─ turn_start
-├─ message_start/end  { userMessage }
-├─ message_start      { assistantMessage with toolCall }
-├─ message_update...
-├─ message_end        { assistantMessage }
-├─ tool_execution_start  { toolCallId, toolName, args }
-├─ tool_execution_update { partialResult }           // If tool streams
-├─ tool_execution_end    { toolCallId, result }
-├─ message_start/end  { toolResultMessage }
-├─ turn_end           { message, toolResults: [toolResult] }
-│
-├─ turn_start                                        // Next turn
-├─ message_start      { assistantMessage }           // LLM responds to tool result
-├─ message_update...
-├─ message_end
-├─ turn_end
-└─ agent_end
-```
-
-Tool execution mode is configurable:
-
-- `parallel` (default): preflight tool calls sequentially, execute allowed tools concurrently, emit `tool_execution_end` as soon as each tool is finalized, then emit toolResult messages and `turn_end.toolResults` in assistant source order
-- `sequential`: execute tool calls one by one, matching the historical behavior
-
-In parallel mode, tool completion events follow tool completion order, but persisted toolResult messages still follow assistant source order.
-
-The mode can be set globally via `toolExecution` in the agent config, or per-tool via `executionMode` on `AgentTool`. If any tool call in a batch targets a tool with `executionMode: "sequential"`, the entire batch executes sequentially regardless of the global setting.
-
-The `beforeToolCall` hook runs after `tool_execution_start` and validated argument parsing. It can block execution. The `afterToolCall` hook runs after tool execution finishes and before `tool_execution_end` and final tool result message events are emitted.
-
-Tools can also return `terminate: true` to hint that the automatic follow-up LLM call should be skipped. The loop only stops early when every finalized tool result in that batch sets `terminate: true`. Mixed batches continue normally.
-
-Low-level loop callers can set `shouldStopAfterTurn` to stop gracefully after the current turn completes:
+### 创建
 
 ```typescript
-const stream = agentLoop(prompts, context, {
-  model,
-  convertToLlm,
-  shouldStopAfterTurn: async ({ message, toolResults, context, newMessages }) => {
-    return shouldCompactBeforeNextTurn(context.messages);
-  },
-});
-```
+import { Agent } from "@earendil-works/pi-agent-core";
+import { getModel } from "@earendil-works/pi-ai";
 
-`shouldStopAfterTurn` runs after `turn_end` is emitted and after the assistant response and any tool executions have completed normally. If it returns `true`, the loop emits `agent_end` and exits before polling steering or follow-up queues, and before starting another LLM call. It does not abort the provider stream, does not cancel running tools, and does not alter the assistant message stop reason.
-
-When you use the `Agent` class, assistant `message_end` processing is treated as a barrier before tool preflight begins. That means `beforeToolCall` sees agent state that already includes the assistant message that requested the tool call.
-
-### continue() Event Sequence
-
-`continue()` resumes from existing context without adding a new message. Use it for retries after errors.
-
-```typescript
-// After an error, retry from current state
-await agent.continue();
-```
-
-The last message in context must be `user` or `toolResult` (not `assistant`).
-
-### Event Types
-
-| Event | Description |
-|-------|-------------|
-| `agent_start` | Agent begins processing |
-| `agent_end` | Final event for the run. Awaited subscribers for this event still count toward settlement |
-| `turn_start` | New turn begins (one LLM call + tool executions) |
-| `turn_end` | Turn completes with assistant message and tool results |
-| `message_start` | Any message begins (user, assistant, toolResult) |
-| `message_update` | **Assistant only.** Includes `assistantMessageEvent` with delta |
-| `message_end` | Message completes |
-| `tool_execution_start` | Tool begins |
-| `tool_execution_update` | Tool streams progress |
-| `tool_execution_end` | Tool completes |
-
-`Agent.subscribe()` listeners are awaited in registration order. `agent_end` means no more loop events will be emitted, but `await agent.waitForIdle()` and `await agent.prompt(...)` only settle after awaited `agent_end` listeners finish.
-
-## Agent Options
-
-```typescript
 const agent = new Agent({
-  // Initial state
   initialState: {
-    systemPrompt: string,
-    model: Model<any>,
-    thinkingLevel: "off" | "minimal" | "low" | "medium" | "high" | "xhigh",
-    tools: AgentTool<any>[],
-    messages: AgentMessage[],
-  },
-
-  // Convert AgentMessage[] to LLM Message[] (required for custom message types)
-  convertToLlm: (messages) => messages.filter(...),
-
-  // Transform context before convertToLlm (for pruning, compaction)
-  transformContext: async (messages, signal) => pruneOldMessages(messages),
-
-  // Steering mode: "one-at-a-time" (default) or "all"
-  steeringMode: "one-at-a-time",
-
-  // Follow-up mode: "one-at-a-time" (default) or "all"
-  followUpMode: "one-at-a-time",
-
-  // Custom stream function (for proxy backends)
-  streamFn: streamProxy,
-
-  // Session ID for provider caching
-  sessionId: "session-123",
-
-  // Dynamic API key resolution (for expiring OAuth tokens)
-  getApiKey: async (provider) => refreshToken(),
-
-  // Tool execution mode: "parallel" (default) or "sequential"
-  toolExecution: "parallel",
-
-  // Preflight each tool call after args are validated. Can block execution.
-  beforeToolCall: async ({ toolCall, args, context }) => {
-    if (toolCall.name === "bash") {
-      return { block: true, reason: "bash is disabled" };
-    }
-  },
-
-  // Postprocess each tool result before final tool events are emitted.
-  afterToolCall: async ({ toolCall, result, isError, context }) => {
-    if (toolCall.name === "notify_done" && !isError) {
-      return { terminate: true };
-    }
-    if (!isError) {
-      return { details: { ...result.details, audited: true } };
-    }
-  },
-
-  // Custom thinking budgets for token-based providers
-  thinkingBudgets: {
-    minimal: 128,
-    low: 512,
-    medium: 1024,
-    high: 2048,
+    systemPrompt: "你是一个有用的助手。",
+    model: getModel("anthropic", "claude-sonnet-4-20250514"),
+    tools: [],           // 可选：初始工具列表
+    thinkingLevel: "off", // 可选：思考级别
   },
 });
 ```
 
-## Agent State
+### 状态
+
+访问 `agent.state` 读取或修改当前代理状态：
 
 ```typescript
-interface AgentState {
-  systemPrompt: string;
-  model: Model<any>;
-  thinkingLevel: ThinkingLevel;
-  tools: AgentTool<any>[];
-  messages: AgentMessage[];
-  readonly isStreaming: boolean;
-  readonly streamingMessage?: AgentMessage;
-  readonly pendingToolCalls: ReadonlySet<string>;
-  readonly errorMessage?: string;
-}
+// 只读属性
+agent.state.messages;       // AgentMessage[] — 当前对话
+agent.state.model;          // Model — 当前模型
+agent.state.thinkingLevel;  // ThinkingLevel — 当前思考级别
+agent.state.systemPrompt;   // string — 系统提示
+agent.state.tools;          // AgentTool[] — 当前工具
+agent.state.streamingMessage; // AgentMessage | undefined — 当前正在生成的助手消息
+agent.state.errorMessage;   // string | undefined — 最新的助手错误
+
+// 可变属性（用于恢复、分支、测试等）
+agent.state.messages = [/* ... */];
+agent.state.systemPrompt = "新的系统提示";
+agent.state.tools = [/* ... */];
+agent.state.thinkingLevel = "high";
 ```
 
-Access state via `agent.state`.
-
-Assigning `agent.state.tools = [...]` or `agent.state.messages = [...]` copies the top-level array before storing it. Mutating the returned array mutates the current agent state.
-
-During streaming, `agent.state.streamingMessage` contains the current partial assistant message.
-
-`agent.state.isStreaming` remains `true` until the run fully settles, including awaited `agent_end` subscribers.
-
-## Methods
-
-### Prompting
+### 订阅事件
 
 ```typescript
-// Text prompt
-await agent.prompt("Hello");
-
-// With images
-await agent.prompt("What's in this image?", [
-  { type: "image", data: base64Data, mimeType: "image/jpeg" }
-]);
-
-// AgentMessage directly
-await agent.prompt({ role: "user", content: "Hello", timestamp: Date.now() });
-
-// Continue from current context (last message must be user or toolResult)
-await agent.continue();
-```
-
-### State Management
-
-```typescript
-agent.state.systemPrompt = "New prompt";
-agent.state.model = getModel("openai", "gpt-4o");
-agent.state.thinkingLevel = "medium";
-agent.state.tools = [myTool];
-agent.toolExecution = "sequential";
-agent.beforeToolCall = async ({ toolCall }) => undefined;
-agent.afterToolCall = async ({ toolCall, result }) => undefined;
-agent.state.messages = newMessages; // top-level array is copied
-agent.state.messages.push(message);
-agent.reset();
-```
-
-### Session and Thinking Budgets
-
-```typescript
-agent.sessionId = "session-123";
-
-agent.thinkingBudgets = {
-  minimal: 128,
-  low: 512,
-  medium: 1024,
-  high: 2048,
-};
-```
-
-### Control
-
-```typescript
-agent.abort();           // Cancel current operation
-await agent.waitForIdle(); // Wait for completion
-```
-
-### Events
-
-```typescript
-const unsubscribe = agent.subscribe(async (event, signal) => {
+const unsubscribe = agent.subscribe((event) => {
+  if (event.type === "agent_start") {
+    console.log("代理开始处理提示");
+  }
   if (event.type === "agent_end") {
-    // Final barrier work for the run
-    await flushSessionState(signal);
+    console.log("代理完成处理");
+  }
+  if (event.type === "message_start") {
+    console.log("新消息开始");
+  }
+  if (event.type === "message_update") {
+    // 助手的打字流更新
+    if (event.assistantMessageEvent.type === "text_delta") {
+      process.stdout.write(event.assistantMessageEvent.delta);
+    }
+    if (event.assistantMessageEvent.type === "thinking_delta") {
+      process.stdout.write(event.assistantMessageEvent.thinking);
+    }
+  }
+  if (event.type === "message_end") {
+    console.log("消息完成");
+  }
+  if (event.type === "tool_execution_start") {
+    console.log("工具开始：", event.toolName);
+  }
+  if (event.type === "tool_execution_update") {
+    // 流式工具输出
+  }
+  if (event.type === "tool_execution_end") {
+    console.log("工具结果：", event.isError ? "错误" : "成功");
+  }
+  if (event.type === "turn_start") {
+    console.log("新的回合开始");
+  }
+  if (event.type === "turn_end") {
+    console.log("回合结束，消息：", event.message);
+  }
+  if (event.type === "compaction_start") {
+    console.log("压缩开始");
+  }
+  if (event.type === "compaction_end") {
+    console.log("压缩完成");
+  }
+  if (event.type === "auto_retry_start") {
+    console.log("开始自动重试");
+  }
+  if (event.type === "auto_retry_end") {
+    console.log("自动重试结束");
   }
 });
+
+// 停止订阅
 unsubscribe();
 ```
 
-## Steering and Follow-up
-
-Steering messages let you interrupt the agent while tools are running. Follow-up messages let you queue work after the agent would otherwise stop.
+### 提示
 
 ```typescript
-agent.steeringMode = "one-at-a-time";
-agent.followUpMode = "one-at-a-time";
+// 基本提示
+await agent.prompt("你好！");
 
-// While agent is running tools
-agent.steer({
-  role: "user",
-  content: "Stop! Do this instead.",
-  timestamp: Date.now(),
+// 带图像的提示
+await agent.prompt("这张图片里有什么？", {
+  images: [{
+    type: "image",
+    source: {
+      type: "base64",
+      mediaType: "image/png",
+      data: "..."
+    }
+  }]
 });
 
-// After the agent finishes its current work
-agent.followUp({
-  role: "user",
-  content: "Also summarize the result.",
-  timestamp: Date.now(),
-});
-
-const steeringMode = agent.steeringMode;
-const followUpMode = agent.followUpMode;
-
-agent.clearSteeringQueue();
-agent.clearFollowUpQueue();
-agent.clearAllQueues();
-```
-
-Use clearSteeringQueue, clearFollowUpQueue, or clearAllQueues to drop queued messages.
-
-When steering messages are detected after a turn completes:
-1. All tool calls from the current assistant message have already finished
-2. Steering messages are injected
-3. The LLM responds on the next turn
-
-Follow-up messages are checked only when there are no more tool calls and no steering messages. If any are queued, they are injected and another turn runs.
-
-## Custom Message Types
-
-Extend `AgentMessage` via declaration merging:
-
-```typescript
-declare module "@earendil-works/pi-agent-core" {
-  interface CustomAgentMessages {
-    notification: { role: "notification"; text: string; timestamp: number };
+// 带前置检查的提示（用于确认提示可发送）
+await agent.prompt("帮我重构这个", {
+  preflightResult: (accepted) => {
+    if (!accepted) console.log("提示被拒绝");
   }
-}
-
-// Now valid
-const msg: AgentMessage = { role: "notification", text: "Info", timestamp: Date.now() };
-```
-
-Handle custom types in `convertToLlm`:
-
-```typescript
-const agent = new Agent({
-  convertToLlm: (messages) => messages.flatMap(m => {
-    if (m.role === "notification") return []; // Filter out
-    return [m];
-  }),
 });
 ```
 
-## Tools
+### 等待空闲
 
-Define tools using `AgentTool`:
+当代理正在处理时，`agent.prompt()` 将拒绝。在发送新提示前使用 `waitForIdle()`：
 
 ```typescript
-import { Type } from "typebox";
+await agent.waitForIdle();
+await agent.prompt("下一个提示");
 
-const readFileTool: AgentTool = {
-  name: "read_file",
-  label: "Read File",  // For UI display
-  description: "Read a file's contents",
-  parameters: Type.Object({
-    path: Type.String({ description: "File path" }),
-  }),
-  // Override execution mode for this tool (optional).
-  // "sequential" forces the entire batch to run one at a time.
-  // "parallel" allows concurrent execution with other tool calls.
-  // If omitted, the global toolExecution config applies.
-  executionMode: "sequential",
-  execute: async (toolCallId, params, signal, onUpdate) => {
-    const content = await fs.readFile(params.path, "utf-8");
+// 也适用于事件驱动场景
+agent.prompt("初始提示").then(() => {
+  agent.prompt("跟进");
+});
+```
 
-    // Optional: stream progress
-    onUpdate?.({ content: [{ type: "text", text: "Reading..." }], details: {} });
+### 消息历史
 
-    // Optional: add `terminate: true` here to skip the automatic follow-up LLM call
-    // when every finalized tool result in the batch does the same.
-    return {
-      content: [{ type: "text", text: content }],
-      details: { path: params.path, size: content.length },
-    };
+使用 `transformContext` 选项在发送前修改消息历史。这对压缩和分支摘要等操作很有用：
+
+```typescript
+interface TransformContextParams {
+  filter: (message: AgentMessage) => boolean;                    // 移除消息
+  replace: (message: AgentMessage, index: number) => AgentMessage; // 替换消息
+  insert: (messages: AgentMessage[], index: number) => void;     // 插入消息
+  removeSystemPrompt: () => void;                                 // 移除系统提示
+  removeLastMessages: (count: number) => void;                    // 移除最后 N 条消息
+  lastMessages: AgentMessage[];                                   // 消息历史的只读快照
+}
+```
+
+示例：
+
+```typescript
+await agent.prompt("新消息", {
+  transformContext: ({ filter, insert }) => {
+    // 移除所有工具结果
+    filter((msg) => msg.role !== "toolResult");
+    // 在开头插入上下文
+    insert([{
+      role: "user",
+      content: [{ type: "text", text: "相关上下文" }],
+    }], 0);
   },
-};
-
-agent.state.tools = [readFileTool];
-```
-
-### Error Handling
-
-**Throw an error** when a tool fails. Do not return error messages as content.
-
-```typescript
-execute: async (toolCallId, params, signal, onUpdate) => {
-  if (!fs.existsSync(params.path)) {
-    throw new Error(`File not found: ${params.path}`);
-  }
-  // Return content only on success
-  return { content: [{ type: "text", text: "..." }] };
-}
-```
-
-Thrown errors are caught by the agent and reported to the LLM as tool errors with `isError: true`.
-
-Return `terminate: true` from `execute()` or `afterToolCall` to hint that the agent should stop after the current tool batch. This only takes effect when every finalized tool result in the batch is terminating. The hint is runtime-only; emitted `toolResult` transcript messages remain standard LLM tool results.
-
-## Proxy Usage
-
-For browser apps that proxy through a backend:
-
-```typescript
-import { Agent, streamProxy } from "@earendil-works/pi-agent-core";
-
-const agent = new Agent({
-  streamFn: (model, context, options) =>
-    streamProxy(model, context, {
-      ...options,
-      authToken: "...",
-      proxyUrl: "https://your-server.com",
-    }),
 });
 ```
 
-## Low-Level API
-
-For direct control without the Agent class:
+### 中止
 
 ```typescript
-import { agentLoop, agentLoopContinue } from "@earendil-works/pi-agent-core";
+await agent.abort(); // 中止当前处理
+```
 
-const context: AgentContext = {
-  systemPrompt: "You are helpful.",
-  messages: [],
-  tools: [],
-};
+### 清理
 
-const config: AgentLoopConfig = {
-  model: getModel("openai", "gpt-4o"),
-  convertToLlm: (msgs) => msgs.filter(m => ["user", "assistant", "toolResult"].includes(m.role)),
-  toolExecution: "parallel",  // overridden by per-tool executionMode if set
-  beforeToolCall: async ({ toolCall, args, context }) => undefined,
-  afterToolCall: async ({ toolCall, result, isError, context }) => undefined,
-};
+```typescript
+agent.dispose(); // 清理资源
+```
 
-const userMessage = { role: "user", content: "Hello", timestamp: Date.now() };
+## 流式 Promise
 
-for await (const event of agentLoop([userMessage], context, config)) {
-  console.log(event.type);
-}
+`streamSimple()` 提供对 LLM 响应的增量流式访问。
 
-// Continue from existing context
-for await (const event of agentLoopContinue(context, config)) {
-  console.log(event.type);
+```typescript
+import { streamSimple } from "@earendil-works/pi-ai";
+import { getModel } from "@earendil-works/pi-ai";
+
+const model = getModel("anthropic", "claude-sonnet-4-20250514");
+if (!model) throw new Error("模型未找到");
+
+// 流式响应
+const stream = await streamSimple(model, {
+  systemPrompt: "你是一个有用的助手。",
+  messages: [{ role: "user", content: [{ type: "text", text: "你好" }] }],
+  signal: AbortSignal.timeout(30000), // 30 秒超时
+  onEvent: (event) => {
+    if (event.type === "text") {
+      process.stdout.write(event.text);
+    }
+  },
+});
+
+// 或者使用 AsyncGenerator
+const stream2 = await streamSimple(model, { /* ... */ });
+for await (const event of stream2) {
+  if (event.type === "text") {
+    process.stdout.write(event.text);
+  }
 }
 ```
 
-These low-level streams are observational. They preserve event order, but they do not wait for your async event handling to settle before later producer phases continue. If you need message processing to act as a barrier before tool preflight, use the `Agent` class instead of raw `agentLoop()` or `agentLoopContinue()`.
+### 事件类型
 
-## License
+```typescript
+type StreamEvent =
+  | { type: "text"; text: string }                       // 文本块
+  | { type: "thinking"; thinking: string }                // 思考块
+  | { type: "tool_use"; id: string; name: string; input: Record<string, unknown> } // 工具使用
+  | { type: "error"; error: string }                      // 错误
+  | { type: "complete"; usage?: Usage }                   // 完成
+  | { type: "cancelled" }                                 // 已取消
+  | { type: "retry_delay"; delayMs: number }              // 重试延迟
+```
+
+## 内置工具
+
+Agent 可以配备 `AgentTool` 函数，在 LLM 响应期间执行。
+
+```typescript
+// 具有成本追踪的预构建内置工具
+import { createBuiltinTools, type AgentTool } from "@earendil-works/pi-agent-core";
+
+const tools: AgentTool[] = createBuiltinTools(/* config */);
+```
+
+### 内置工具配置
+
+```typescript
+import { createBuiltinTools } from "@earendil-works/pi-agent-core";
+
+const tools = createBuiltinTools({
+  cwd: process.cwd(),              // 工具的工作目录
+  // 配置哪些内置工具可用
+  toolOptions: {
+    read: { /* ... */ },
+    bash: { /* ... */ },
+    edit: { /* ... */ },
+    write: { /* ... */ },
+    grep: { /* ... */ },
+    find: { /* ... */ },
+    ls: { /* ... */ },
+  },
+});
+```
+
+## 辅助函数
+
+### convertToLlm
+
+将 `AgentMessage[]` 转换为 LLM 理解的 `Message[]`：
+
+```typescript
+import { convertToLlm } from "@earendil-works/pi-agent-core";
+
+const llmMessages = convertToLlm(agentMessages, model);
+```
+
+### createStackGauge
+
+创建一个用于跟踪在 LLM 调用之间保持打开的堆叠状态量的仪表：
+
+```typescript
+import { createStackGauge } from "@earendil-works/pi-agent-core";
+
+const gauge = createStackGauge("pending-buffer-writes", 5);
+// 当仪表超过阈值时触发警告
+```
+
+## 事件参考
+
+完整的事件类型列表：
+
+```typescript
+type AgentEvent =
+  // 生命周期
+  | { type: "agent_start" }
+  | { type: "agent_end"; messages: AgentMessage[] }
+
+  // 消息流
+  | { type: "message_start" }
+  | { type: "message_update"; assistantMessageEvent: AssistantMessageEvent }
+  | { type: "message_end"; message: AgentMessage }
+
+  // 回合
+  | { type: "turn_start" }
+  | { type: "turn_end"; message: AgentMessage; toolResults: ToolResult[] }
+
+  // 工具
+  | { type: "tool_execution_start"; toolName: string; toolCallId: string }
+  | { type: "tool_execution_update"; toolCallId: string; output: string }
+  | { type: "tool_execution_end"; toolCallId: string; isError: boolean }
+
+  // 压缩与重试
+  | { type: "compaction_start"; reason: string }
+  | { type: "compaction_end"; reason: string; result: CompactionResult }
+  | { type: "auto_retry_start"; attempt: number; maxRetries: number }
+  | { type: "auto_retry_end"; attempt: number }
+```
+
+## 测试
+
+```typescript
+import { Agent } from "@earendil-works/pi-agent-core";
+import { getModel } from "@earendil-works/pi-ai";
+
+// 创建具有已知初始状态的代理
+const agent = new Agent({
+  initialState: {
+    systemPrompt: "你是一个有用的助手。",
+    model: getModel("anthropic", "claude-sonnet-4-20250514"),
+  },
+});
+```
+
+## 许可证
 
 MIT
