@@ -729,11 +729,11 @@
     }
 
     .tool-params-hint::after {
-      content: '[click to show parameters]';
+      content: '[点击显示参数]';
     }
 
     .tool-item.params-expanded .tool-params-hint::after {
-      content: '[hide parameters]';
+      content: '[隐藏参数]';
     }
 
     .tool-params-content {

@@ -98,7 +98,7 @@ export function parseArgs(args: string[]): Args {
 			if (i + 1 < args.length) {
 				result.name = args[++i];
 			} else {
-				result.diagnostics.push({ type: "error", message: "--name requires a value" });
+				result.diagnostics.push({ type: "error", message: "--name 需要一个值" });
 			}
 		} else if (arg === "--no-session") {
 			result.noSession = true;
@@ -133,7 +133,7 @@ export function parseArgs(args: string[]): Args {
 			} else {
 				result.diagnostics.push({
 					type: "warning",
-					message: `Invalid thinking level "${level}". Valid values: ${VALID_THINKING_LEVELS.join(", ")}`,
+					message: `无效的思考级别 "${level}"。有效值: ${VALID_THINKING_LEVELS.join(", ")}`,
 				});
 			}
 		} else if (arg === "--print" || arg === "-p") {
@@ -195,7 +195,7 @@ export function parseArgs(args: string[]): Args {
 				}
 			}
 		} else if (arg.startsWith("-") && !arg.startsWith("--")) {
-			result.diagnostics.push({ type: "error", message: `Unknown option: ${arg}` });
+			result.diagnostics.push({ type: "error", message: `未知选项: ${arg}` });
 		} else if (!arg.startsWith("-")) {
 			result.messages.push(arg);
 		}
@@ -210,7 +210,7 @@ export function printHelp(extensionFlags?: ExtensionFlag[]): void {
 			? `\n${chalk.bold("Extension CLI Flags:")}\n${extensionFlags
 					.map((flag) => {
 						const value = flag.type === "string" ? " <value>" : "";
-						const description = flag.description ?? `Registered by ${flag.extensionPath}`;
+						const description = flag.description ?? `由 ${flag.extensionPath} 注册`;
 						return `  --${flag.name}${value}`.padEnd(30) + description;
 					})
 					.join("\n")}\n`

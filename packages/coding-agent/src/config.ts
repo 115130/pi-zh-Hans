@@ -176,7 +176,7 @@ function readCommandOutput(
 	});
 	if (result.status === 0) return result.stdout.trim() || undefined;
 	if (options.requireSuccess) {
-		const reason = result.error?.message || result.stderr.trim() || `exit code ${result.status ?? "unknown"}`;
+		const reason = result.error?.message || result.stderr.trim() || `退出码 ${result.status ?? "未知"}`;
 		throw new Error(`运行 ${[command, ...args].join(" ")}: ${reason}`);
 	}
 	return undefined;

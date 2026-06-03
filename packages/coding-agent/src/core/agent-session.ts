@@ -1178,7 +1178,7 @@ export class AgentSession {
 		try {
 			const content = readFileSync(skill.filePath, "utf-8");
 			const body = stripFrontmatter(content).trim();
-			const skillBlock = `<skill name="${skill.name}" location="${skill.filePath}">\nReferences are relative to ${skill.baseDir}.\n\n${body}\n</skill>`;
+			const skillBlock = `<skill name="${skill.name}" location="${skill.filePath}">\n引用相对于 ${skill.baseDir}。\n\n${body}\n</skill>`;
 			return args ? `${skillBlock}\n\n${args}` : skillBlock;
 		} catch (err) {
 			// Emit error like extension commands do
@@ -1434,7 +1434,7 @@ export class AgentSession {
 	 */
 	async setModel(model: Model<any>): Promise<void> {
 		if (!this._modelRegistry.hasConfiguredAuth(model)) {
-			throw new Error(`No API key for ${model.provider}/${model.id}`);
+			throw new Error(`模型 ${model.provider}/${model.id} 未配置 API 密钥`);
 		}
 
 		const previousModel = this.model;
@@ -1748,7 +1748,7 @@ export class AgentSession {
 				result: undefined,
 				aborted,
 				willRetry: false,
-				errorMessage: aborted ? undefined : `Compaction failed: ${message}`,
+				errorMessage: aborted ? undefined : `压缩失败: ${message}`,
 			});
 			throw error;
 		} finally {
