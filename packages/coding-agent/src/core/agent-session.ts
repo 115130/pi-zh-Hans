@@ -415,7 +415,7 @@ export class AgentSession {
 				if (err instanceof Error) {
 					throw err;
 				}
-				throw new Error(`Extension failed, blocking execution: ${String(err)}`);
+				throw new Error(`扩展失败，阻塞执行: ${String(err)}`);
 			}
 		};
 
@@ -2025,7 +2025,7 @@ export class AgentSession {
 			// Continue once so queued messages are delivered.
 			return this.agent.hasQueuedMessages();
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "compaction failed";
+			const errorMessage = error instanceof Error ? error.message : "压缩失败";
 			this._emit({
 				type: "compaction_end",
 				reason,

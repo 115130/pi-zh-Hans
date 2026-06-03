@@ -1,39 +1,39 @@
 {
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"title": "Pi Coding Agent Theme",
-	"description": "Theme schema for Pi coding agent",
+	"description": "Pi 编码代理的主题模式",
 	"type": "object",
 	"required": ["name", "colors"],
 	"properties": {
 		"$schema": {
 			"type": "string",
-			"description": "JSON schema reference"
+			"description": "JSON 模式引用"
 		},
 		"name": {
 			"type": "string",
-			"description": "Theme name"
+			"description": "主题名称"
 		},
 		"vars": {
 			"type": "object",
-			"description": "Reusable color variables",
+			"description": "可复用颜色变量",
 			"additionalProperties": {
 				"oneOf": [
 					{
 						"type": "string",
-						"description": "Hex color (#RRGGBB), variable reference, or empty string for terminal default"
+						"description": "十六进制颜色(#RRGGBB)、变量引用或空字符串（使用终端默认）"
 					},
 					{
 						"type": "integer",
 						"minimum": 0,
 						"maximum": 255,
-						"description": "256-color palette index (0-255)"
+						"description": "256 色调色板索引（0-255）"
 					}
 				]
 			}
 		},
 		"colors": {
 			"type": "object",
-			"description": "Theme color definitions (all required)",
+			"description": "主题颜色定义（全部必需）",
 			"required": [
 				"accent",
 				"border",
@@ -90,226 +90,226 @@
 			"properties": {
 				"accent": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Primary accent color (logo, selected items, cursor)"
+					"description": "主要强调色（徽标、选中项、光标）"
 				},
 				"border": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Normal borders"
+					"description": "普通边框"
 				},
 				"borderAccent": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Highlighted borders"
+					"description": "高亮边框"
 				},
 				"borderMuted": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Subtle borders"
+					"description": "柔和边框"
 				},
 				"success": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Success states"
+					"description": "成功状态"
 				},
 				"error": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Error states"
+					"description": "错误状态"
 				},
 				"warning": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Warning states"
+					"description": "警告状态"
 				},
 				"muted": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Secondary/dimmed text"
+					"description": "次要/暗淡文本"
 				},
 				"dim": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Very dimmed text (more subtle than muted)"
+					"description": "极暗文本（比柔和更淡）"
 				},
 				"text": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Default text color (usually empty string)"
+					"description": "默认文本颜色（通常为空字符串）"
 				},
 				"thinkingText": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Thinking block text color"
+					"description": "思考块文本颜色"
 				},
 				"selectedBg": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Selected item background"
+					"description": "选中项背景"
 				},
 				"userMessageBg": {
 					"$ref": "#/$defs/colorValue",
-					"description": "User message background"
+					"description": "用户消息背景"
 				},
 				"userMessageText": {
 					"$ref": "#/$defs/colorValue",
-					"description": "User message text color"
+					"description": "用户消息文本颜色"
 				},
 				"customMessageBg": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Custom message background (hook-injected messages)"
+					"description": "自定义消息背景（钩子注入的消息）"
 				},
 				"customMessageText": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Custom message text color"
+					"description": "自定义消息文本颜色"
 				},
 				"customMessageLabel": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Custom message type label color"
+					"description": "自定义消息类型标签颜色"
 				},
 				"toolPendingBg": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Tool execution box (pending state)"
+					"description": "工具执行框（待处理状态）"
 				},
 				"toolSuccessBg": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Tool execution box (success state)"
+					"description": "工具执行框（成功状态）"
 				},
 				"toolErrorBg": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Tool execution box (error state)"
+					"description": "工具执行框（错误状态）"
 				},
 				"toolTitle": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Tool execution box title color"
+					"description": "工具执行框标题颜色"
 				},
 				"toolOutput": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Tool execution box output text color"
+					"description": "工具执行框输出文本颜色"
 				},
 				"mdHeading": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Markdown heading text"
+					"description": "Markdown 标题文本"
 				},
 				"mdLink": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Markdown link text"
+					"description": "Markdown 链接文本"
 				},
 				"mdLinkUrl": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Markdown link URL"
+					"description": "Markdown 链接 URL"
 				},
 				"mdCode": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Markdown inline code"
+					"description": "Markdown 行内代码"
 				},
 				"mdCodeBlock": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Markdown code block content"
+					"description": "Markdown 代码块内容"
 				},
 				"mdCodeBlockBorder": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Markdown code block fences"
+					"description": "Markdown 代码块边框"
 				},
 				"mdQuote": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Markdown blockquote text"
+					"description": "Markdown 引用文本"
 				},
 				"mdQuoteBorder": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Markdown blockquote border"
+					"description": "Markdown 引用边框"
 				},
 				"mdHr": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Markdown horizontal rule"
+					"description": "Markdown 水平分割线"
 				},
 				"mdListBullet": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Markdown list bullets/numbers"
+					"description": "Markdown 列表符号/编号"
 				},
 				"toolDiffAdded": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Added lines in tool diffs"
+					"description": "工具差异中的新增行"
 				},
 				"toolDiffRemoved": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Removed lines in tool diffs"
+					"description": "工具差异中的删除行"
 				},
 				"toolDiffContext": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Context lines in tool diffs"
+					"description": "工具差异中的上下文行"
 				},
 				"syntaxComment": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Syntax highlighting: comments"
+					"description": "语法高亮：注释"
 				},
 				"syntaxKeyword": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Syntax highlighting: keywords"
+					"description": "语法高亮：关键字"
 				},
 				"syntaxFunction": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Syntax highlighting: function names"
+					"description": "语法高亮：函数名"
 				},
 				"syntaxVariable": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Syntax highlighting: variable names"
+					"description": "语法高亮：变量名"
 				},
 				"syntaxString": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Syntax highlighting: string literals"
+					"description": "语法高亮：字符串字面量"
 				},
 				"syntaxNumber": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Syntax highlighting: number literals"
+					"description": "语法高亮：数字字面量"
 				},
 				"syntaxType": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Syntax highlighting: type names"
+					"description": "语法高亮：类型名"
 				},
 				"syntaxOperator": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Syntax highlighting: operators"
+					"description": "语法高亮：运算符"
 				},
 				"syntaxPunctuation": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Syntax highlighting: punctuation"
+					"description": "语法高亮：标点符号"
 				},
 				"thinkingOff": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Thinking level border: off"
+					"description": "思考级别边框：关闭"
 				},
 				"thinkingMinimal": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Thinking level border: minimal"
+					"description": "思考级别边框：最低"
 				},
 				"thinkingLow": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Thinking level border: low"
+					"description": "思考级别边框：低"
 				},
 				"thinkingMedium": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Thinking level border: medium"
+					"description": "思考级别边框：中"
 				},
 				"thinkingHigh": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Thinking level border: high"
+					"description": "思考级别边框：高"
 				},
 				"thinkingXhigh": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Thinking level border: xhigh (OpenAI codex-max only)"
+					"description": "思考级别边框：最高（仅限 OpenAI codex-max）"
 				},
 				"bashMode": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Editor border color in bash mode"
+					"description": "Bash 模式编辑器边框颜色"
 				}
 			},
 			"additionalProperties": false
 		},
 		"export": {
 			"type": "object",
-			"description": "Optional colors for HTML export (defaults derived from userMessageBg if not specified)",
+			"description": "用于 HTML 导出的可选颜色（未指定时默认继承自用户消息背景）",
 			"properties": {
 				"pageBg": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Page background color"
+					"description": "页面背景色"
 				},
 				"cardBg": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Card/container background color"
+					"description": "卡片/容器背景色"
 				},
 				"infoBg": {
 					"$ref": "#/$defs/colorValue",
-					"description": "Info sections background (system prompt, notices)"
+					"description": "信息区域背景（系统提示、通知）"
 				}
 			},
 			"additionalProperties": false
@@ -321,13 +321,13 @@
 			"oneOf": [
 				{
 					"type": "string",
-					"description": "Hex color (#RRGGBB), variable reference, or empty string for terminal default"
+					"description": "十六进制颜色(#RRGGBB)、变量引用或空字符串（使用终端默认）"
 				},
 				{
 					"type": "integer",
 					"minimum": 0,
 					"maximum": 255,
-					"description": "256-color palette index (0-255)"
+					"description": "256 色调色板索引（0-255）"
 				}
 			]
 		}
