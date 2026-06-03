@@ -37,7 +37,7 @@ import type {
 	RpcSlashCommand,
 } from "./rpc-types.ts";
 
-// Re-export types for consumers
+// 为使用者重新导出类型
 export type {
 	RpcCommand,
 	RpcExtensionUIRequest,
@@ -75,13 +75,13 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 		return { id, type: "response", command, success: false, error: message };
 	};
 
-	// Pending extension UI requests waiting for response
+	// 等待响应的扩展 UI 请求 for response
 	const pendingExtensionRequests = new Map<
 		string,
 		{ resolve: (value: any) => void; reject: (error: Error) => void }
 	>();
 
-	// Shutdown request flag
+	// 关闭请求标志
 	let shutdownRequested = false;
 	let shuttingDown = false;
 	const signalCleanupHandlers: Array<() => void> = [];
@@ -270,7 +270,7 @@ export async function runRpcMode(runtimeHost: AgentSessionRuntime): Promise<neve
 		},
 
 		addAutocompleteProvider(): void {
-			// Autocomplete provider composition is not supported in RPC mode
+			// 自动完成提供者 composition is not supported in RPC mode
 		},
 
 		setEditorComponent(): void {

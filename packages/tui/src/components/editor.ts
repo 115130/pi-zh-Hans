@@ -34,12 +34,12 @@ function segmentWithMarkers(
 	baseSegmenter: Intl.Segmenter,
 	validIds: Set<number>,
 ): Iterable<Intl.SegmentData> {
-	// Fast path: no paste markers in the text or no valid IDs.
+	// 快速路径：文本中没有粘贴标记 or no valid IDs.
 	if (validIds.size === 0 || !text.includes("[paste #")) {
 		return baseSegmenter.segment(text);
 	}
 
-	// Find all marker spans with valid IDs.
+	// 查找所有具有有效 ID 的标记范围。
 	const markers: Array<{ start: number; end: number }> = [];
 	for (const m of text.matchAll(PASTE_MARKER_REGEX)) {
 		const id = Number.parseInt(m[1]!, 10);
@@ -50,7 +50,7 @@ function segmentWithMarkers(
 		return baseSegmenter.segment(text);
 	}
 
-	// Build merged segment list.
+	// 构建合并的分段列表。
 	const baseSegments = baseSegmenter.segment(text);
 	const result: Intl.SegmentData[] = [];
 	let markerIdx = 0;

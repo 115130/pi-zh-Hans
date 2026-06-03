@@ -194,8 +194,8 @@ export const streamOpenAICompletions: StreamFunction<"openai-completions", OpenA
 					});
 				} else if (block.type === "toolCall") {
 					block.arguments = parseStreamingJson(block.partialArgs);
-					// Finalize in-place and strip the scratch buffers so replay only
-					// carries parsed arguments.
+					// 就地完成并清除临时缓冲区 so replay only
+					// 携带已解析的参数。
 					delete block.partialArgs;
 					delete block.streamIndex;
 					stream.push({
@@ -267,7 +267,7 @@ export const streamOpenAICompletions: StreamFunction<"openai-completions", OpenA
 			for await (const chunk of openaiStream) {
 				if (!chunk || typeof chunk !== "object") continue;
 
-				// OpenAI documents ChatCompletionChunk.id as the unique chat completion identifier,
+				// OpenAI 将 ChatCompletionChunk.id 记录为唯一 chat completion identifier,
 				// and each chunk in a streamed completion carries the same id.
 				output.responseId ||= chunk.id;
 				if (typeof chunk.model === "string" && chunk.model.length > 0 && chunk.model !== model.id) {

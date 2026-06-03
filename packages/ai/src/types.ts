@@ -72,7 +72,7 @@ export interface ThinkingBudgets {
 	high?: number;
 }
 
-// Base options all providers share
+// 所有提供商共享的基础选项
 export type CacheRetention = "none" | "short" | "long";
 
 export type Transport = "sse" | "websocket" | "websocket-cached" | "auto";
@@ -197,14 +197,14 @@ export interface ImagesOptions {
 
 export type ProviderImagesOptions = ImagesOptions & Record<string, unknown>;
 
-// Unified options with reasoning passed to streamSimple() and completeSimple()
+// 统一选项，带推理参数传递给 streamSimple() and completeSimple()
 export interface SimpleStreamOptions extends StreamOptions {
 	reasoning?: ThinkingLevel;
 	/** Custom token budgets for thinking levels (token-based providers only) */
 	thinkingBudgets?: ThinkingBudgets;
 }
 
-// Generic StreamFunction with typed options.
+// 带类型选项的通用 StreamFunction。
 //
 // Contract:
 // - Must return an AssistantMessageEventStream.

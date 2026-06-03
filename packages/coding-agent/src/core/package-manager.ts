@@ -319,7 +319,7 @@ function collectFiles(
 			}
 		}
 	} catch {
-		// Ignore errors
+		// 忽略错误
 	}
 
 	return files;
@@ -395,7 +395,7 @@ function collectSkillEntries(
 			entries.push(...collectSkillEntries(fullPath, mode, ig, root));
 		}
 	} catch {
-		// Ignore errors
+		// 忽略错误
 	}
 
 	return entries;
@@ -471,7 +471,7 @@ function collectAutoPromptEntries(dir: string): string[] {
 			}
 		}
 	} catch {
-		// Ignore errors
+		// 忽略错误
 	}
 
 	return entries;
@@ -508,7 +508,7 @@ function collectAutoThemeEntries(dir: string): string[] {
 			}
 		}
 	} catch {
-		// Ignore errors
+		// 忽略错误
 	}
 
 	return entries;
@@ -602,7 +602,7 @@ function collectAutoExtensionEntries(dir: string): string[] {
 			}
 		}
 	} catch {
-		// Ignore errors
+		// 忽略错误
 	}
 
 	return entries;
@@ -2367,7 +2367,7 @@ export class DefaultPackageManager implements PackageManager {
 					files.push(...collectResourceFiles(p, resourceType));
 				}
 			} catch {
-				// Ignore errors
+				// 忽略错误
 			}
 		}
 		return files;

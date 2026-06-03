@@ -65,14 +65,14 @@ export interface Terminal {
 	 */
 	drainInput(maxMs?: number, idleMs?: number): Promise<void>;
 
-	// Write output to terminal
+	// 向终端写入输出
 	write(data: string): void;
 
-	// Get terminal dimensions
+	// 获取终端尺寸
 	get columns(): number;
 	get rows(): number;
 
-	// Whether Kitty keyboard protocol is active
+	// Kitty 键盘协议是否激活
 	get kittyProtocolActive(): boolean;
 
 	// 光标位置ing (relative to current position)

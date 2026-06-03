@@ -23,7 +23,7 @@ export const isBunBinary =
 export const isBunRuntime = !!process.versions.bun;
 
 // =============================================================================
-// Install Method Detection
+// 安装方式检测
 // =============================================================================
 
 export type InstallMethod = "bun-binary" | "npm" | "pnpm" | "yarn" | "bun" | "unknown";
@@ -94,8 +94,8 @@ function getInferredNpmInstall(): { root: string; prefix: string } | undefined {
 	if (!root) return undefined;
 	const rootParent = path.dirname(root);
 	if (path.basename(rootParent) === "lib") return { root, prefix: path.dirname(rootParent) };
-	// Windows global npm prefixes use `<prefix>\\node_modules`, which is
-	// indistinguishable from local project installs by path shape alone. Do not
+	// Windows 全局 npm 前缀使用 `<prefix>\\node_modules`, which is
+	// 无法与本地项目安装区分 by path shape alone. Do not
 	// infer unsupported Windows custom prefixes without `npm root -g` evidence.
 	return undefined;
 }

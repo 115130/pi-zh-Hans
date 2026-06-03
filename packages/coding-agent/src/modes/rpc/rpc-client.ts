@@ -48,7 +48,7 @@ export interface ModelInfo {
 export type RpcEventListener = (event: AgentEvent) => void;
 
 // ============================================================================
-// RPC Client
+// RPC 客户端
 // ============================================================================
 
 export class RpcClient {
@@ -96,7 +96,7 @@ export class RpcClient {
 		});
 		this.process = childProcess;
 
-		// Collect stderr for debugging
+		// 收集 stderr 用于调试
 		childProcess.stderr?.on("data", (data) => {
 			this.stderr += data.toString();
 			process.stderr.write(data);
@@ -122,7 +122,7 @@ export class RpcClient {
 			this.rejectPendingRequests(stdinError);
 		});
 
-		// Set up strict JSONL reader for stdout.
+		// 为标准输出设置严格的 JSONL 读取器。
 		this.stopReadingStdout = attachJsonlLineReader(childProcess.stdout!, (line) => {
 			this.handleLine(line);
 		});
