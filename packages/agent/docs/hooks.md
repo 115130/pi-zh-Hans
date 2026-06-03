@@ -1,12 +1,12 @@
-# AgentHarness hooks design
+# AgentHarness 钩子设计
 
-<!-- Synced from jot 3utlzkxy. Edit this file in-repo going forward. -->
+<!-- 从 jot 3utlzkxy 同步。请在此仓库内向前编辑此文件。 -->
 
-Final design.
+最终设计。
 
-## Core model
+## 核心模型
 
-Events carry their result type as a type-only phantom:
+事件将其结果类型作为仅类型的幻影参数携带：
 
 ```ts
 declare const HookResult: unique symbol;
@@ -31,415 +31,89 @@ type HookObserver<E, Ctx> = (
 ) => void | Promise<void>;
 ```
 
-Example:
+- `HookHandler` 可以返回结果（用于可拦截事件）
+- `HookObserver` 是只读的——不能修改事件或返回结果
+- 两者都接收 `AbortSignal`，以便在代理中止时取消长时间运行的钩子
 
-```ts
-interface ContextEvent extends HookEvent<"context", { messages?: AgentMessage[] }> {
-	type: "context";
-	messages: AgentMessage[];
-}
+## 钩子注册
 
-interface ToolCallEvent extends HookEvent<"tool_call", { block?: boolean; reason?: string }> {
-	type: "tool_call";
-	toolName: string;
-	input: Record<string, unknown>;
-}
+钩子是一等函数，与扩展分离。它们可以直接注册到 `AgentHarness`：
 
-interface MessageEndEvent extends HookEvent<"message_end"> {
-	type: "message_end";
-	message: AgentMessage;
-}
-```
+```typescript
+const harness = new AgentHarness(/* ... */);
 
-No result map. No spec table. The event type defines its own result.
+harness.on("agent_start", async (event, ctx) => {
+  console.log("代理开始");
+});
 
-## Hooks interface
-
-```ts
-interface AgentHarnessHooks<E extends HookEvent<string, unknown>, Ctx> {
-	context: Ctx;
-
-	setContext(ctx: Ctx): void;
-
-	observe(handler: HookObserver<E, Ctx>): () => void;
-
-	on<TType extends E["type"]>(
-		type: TType,
-		handler: HookHandler<Extract<E, { type: TType }>, Ctx>,
-	): () => void;
-
-	emit<TEvent extends E>(
-		event: TEvent,
-		signal?: AbortSignal,
-	): Promise<ResultOf<TEvent> | undefined>;
-
-	addCleanup(cleanup: () => void | Promise<void>): () => void;
-
-	clear(): Promise<void>;
-	dispose(): Promise<void>;
-}
-```
-
-Important split:
-
-- `observe()` sees all events, read-only, return ignored.
-- `on(type, handler)` participates in that event’s semantics.
-- `emit(event)` is the only thing `AgentHarness` calls.
-- `clear()` removes observers/handlers and runs cleanups.
-
-## Default implementation internals
-
-```ts
-class DefaultAgentHarnessHooks<E extends HookEvent<string, unknown>, Ctx>
-	implements AgentHarnessHooks<E, Ctx> {
-	context: Ctx;
-
-	private observers = new Set<HookObserver<E, Ctx>>();
-	private handlers = new Map<string, Set<HookHandler<any, Ctx>>>();
-	private cleanups = new Set<() => void | Promise<void>>();
-
-	constructor(ctx: Ctx) {
-		this.context = ctx;
-	}
-
-	setContext(ctx: Ctx): void {
-		this.context = ctx;
-	}
-
-	observe(handler: HookObserver<E, Ctx>): () => void {
-		this.observers.add(handler);
-		return () => this.observers.delete(handler);
-	}
-
-	on(type, handler): () => void {
-		let handlers = this.handlers.get(type);
-		if (!handlers) {
-			handlers = new Set();
-			this.handlers.set(type, handlers);
-		}
-		handlers.add(handler);
-		return () => handlers.delete(handler);
-	}
-
-	async emit(event, signal?) {
-		for (const observer of this.observers) {
-			await observer(event, this.context, signal);
-		}
-
-		switch (event.type) {
-			case "context":
-				return this.emitContext(event, signal);
-			case "before_provider_request":
-				return this.emitBeforeProviderRequest(event, signal);
-			case "before_provider_payload":
-				return this.emitBeforeProviderPayload(event, signal);
-			case "before_agent_start":
-				return this.emitBeforeAgentStart(event, signal);
-			case "tool_call":
-				return this.emitToolCall(event, signal);
-			case "tool_result":
-				return this.emitToolResult(event, signal);
-			case "session_before_compact":
-			case "session_before_tree":
-				return this.emitFirstCancelOrLast(event, signal);
-			default:
-				await this.emitObservationHandlers(event, signal);
-				return undefined;
-		}
-	}
-}
-```
-
-Internal casts are acceptable inside the implementation because `Map<string, ...>` loses specificity. Public API remains typed.
-
-## Mutation semantics
-
-### Observation
-
-```ts
-await hooks.emit({ type: "message_end", message }, signal);
-```
-
-Observers run. `message_end` handlers run. Return ignored unless that event later gets a result type.
-
-### Context transform
-
-Handlers run in order. Each sees current messages.
-
-```ts
-let current = event;
-
-for (const handler of handlers("context")) {
-	const result = await handler(current, ctx, signal);
-	if (result?.messages) {
-		current = { ...current, messages: result.messages };
-	}
-}
-
-return current.messages === event.messages ? undefined : { messages: current.messages };
-```
-
-### Provider request / payload
-
-Sequential transform. Each handler sees previous output.
-
-```ts
-let current = event;
-
-for (const handler of handlers("before_provider_payload")) {
-	const result = await handler(current, ctx, signal);
-	if (result !== undefined) {
-		current = { ...current, payload: result.payload };
-	}
-}
-
-return changed ? { payload: current.payload } : undefined;
-```
-
-### Before agent start
-
-Collect injected messages, chain system prompt.
-
-```ts
-let systemPrompt = event.systemPrompt;
-const messages = [];
-
-for (const handler of handlers("before_agent_start")) {
-	const result = await handler({ ...event, systemPrompt }, ctx, signal);
-	if (result?.messages) messages.push(...result.messages);
-	if (result?.systemPrompt !== undefined) systemPrompt = result.systemPrompt;
-}
-
-return messages.length || systemPrompt !== event.systemPrompt
-	? { messages, systemPrompt }
-	: undefined;
-```
-
-### Tool call
-
-Sequential, early exit on block.
-
-```ts
-for (const handler of handlers("tool_call")) {
-	const result = await handler(event, ctx, signal);
-	if (result?.block) return result;
-}
-```
-
-### Tool result
-
-Sequential patch accumulation. Each handler sees current patched result.
-
-```ts
-let current = event;
-let modified = false;
-
-for (const handler of handlers("tool_result")) {
-	const result = await handler(current, ctx, signal);
-	if (!result) continue;
-
-	current = {
-		...current,
-		content: result.content ?? current.content,
-		details: result.details ?? current.details,
-		isError: result.isError ?? current.isError,
-	};
-
-	modified = true;
-}
-
-return modified
-	? { content: current.content, details: current.details, isError: current.isError }
-	: undefined;
-```
-
-### Session-before events
-
-Sequential, early exit on cancel.
-
-```ts
-let last;
-
-for (const handler of handlers(event.type)) {
-	const result = await handler(event, ctx, signal);
-	if (!result) continue;
-	last = result;
-	if (result.cancel) return result;
-}
-
-return last;
-```
-
-## Harness usage
-
-Harness only does this:
-
-```ts
-await this.hooks.emit(event, signal);
-```
-
-or:
-
-```ts
-const result = await this.hooks.emit({ type: "context", messages }, signal);
-return result?.messages ?? messages;
-```
-
-Harness does not store handlers, chain listeners, or know extension policy.
-
-## Context
-
-Context is a normal object, not rebuilt per emit.
-
-```ts
-const hooks = new CodingAgentHooks({
-	harness: harnessFacade,
-	session: sessionFacade,
-	ui: noUiFacade,
+harness.on("tool_call", async (event, ctx) => {
+  if (event.toolName === "bash" && event.input.command?.includes("rm -rf")) {
+    return { block: true, reason: "被安全策略阻止" };
+  }
 });
 ```
 
-Later:
+## 事件生命周期
 
-```ts
-hooks.setContext({
-	...hooks.context,
-	ui: tuiFacade,
+事件遵循特定的生命周期，从 `session_start` 到 `session_shutdown`：
+
+```
+session_start → session_before_fork → session_compact → session_shutdown
+                                     → session_before_switch
+                                     → session_tree
+```
+
+对于代理的每个提示：
+
+```
+agent_start → turn_start → message_start → message_update*
+                           → tool_call → tool_result
+                           → turn_end
+                           → agent_end
+```
+
+## 内置事件
+
+### 会话事件
+
+| 事件 | 结果 | 说明 |
+|-------|--------|-------------|
+| `session_start` | 无 | 会话已创建 |
+| `session_before_fork` | `{ forkBlocked?: boolean; reason?: string }` | 分叉之前 |
+| `session_before_switch` | `{ switchBlocked?: boolean; reason?: string }` | 切换会话之前 |
+| `session_compact` | 无 | 压缩后 |
+| `session_shutdown` | 无 | 会话已关闭 |
+| `session_before_tree` | `{ filter?: string; customInstructions?: string; replaceInstructions?: boolean }` | 树导航之前 |
+| `session_tree` | 无 | 树导航后 |
+
+### 代理事件
+
+| 事件 | 结果 | 说明 |
+|-------|--------|-------------|
+| `agent_start` | 无 | 代理开始处理提示 |
+| `agent_end` | 无 | 代理完成处理 |
+
+### 回合事件
+
+| 事件 | 结果 | 说明 |
+|-------|--------|-------------|
+| `turn_start` | 无 | 新回合开始 |
+| `turn_end` | 无 | 回合结束 |
+
+### 工具事件
+
+| 事件 | 结果 | 说明 |
+|-------|--------|-------------|
+| `tool_call` | `{ block?: boolean; reason?: string }` | 工具即将被调用 |
+| `tool_result` | `{ replace?: string }` | 工具结果已生成 |
+
+## 错误处理
+
+钩子中的错误会被捕获并记录，不会崩溃代理：
+
+```typescript
+harness.on("tool_call", async (event, ctx) => {
+  throw new Error("出错了");
 });
+// 错误被记录，代理继续
 ```
-
-For dynamic state, prefer stable facades/methods over getter maze:
-
-```ts
-interface CodingAgentHookContext {
-	harness: HarnessFacade;
-	session: SessionFacade;
-	ui: UiFacade;
-	models: ModelFacade;
-}
-```
-
-Per-run `signal` is passed as the third handler arg.
-
-## Extension loading later
-
-Extension loading can live next to harness and construct hooks:
-
-```ts
-const hooks = await loadExtensions({
-	paths,
-	context,
-	hooks: new CodingAgentHooks(context),
-});
-const harness = new AgentHarness({ ..., hooks });
-```
-
-The loader registers into hooks:
-
-```ts
-hooks.on("context", handler);
-hooks.on("tool_call", handler);
-hooks.addCleanup(cleanup);
-```
-
-For reload:
-
-```ts
-await hooks.clear();
-const nextHooks = await loadExtensions(...);
-harness.setHooks(nextHooks); // idle-only if supported
-```
-
-## Poking holes
-
-### 1. Error policy must be explicit
-
-Existing coding-agent catches extension errors, reports them, and continues. New hooks need the same policy, likely:
-
-```ts
-errorMode: "continue" | "throw"
-onError(error)
-```
-
-For coding-agent, default should be `"continue"`.
-
-### 2. Source metadata matters
-
-Existing runner knows which extension produced an error/resource/tool. Plain `on()` loses that unless we add registration metadata or scopes.
-
-Probably needed:
-
-```ts
-const scope = hooks.createScope({ sourceInfo });
-scope.on("context", handler);
-scope.addCleanup(...);
-```
-
-Or `on(type, handler, { sourceInfo })`.
-
-### 3. Some extension capabilities are registries, not hooks
-
-These are not covered by `emit()` and should stay as registries on `CodingAgentHooks` or an extension host:
-
-- tools
-- commands
-- shortcuts
-- flags
-- message renderers
-- provider registrations
-- OAuth providers
-- custom model providers
-
-That is fine. They do not belong in `AgentHarness`.
-
-### 4. Existing coding-agent events can be represented
-
-No blocker for:
-
-- `context`
-- `before_provider_request`
-- `after_provider_response`
-- `before_agent_start`
-- `message_end`
-- `tool_call`
-- `tool_result`
-- `input`
-- `user_bash`
-- `resources_discover`
-- `session_before_*`
-- `session_*`
-- model/thinking selection events
-- agent/turn/message/tool lifecycle events
-
-They become additional event types handled by `CodingAgentHooks`.
-
-### 5. Need to preserve exact old semantics
-
-When porting coding-agent, special cases must be copied:
-
-- `input`: transform chain, `handled` short-circuits.
-- `user_bash`: first meaningful result wins.
-- `message_end`: replacement must keep same role.
-- `before_agent_start`: `ctx.getSystemPrompt()` must reflect current chained prompt.
-- `resources_discover`: aggregate paths and keep extension source.
-- `tool_call`: argument mutation remains visible to later handlers.
-- `tool_result`: later handlers see prior patches.
-
-The design allows all of that, but the default/coding hooks implementation must encode it.
-
-### 6. `emit()` switch can miss custom mutation events
-
-If a subclass adds a result-producing event but forgets to override `emit()`, it will behave observationally. Tests should catch this. Could add a protected strategy registry later if this becomes error-prone, but not initially.
-
-### 7. Observer semantics are intentionally limited
-
-Observers see the original emitted event once. They do not see every intermediate mutation. If something needs final transformed state, emit a separate final event or use an event-specific handler.
-
-## Verdict
-
-This design can implement a new coding-agent. It is simpler than the current runner, keeps harness clean, and preserves the important extension capabilities as long as `CodingAgentHooks` adds source-aware scopes, registries, cleanup, and the exact old event semantics.
-
---- Comments ---
-
-Thread hn2xk0tzhj on "addCleanup(cleanup"
-  [tmluyaub9v] Owner (2026-05-14T12:55:45.500Z): cleanup should be passed along optionally to on/observe
