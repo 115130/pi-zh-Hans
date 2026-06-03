@@ -104,7 +104,8 @@ function walk(dir, root, rules, out, max, min) {
     const full = join(dir, e);
     const rel = relative(root, full);
     if (matchesGitignore(rel, rules)) continue;
-    if (rel === ".git" || rel === "node_modules") continue;
+    if (rel.includes("/.git") || rel.includes("/node_modules") || rel.includes("/dist/") || rel.includes("/build/") || rel.includes("/.cache") || rel.includes("/target/")) continue;
+    if (rel === "node_modules" || rel === ".git") continue;
     let st;
     try { st = statSync(full); } catch { continue; }
     if (st.isDirectory()) {

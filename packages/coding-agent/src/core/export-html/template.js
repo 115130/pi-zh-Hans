@@ -580,23 +580,23 @@
               const end = limit !== undefined ? start + limit - 1 : '';
               display += `:${start}${end ? `-${end}` : ''}`;
             }
-            return `[read: ${display}]`;
+            return `[读取：${display}]`;
           }
           case 'write':
-            return `[write: ${shortenPath(String(args.path || args.file_path || ''))}]`;
+            return `[写入：${shortenPath(String(args.path || args.file_path || ''))}]`;
           case 'edit':
-            return `[edit: ${shortenPath(String(args.path || args.file_path || ''))}]`;
+            return `[编辑：${shortenPath(String(args.path || args.file_path || ''))}]`;
           case 'bash': {
             const rawCmd = String(args.command || '');
             const cmd = rawCmd.replace(/[\n\t]/g, ' ').trim().slice(0, 50);
-            return `[bash: ${cmd}${rawCmd.length > 50 ? '...' : ''}]`;
+            return `[bash：${cmd}${rawCmd.length > 50 ? '...' : ''}]`;
           }
           case 'grep':
-            return `[grep: /${args.pattern || ''}/ in ${shortenPath(String(args.path || '.'))}]`;
+            return `[搜索：/${args.pattern || ''}/ 于 ${shortenPath(String(args.path || '.'))}]`;
           case 'find':
-            return `[find: ${args.pattern || ''} in ${shortenPath(String(args.path || '.'))}]`;
+            return `[查找：${args.pattern || ''} 于 ${shortenPath(String(args.path || '.'))}]`;
           case 'ls':
-            return `[ls: ${shortenPath(String(args.path || '.'))}]`;
+            return `[列表：${shortenPath(String(args.path || '.'))}]`;
           default: {
             const argsStr = JSON.stringify(args).slice(0, 40);
             return `[${name}: ${argsStr}${JSON.stringify(args).length > 40 ? '...' : ''}]`;
@@ -635,9 +635,9 @@
               const rawContent = extractContent(msg.content);
               const skillBlock = parseSkillBlock(rawContent);
               if (skillBlock) {
-                let treeHtml = labelHtml + `<span class="tree-role-skill">skill:</span> ${escapeHtml(skillBlock.name)}`;
+                let treeHtml = labelHtml + `<span class="tree-role-skill">技能：</span> ${escapeHtml(skillBlock.name)}`;
                 if (skillBlock.userMessage) {
-                  treeHtml += ` · <span class="tree-role-user">user:</span> ${escapeHtml(truncate(normalize(skillBlock.userMessage)))}`;
+                  treeHtml += ` · <span class="tree-role-user">用户：</span> ${escapeHtml(truncate(normalize(skillBlock.userMessage)))}`;
                 }
                 return treeHtml;
               }
@@ -647,43 +647,43 @@
             if (msg.role === 'assistant') {
               const textContent = truncate(normalize(extractContent(msg.content)));
               if (textContent) {
-                return labelHtml + `<span class="tree-role-assistant">assistant:</span> ${escapeHtml(textContent)}`;
+                return labelHtml + `<span class="tree-role-assistant">助手：</span> ${escapeHtml(textContent)}`;
               }
               if (msg.stopReason === 'aborted') {
-                return labelHtml + `<span class="tree-role-assistant">assistant:</span> <span class="tree-muted">(aborted)</span>`;
+                return labelHtml + `<span class="tree-role-assistant">assistant:</span> <span class="tree-muted">（已中止）</span>`;
               }
               if (msg.errorMessage) {
                 return labelHtml + `<span class="tree-role-assistant">assistant:</span> <span class="tree-error">${escapeHtml(truncate(msg.errorMessage))}</span>`;
               }
-              return labelHtml + `<span class="tree-role-assistant">assistant:</span> <span class="tree-muted">(no text)</span>`;
+              return labelHtml + `<span class="tree-role-assistant">assistant:</span> <span class="tree-muted">（无文本）</span>`;
             }
             if (msg.role === 'toolResult') {
               const toolCall = msg.toolCallId ? toolCallMap.get(msg.toolCallId) : null;
               if (toolCall) {
                 return labelHtml + `<span class="tree-role-tool">${escapeHtml(formatToolCall(toolCall.name, toolCall.arguments))}</span>`;
               }
-              return labelHtml + `<span class="tree-role-tool">[${escapeHtml(msg.toolName || 'tool')}]</span>`;
+              return labelHtml + `<span class="tree-role-tool">[${escapeHtml(msg.toolName || '工具')}]</span>`;
             }
             if (msg.role === 'bashExecution') {
               const cmd = truncate(normalize(msg.command || ''));
-              return labelHtml + `<span class="tree-role-tool">[bash]:</span> ${escapeHtml(cmd)}`;
+              return labelHtml + `<span class="tree-role-tool">[bash]：</span> ${escapeHtml(cmd)}`;
             }
             return labelHtml + `<span class="tree-muted">[${escapeHtml(msg.role)}]</span>`;
           }
           case 'compaction':
-            return labelHtml + `<span class="tree-compaction">[compaction: ${Math.round(entry.tokensBefore/1000)}k tokens]</span>`;
+            return labelHtml + `<span class="tree-compaction">[压缩：${Math.round(entry.tokensBefore/1000)}k tokens]</span>`;
           case 'branch_summary': {
             const summary = truncate(normalize(entry.summary || ''));
-            return labelHtml + `<span class="tree-branch-summary">[branch summary]:</span> ${escapeHtml(summary)}`;
+            return labelHtml + `<span class="tree-branch-summary">[分支摘要]：</span> ${escapeHtml(summary)}`;
           }
           case 'custom_message': {
             const content = typeof entry.content === 'string' ? entry.content : extractContent(entry.content);
             return labelHtml + `<span class="tree-custom">[${escapeHtml(entry.customType)}]:</span> ${escapeHtml(truncate(normalize(content)))}`;
           }
           case 'model_change':
-            return labelHtml + `<span class="tree-muted">[model: ${escapeHtml(entry.modelId)}]</span>`;
+            return labelHtml + `<span class="tree-muted">[模型：${escapeHtml(entry.modelId)}]</span>`;
           case 'thinking_level_change':
-            return labelHtml + `<span class="tree-muted">[thinking: ${escapeHtml(entry.thinkingLevel)}]</span>`;
+            return labelHtml + `<span class="tree-muted">[思考：${escapeHtml(entry.thinkingLevel)}]</span>`;
           default:
             return labelHtml + `<span class="tree-muted">[${escapeHtml(entry.type)}]</span>`;
         }
@@ -943,7 +943,7 @@
               pathHtml += `<span class="line-numbers">:${startLine}${endLine ? '-' + endLine : ''}</span>`;
             }
 
-            html += `<div class="tool-header"><span class="tool-name">read</span> <span class="tool-path">${pathHtml}</span></div>`;
+            html += `<div class="tool-header"><span class="tool-name">读取</span> <span class="tool-path">${pathHtml}</span></div>`;
             if (result) {
               html += renderResultImages();
               const output = getResultText();
@@ -956,15 +956,15 @@
             const filePath = str(args.file_path ?? args.path);
             const content = str(args.content);
 
-            html += `<div class="tool-header"><span class="tool-name">write</span> <span class="tool-path">${filePath === null ? invalidArg : escapeHtml(shortenPath(filePath || ''))}</span>`;
+            html += `<div class="tool-header"><span class="tool-name">写入</span> <span class="tool-path">${filePath === null ? invalidArg : escapeHtml(shortenPath(filePath || ''))}</span>`;
             if (content !== null && content) {
               const lines = content.split('\n');
-              if (lines.length > 10) html += ` <span class="line-count">(${lines.length} lines)</span>`;
+              if (lines.length > 10) html += ` <span class="line-count">（${lines.length} 行）</span>`;
             }
             html += '</div>';
 
             if (content === null) {
-              html += `<div class="tool-error">[invalid content arg - expected string]</div>`;
+              html += `<div class="tool-error">[无效参数 - 应为字符串]</div>`;
             } else if (content) {
               const lang = filePath ? getLanguageFromPath(filePath) : null;
               html += formatExpandableOutput(content, 10, lang);
@@ -977,7 +977,7 @@
           }
           case 'edit': {
             const filePath = str(args.file_path ?? args.path);
-            html += `<div class="tool-header"><span class="tool-name">edit</span> <span class="tool-path">${filePath === null ? invalidArg : escapeHtml(shortenPath(filePath || ''))}</span></div>`;
+            html += `<div class="tool-header"><span class="tool-name">编辑</span> <span class="tool-path">${filePath === null ? invalidArg : escapeHtml(shortenPath(filePath || ''))}</span></div>`;
 
             if (result?.details?.diff) {
               const diffLines = result.details.diff.split('\n');
@@ -1002,7 +1002,7 @@
               pathHtml += ` <span class="line-count">(limit ${escapeHtml(String(limit))})</span>`;
             }
 
-            html += `<div class="tool-header"><span class="tool-name">ls</span> <span class="tool-path">${pathHtml}</span></div>`;
+            html += `<div class="tool-header"><span class="tool-name">列表</span> <span class="tool-path">${pathHtml}</span></div>`;
             if (result) {
               const output = getResultText().trim();
               if (output) html += formatExpandableOutput(output, 20);
