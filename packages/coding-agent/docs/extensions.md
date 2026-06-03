@@ -1,53 +1,53 @@
-> pi can create extensions. Ask it to build one for your use case.
+> pi 可以创建扩展。让它为你的用例构建一个。
 
-# Extensions
+# 扩展
 
-Extensions are TypeScript modules that extend pi's behavior. They can subscribe to lifecycle events, register custom tools callable by the LLM, add commands, and more.
+扩展是 TypeScript 模块，用于扩展 pi 的行为。它们可以订阅生命周期事件、注册 LLM 可调用的自定义工具、添加命令等。
 
-> **Placement for /reload:** Put extensions in `~/.pi/agent/extensions/` (global) or `.pi/extensions/` (project-local) for auto-discovery. Use `pi -e ./path.ts` only for quick tests. Extensions in auto-discovered locations can be hot-reloaded with `/reload`.
+> **/reload 的位置：** 将扩展放在 `~/.pi/agent/extensions/`（全局）或 `.pi/extensions/`（项目本地）以支持自动发现。仅对快速测试使用 `pi -e ./path.ts`。自动发现位置的扩展可以通过 `/reload` 热重载。
 
-**Key capabilities:**
-- **Custom tools** - Register tools the LLM can call via `pi.registerTool()`
-- **Event interception** - Block or modify tool calls, inject context, customize compaction
-- **User interaction** - Prompt users via `ctx.ui` (select, confirm, input, notify)
-- **Custom UI components** - Full TUI components with keyboard input via `ctx.ui.custom()` for complex interactions
-- **Custom commands** - Register commands like `/mycommand` via `pi.registerCommand()`
-- **Session persistence** - Store state that survives restarts via `pi.appendEntry()`
-- **Custom rendering** - Control how tool calls/results and messages appear in TUI
+**关键能力：**
+- **自定义工具** — 通过 `pi.registerTool()` 注册 LLM 可调用的工具
+- **事件拦截** — 阻止或修改工具调用、注入上下文、自定义压缩
+- **用户交互** — 通过 `ctx.ui` 提示用户（select、confirm、input、notify）
+- **自定义 UI 组件** — 通过 `ctx.ui.custom()` 为复杂交互创建完整的 TUI 组件，支持键盘输入
+- **自定义命令** — 通过 `pi.registerCommand()` 注册类似 `/mycommand` 的命令
+- **会话持久化** — 通过 `pi.appendEntry()` 存储可在重启后保留的状态
+- **自定义渲染** — 控制工具调用/结果和消息在 TUI 中的显示方式
 
-**Example use cases:**
-- Permission gates (confirm before `rm -rf`, `sudo`, etc.)
-- Git checkpointing (stash at each turn, restore on branch)
-- Path protection (block writes to `.env`, `node_modules/`)
-- Custom compaction (summarize conversation your way)
-- Conversation summaries (see `summarize.ts` example)
-- Interactive tools (questions, wizards, custom dialogs)
-- Stateful tools (todo lists, connection pools)
-- External integrations (file watchers, webhooks, CI triggers)
-- Games while you wait (see `snake.ts` example)
+**示例用例：**
+- 权限门控（在 `rm -rf`、`sudo` 等之前确认）
+- Git 检查点（每回合 stash，切换分支时恢复）
+- 路径保护（阻止写入 `.env`、`node_modules/`）
+- 自定义压缩（以你的方式总结对话）
+- 对话摘要（参见 `summarize.ts` 示例）
+- 交互式工具（问题、向导、自定义对话框）
+- 有状态工具（待办列表、连接池）
+- 外部集成（文件监视器、webhook、CI 触发器）
+- 等待时的游戏（参见 `snake.ts` 示例）
 
-See [examples/extensions/](../examples/extensions/) for working implementations.
+参见 [examples/extensions/](../examples/extensions/) 获取可工作的实现。
 
-## Table of Contents
+## 目录
 
-- [Quick Start](#quick-start)
-- [Extension Locations](#extension-locations)
-- [Available Imports](#available-imports)
-- [Writing an Extension](#writing-an-extension)
-  - [Extension Styles](#extension-styles)
-- [Events](#events)
-  - [Lifecycle Overview](#lifecycle-overview)
-  - [Resource Events](#resource-events)
-  - [Session Events](#session-events)
-  - [Agent Events](#agent-events)
-  - [Model Events](#model-events)
-  - [Tool Events](#tool-events)
+- [快速开始](#快速开始)
+- [扩展位置](#扩展位置)
+- [可用导入](#可用导入)
+- [编写扩展](#编写扩展)
+  - [扩展样式](#扩展样式)
+- [事件](#事件)
+  - [生命周期概览](#生命周期概览)
+  - [资源事件](#资源事件)
+  - [会话事件](#会话事件)
+  - [代理事件](#代理事件)
+  - [模型事件](#模型事件)
+  - [工具事件](#工具事件)
 - [ExtensionContext](#extensioncontext)
 - [ExtensionCommandContext](#extensioncommandcontext)
-- [ExtensionAPI Methods](#extensionapi-methods)
-- [State Management](#state-management)
-- [Custom Tools](#custom-tools)
-- [Custom UI](#custom-ui)
+- [ExtensionAPI 方法](#extensionapi-方法)
+- [状态管理](#状态管理)
+- [自定义工具](#自定义工具)
+- [自定义 UI](#自定义-ui)
 - [Error Handling](#error-handling)
 - [Mode Behavior](#mode-behavior)
 - [Examples Reference](#examples-reference)
@@ -61,39 +61,39 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
 
 export default function (pi: ExtensionAPI) {
-  // React to events
+  // 响应事件
   pi.on("session_start", async (_event, ctx) => {
-    ctx.ui.notify("Extension loaded!", "info");
+    ctx.ui.notify("扩展已加载！", "info");
   });
 
   pi.on("tool_call", async (event, ctx) => {
     if (event.toolName === "bash" && event.input.command?.includes("rm -rf")) {
-      const ok = await ctx.ui.confirm("Dangerous!", "Allow rm -rf?");
-      if (!ok) return { block: true, reason: "Blocked by user" };
+      const ok = await ctx.ui.confirm("危险！", "允许 rm -rf 吗？");
+      if (!ok) return { block: true, reason: "用户已阻止" };
     }
   });
 
-  // Register a custom tool
+  // 注册自定义工具
   pi.registerTool({
     name: "greet",
-    label: "Greet",
-    description: "Greet someone by name",
+    label: "问候",
+    description: "按名称问候某人",
     parameters: Type.Object({
-      name: Type.String({ description: "Name to greet" }),
+      name: Type.String({ description: "要问候的名称" }),
     }),
     async execute(toolCallId, params, signal, onUpdate, ctx) {
       return {
-        content: [{ type: "text", text: `Hello, ${params.name}!` }],
+        content: [{ type: "text", text: `你好，${params.name}!` }],
         details: {},
       };
     },
   });
 
-  // Register a command
+  // 注册命令
   pi.registerCommand("hello", {
-    description: "Say hello",
+    description: "打声招呼",
     handler: async (args, ctx) => {
-      ctx.ui.notify(`Hello ${args || "world"}!`, "info");
+      ctx.ui.notify(`你好 ${args || "世界"}!`, "info");
     },
   });
 }
@@ -107,18 +107,18 @@ pi -e ./my-extension.ts
 
 ## Extension Locations
 
-> **Security:** Extensions run with your full system permissions and can execute arbitrary code. Only install from sources you trust.
+> **安全：** 扩展以你的完整系统权限运行，可以执行任意代码。只从你信任的来源安装。
 
-Extensions are auto-discovered from:
+扩展从以下位置自动发现：
 
-| Location | Scope |
+| 位置 | 范围 |
 |----------|-------|
-| `~/.pi/agent/extensions/*.ts` | Global (all projects) |
-| `~/.pi/agent/extensions/*/index.ts` | Global (subdirectory) |
-| `.pi/extensions/*.ts` | Project-local |
-| `.pi/extensions/*/index.ts` | Project-local (subdirectory) |
+| `~/.pi/agent/extensions/*.ts` | 全局（所有项目） |
+| `~/.pi/agent/extensions/*/index.ts` | 全局（子目录） |
+| `.pi/extensions/*.ts` | 项目本地 |
+| `.pi/extensions/*/index.ts` | 项目本地（子目录） |
 
-Additional paths via `settings.json`:
+通过 `settings.json` 添加更多路径：
 
 ```json
 {
@@ -133,41 +133,41 @@ Additional paths via `settings.json`:
 }
 ```
 
-To share extensions via npm or git as pi packages, see [packages.md](packages.md).
+要通过 npm 或 git 以 pi 包方式分享扩展，参见 [packages.md](packages.md)。
 
-## Available Imports
+## 可用导入
 
-| Package | Purpose |
+| 包 | 用途 |
 |---------|---------|
-| `@earendil-works/pi-coding-agent` | Extension types (`ExtensionAPI`, `ExtensionContext`, events) |
-| `typebox` | Schema definitions for tool parameters |
-| `@earendil-works/pi-ai` | AI utilities (`StringEnum` for Google-compatible enums) |
-| `@earendil-works/pi-tui` | TUI components for custom rendering |
+| `@earendil-works/pi-coding-agent` | 扩展类型（`ExtensionAPI`、`ExtensionContext`、事件） |
+| `typebox` | 工具参数的模式定义 |
+| `@earendil-works/pi-ai` | AI 工具（`StringEnum` 用于 Google 兼容枚举） |
+| `@earendil-works/pi-tui` | 用于自定义渲染的 TUI 组件 |
 
-npm dependencies work too. Add a `package.json` next to your extension (or in a parent directory), run `npm install`, and imports from `node_modules/` are resolved automatically.
+npm 依赖也同样有效。在扩展旁边（或父目录中）添加 `package.json`，运行 `npm install`，从 `node_modules/` 的导入会自动解析。
 
-For distributed pi packages installed with `pi install` (npm or git), runtime deps must be in `dependencies`. Package installation uses production installs (`npm install --omit=dev`) by default, so `devDependencies` are not available at runtime; when `npmCommand` is configured, git packages use plain `install` for compatibility with wrappers.
+对于通过 `pi install`（npm 或 git）安装的分发版 pi 包，运行时依赖必须在 `dependencies` 中。包安装默认使用生产安装（`npm install --omit=dev`），因此 `devDependencies` 在运行时不可用；当配置了 `npmCommand` 时，git 包使用普通的 `install` 以兼容包装器。
 
-Node.js built-ins (`node:fs`, `node:path`, etc.) are also available.
+Node.js 内置模块（`node:fs`、`node:path` 等）也可用。
 
-## Writing an Extension
+## 编写扩展
 
-An extension exports a default factory function that receives `ExtensionAPI`. The factory can be synchronous or asynchronous:
+扩展导出一个默认工厂函数，接收 `ExtensionAPI`。工厂函数可以是同步或异步的：
 
 ```typescript
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export default function (pi: ExtensionAPI) {
-  // Subscribe to events
+  // 订阅事件
   pi.on("event_name", async (event, ctx) => {
-    // ctx.ui for user interaction
-    const ok = await ctx.ui.confirm("Title", "Are you sure?");
-    ctx.ui.notify("Done!", "info");
-    ctx.ui.setStatus("my-ext", "Processing...");  // Footer status
-    ctx.ui.setWidget("my-ext", ["Line 1", "Line 2"]);  // Widget above editor (default)
+    // ctx.ui 用于用户交互
+    const ok = await ctx.ui.confirm("标题", "你确定吗？");
+    ctx.ui.notify("完成了！", "info");
+    ctx.ui.setStatus("my-ext", "处理中...");  // 底部状态
+    ctx.ui.setWidget("my-ext", ["第1行", "第2行"]);  // 编辑器上方的小部件（默认）
   });
 
-  // Register tools, commands, shortcuts, flags
+  // 注册工具、命令、快捷键、标志
   pi.registerTool({ ... });
   pi.registerCommand("name", { ... });
   pi.registerShortcut("ctrl+x", { ... });
@@ -175,13 +175,13 @@ export default function (pi: ExtensionAPI) {
 }
 ```
 
-Extensions are loaded via [jiti](https://github.com/unjs/jiti), so TypeScript works without compilation.
+扩展通过 [jiti](https://github.com/unjs/jiti) 加载，因此 TypeScript 无需编译即可工作。
 
-If the factory returns a `Promise`, pi awaits it before continuing startup. That means async initialization completes before `session_start`, before `resources_discover`, and before provider registrations queued via `pi.registerProvider()` are flushed.
+如果工厂函数返回 `Promise`，pi 会在继续启动前等待它。这意味着异步初始化在 `session_start`、`resources_discover` 以及通过 `pi.registerProvider()` 排队的提供商注册刷新之前完成。
 
-### Async factory functions
+### 异步工厂函数
 
-Use an async factory for one-time startup work such as fetching remote configuration or dynamically discovering available models.
+对于一次性启动工作（如获取远程配置或动态发现可用模型），使用异步工厂函数。
 
 ```typescript
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -265,7 +265,7 @@ Run `npm install` in the extension directory, then imports from `node_modules/` 
 
 ## Events
 
-### Lifecycle Overview
+### 生命周期概览
 
 ```
 pi starts
@@ -334,7 +334,7 @@ exit (Ctrl+C, Ctrl+D, SIGHUP, SIGTERM)
   └─► session_shutdown
 ```
 
-### Resource Events
+### 资源事件
 
 #### resources_discover
 
@@ -353,7 +353,7 @@ pi.on("resources_discover", async (event, _ctx) => {
 });
 ```
 
-### Session Events
+### 会话事件
 
 See [Session Format](session-format.md) for session storage internals and the SessionManager API.
 
@@ -461,7 +461,7 @@ pi.on("session_shutdown", async (event, ctx) => {
 });
 ```
 
-### Agent Events
+### 代理事件
 
 #### before_agent_start
 
@@ -631,7 +631,7 @@ pi.on("after_provider_response", (event, ctx) => {
 
 Header availability depends on provider and transport. Providers that abstract HTTP responses may not expose headers.
 
-### Model Events
+### 模型事件
 
 #### model_select
 
@@ -669,7 +669,7 @@ pi.on("thinking_level_select", async (event, ctx) => {
 
 Use this to update extension UI when `pi.setThinkingLevel()`, model changes, or built-in thinking-level controls change the active thinking level.
 
-### Tool Events
+### 工具事件
 
 #### tool_call
 
@@ -769,7 +769,7 @@ pi.on("tool_result", async (event, ctx) => {
 });
 ```
 
-### User Bash Events
+### 用户 Bash 事件
 
 #### user_bash
 
@@ -801,7 +801,7 @@ pi.on("user_bash", (event, ctx) => {
 });
 ```
 
-### Input Events
+### 输入事件
 
 #### input
 
@@ -1109,7 +1109,7 @@ pi.registerCommand("switch", {
 });
 ```
 
-### Session replacement lifecycle and footguns
+### 会话替换生命周期与陷阱
 
 `withSession` receives a fresh `ReplacedSessionContext`, which extends `ExtensionCommandContext` with async `sendMessage()` and `sendUserMessage()` helpers bound to the replacement session.
 
@@ -1208,7 +1208,7 @@ export default function (pi: ExtensionAPI) {
 }
 ```
 
-## ExtensionAPI Methods
+## ExtensionAPI 方法
 
 ### pi.on(event, handler)
 
