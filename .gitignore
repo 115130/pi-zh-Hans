@@ -41,3 +41,6 @@ plans/
 .pi/hf-sessions/
 .pi/hf-sessions-backup/
 collect.sh
+out.cast
+_pi_build/
+pi-release/
