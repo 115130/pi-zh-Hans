@@ -11,8 +11,8 @@ const rootLockfilePath = join(repoRoot, "package-lock.json");
 const shrinkwrapPath = join(codingAgentDir, "npm-shrinkwrap.json");
 const internalPackagePrefix = "@earendil-works/pi-";
 const allowedInstallScriptPackages = new Map([
-	["@google/genai@1.52.0", "preinstall is a no-op in the published package"],
-	["protobufjs@7.5.9", "postinstall only warns about protobufjs version scheme mismatches"],
+	["@google/genai@1.52.0", "preinstall 在发布的包中是无操作"],
+	["protobufjs@7.5.9", "postinstall 仅警告 protobufjs 版本方案不匹配"],
 ]);
 
 const args = new Set(process.argv.slice(2));
@@ -20,7 +20,7 @@ const checkOnly = args.has("--check");
 
 for (const arg of args) {
 	if (arg !== "--check") {
-		console.error(`Unknown argument: ${arg}`);
+		console.error(`未知参数：${arg}`);
 		process.exit(1);
 	}
 }
@@ -187,8 +187,8 @@ function resolveExternalDependency(lockPackages, packageName, fromLockPath) {
 	}
 
 	throw new Error(
-		`Cannot resolve ${packageName} from ${fromLockPath || "root"}. ` +
-			(matches.length > 1 ? `Matches: ${matches.join(", ")}` : "No matching lockfile entry found."),
+		`无法从 ${fromLockPath || "根目录"} 解析 ${packageName}。` +
+			(matches.length > 1 ? `匹配项：${matches.join(", ")}` : "未找到匹配的 lockfile 条目。"),
 	);
 }
 
@@ -233,21 +233,21 @@ function validateShrinkwrap(shrinkwrap, internalNames) {
 			includedPackageNames.add(packageName);
 		}
 		if (entry.link) {
-			errors.push(`${lockPath} is a link entry`);
+			errors.push(`${lockPath} 是链接条目`);
 		}
 		if (typeof entry.resolved === "string" && /^(file:|link:|workspace:|\.\.?\/|\/)/.test(entry.resolved)) {
-			errors.push(`${lockPath} has a local resolved value: ${entry.resolved}`);
+			errors.push(`${lockPath} 包含本地 resolved 值：${entry.resolved}`);
 		}
 		if (entry.hasInstallScript) {
 			if (!packageName || !entry.version) {
-				errors.push(`${lockPath || "root"} has install scripts but no package name/version`);
+				errors.push(`${lockPath || "根目录"} 包含安装脚本但缺少包名/版本`);
 			} else {
 				const packageId = `${packageName}@${entry.version}`;
 				if (allowedInstallScriptPackages.has(packageId)) {
 					seenAllowedInstallScriptPackages.add(packageId);
 				} else {
 					errors.push(
-						`${lockPath} has install scripts (${packageId}). Review it and add it to allowedInstallScriptPackages if intentional.`,
+						`${lockPath} 包含安装脚本（${packageId}）。请审查并将其添加到 allowedInstallScriptPackages（如有意保留）。`,
 					);
 				}
 			}
@@ -256,13 +256,13 @@ function validateShrinkwrap(shrinkwrap, internalNames) {
 
 	for (const packageId of allowedInstallScriptPackages.keys()) {
 		if (!seenAllowedInstallScriptPackages.has(packageId)) {
-			errors.push(`allowed install-script package ${packageId} is no longer present; remove it from the allowlist`);
+			errors.push(`允许安装脚本的包 ${packageId} 不再存在；请从白名单中移除`);
 		}
 	}
 
 	for (const name of internalNames) {
 		if (!includedPackageNames.has(name)) {
-			errors.push(`internal dependency ${name} is missing`);
+			errors.push(`内部依赖 ${name} 缺失`);
 		}
 	}
 
@@ -272,25 +272,25 @@ function validateShrinkwrap(shrinkwrap, internalNames) {
 				(candidate) => candidate === `node_modules/${dependencyName}` || candidate.endsWith(`/node_modules/${dependencyName}`),
 			);
 			if (!dependencyIncluded) {
-				errors.push(`${lockPath || "root"} dependency ${dependencyName} is missing`);
+				errors.push(`${lockPath || "根目录"} 依赖 ${dependencyName} 缺失`);
 			}
 		}
 	}
 
 	const platformPackageCount = Object.values(shrinkwrap.packages).filter((entry) => entry.os || entry.cpu || entry.libc).length;
 	if (platformPackageCount === 0) {
-		errors.push("no platform-specific optional dependency entries found");
+		errors.push("未找到平台特定的可选依赖条目");
 	}
 
 	if (errors.length > 0) {
-		throw new Error(`Generated shrinkwrap failed validation:\n${errors.map((error) => `  - ${error}`).join("\n")}`);
+		throw new Error(`生成的 shrinkwrap 验证失败：\n${errors.map((error) => `  - ${error}`).join("\n")}`);
 	}
 }
 
 function generateShrinkwrap() {
 	const rootLock = readJson(rootLockfilePath);
 	if (rootLock.lockfileVersion !== 3 || !rootLock.packages) {
-		throw new Error("package-lock.json must be lockfileVersion 3 and contain a packages map");
+		throw new Error("package-lock.json 必须是 lockfileVersion 3 并包含 packages 映射");
 	}
 
 	const lockPackages = rootLock.packages;
@@ -340,23 +340,23 @@ try {
 
 	if (checkOnly) {
 		if (!existsSync(shrinkwrapPath)) {
-			console.error("packages/coding-agent/npm-shrinkwrap.json is missing.");
-			console.error("Run: npm run shrinkwrap:coding-agent");
+			console.error("packages/coding-agent/npm-shrinkwrap.json 缺失。");
+			console.error("请运行：npm run shrinkwrap:coding-agent");
 			process.exit(1);
 		}
 		const current = readFileSync(shrinkwrapPath, "utf8");
 		if (current !== content) {
-			console.error("packages/coding-agent/npm-shrinkwrap.json is out of date.");
-			console.error("Run: npm run shrinkwrap:coding-agent");
+			console.error("packages/coding-agent/npm-shrinkwrap.json 已过期。");
+			console.error("请运行：npm run shrinkwrap:coding-agent");
 			process.exit(1);
 		}
-		console.log("packages/coding-agent/npm-shrinkwrap.json is up to date.");
+		console.log("packages/coding-agent/npm-shrinkwrap.json 是最新的。");
 	} else {
 		writeFileSync(shrinkwrapPath, content);
 		const packageCount = Object.keys(shrinkwrap.packages).length - 1;
 		const platformPackageCount = Object.values(shrinkwrap.packages).filter((entry) => entry.os || entry.cpu || entry.libc).length;
 		console.log(
-			`Wrote packages/coding-agent/npm-shrinkwrap.json (${packageCount} packages, ${platformPackageCount} platform-specific).`,
+			`已写入 packages/coding-agent/npm-shrinkwrap.json（${packageCount} 个包，${platformPackageCount} 个平台特定）。`,
 		);
 	}
 } catch (error) {

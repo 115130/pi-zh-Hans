@@ -1,25 +1,25 @@
 ---
-description: Analyze GitHub issues (bugs or feature requests)
+description: 分析 GitHub issue（错误或功能请求）
 argument-hint: "<issue>"
 ---
-Analyze GitHub issue(s): $ARGUMENTS
+分析 GitHub issue：$ARGUMENTS
 
-For each issue:
+对每个 issue：
 
-1. Add the `inprogress` label to the issue via GitHub CLI and assign the issue to the local `gh` user before analysis starts. If either action fails, report that explicitly and continue.
-2. Read the issue in full, including all comments and linked issues/PRs.
-3. Do not trust analysis written in the issue. Independently verify behavior and derive your own analysis from the code and execution path.
+1. 在开始分析前，通过 GitHub CLI 给 issue 添加 `inprogress` 标签，并将 issue 分配给本地 `gh` 用户。如果任一操作失败，明确报告该问题后继续。
+2. 完整阅读 issue，包括所有评论和关联的 issue/PR。
+3. 不要相信 issue 中已有的分析。独立验证行为，并根据代码和执行路径得出你自己的分析。
 
-4. **For bugs**:
-   - Ignore any root cause analysis in the issue (likely wrong)
-   - Read all related code files in full (no truncation)
-   - Trace the code path and identify the actual root cause
-   - Propose a fix
+4. **对于错误报告**：
+   - 忽略 issue 中的任何根本原因分析（很可能是错误的）
+   - 完整阅读所有相关代码文件（不截断）
+   - 跟踪代码路径并确定实际的根本原因
+   - 提出修复方案
 
-5. **For feature requests**:
-   - Do not trust implementation proposals in the issue without verification
-   - Read all related code files in full (no truncation)
-   - Propose the most concise implementation approach
-   - List affected files and changes needed
+5. **对于功能请求**：
+   - 未经核实，不要相信 issue 中的实现提案
+   - 完整阅读所有相关代码文件（不截断）
+   - 提出最简洁的实现方案
+   - 列出受影响的文件和需要的更改
 
-Do NOT implement unless explicitly asked. Analyze and propose only.
+除非明确要求，否则不要实现。仅进行分析和提案。

@@ -56,65 +56,65 @@ const getSuggestions = (
 
 describe("CombinedAutocompleteProvider", () => {
 	describe("extractPathPrefix", () => {
-		it("extracts / from 'hey /' when forced", async () => {
+		it("从 'hey /' 中提取 /（强制模式）", async () => {
 			const provider = new CombinedAutocompleteProvider([], "/tmp");
 			const lines = ["hey /"];
 			const cursorLine = 0;
-			const cursorCol = 5; // After the "/"
+			const cursorCol = 5; // "/" 之后
 
 			const result = await getSuggestions(provider, lines, cursorLine, cursorCol, true);
 
-			assert.notEqual(result, null, "Should return suggestions for root directory");
+			assert.notEqual(result, null, "应返回根目录的建议");
 			if (result) {
-				assert.strictEqual(result.prefix, "/", "Prefix should be '/'");
+				assert.strictEqual(result.prefix, "/", "前缀应为 '/'");
 			}
 		});
 
-		it("extracts /A from '/A' when forced", async () => {
+		it("从 '/A' 中提取 /A（强制模式）", async () => {
 			const provider = new CombinedAutocompleteProvider([], "/tmp");
 			const lines = ["/A"];
 			const cursorLine = 0;
-			const cursorCol = 2; // After the "A"
+			const cursorCol = 2; // "A" 之后
 
 			const result = await getSuggestions(provider, lines, cursorLine, cursorCol, true);
 
 			console.log("Result:", result);
-			// This might return null if /A doesn't match anything, which is fine
-			// We're mainly testing that the prefix extraction works
+			// 如果 /A 没有匹配项，可能返回 null，这没问题
+			// 我们主要测试前缀提取功能
 			if (result) {
-				assert.strictEqual(result.prefix, "/A", "Prefix should be '/A'");
+				assert.strictEqual(result.prefix, "/A", "前缀应为 '/A'");
 			}
 		});
 
-		it("does not trigger for slash commands", async () => {
+		it("不触发斜杠命令的补全", async () => {
 			const provider = new CombinedAutocompleteProvider([], "/tmp");
 			const lines = ["/model"];
 			const cursorLine = 0;
-			const cursorCol = 6; // After "model"
+			const cursorCol = 6; // "model" 之后
 
 			const result = await getSuggestions(provider, lines, cursorLine, cursorCol, true);
 
 			console.log("Result:", result);
-			assert.strictEqual(result, null, "Should not trigger for slash commands");
+			assert.strictEqual(result, null, "不应为斜杠命令触发补全");
 		});
 
-		it("triggers for absolute paths after slash command argument", async () => {
+		it("在斜杠命令参数后触发绝对路径补全", async () => {
 			const provider = new CombinedAutocompleteProvider([], "/tmp");
 			const lines = ["/command /"];
 			const cursorLine = 0;
-			const cursorCol = 10; // After the second "/"
+			const cursorCol = 10; // 第二个 "/" 之后
 
 			const result = await getSuggestions(provider, lines, cursorLine, cursorCol, true);
 
 			console.log("Result:", result);
-			assert.notEqual(result, null, "Should trigger for absolute paths in command arguments");
+			assert.notEqual(result, null, "应为命令参数中的绝对路径触发补全");
 			if (result) {
-				assert.strictEqual(result.prefix, "/", "Prefix should be '/'");
+				assert.strictEqual(result.prefix, "/", "前缀应为 '/'");
 			}
 		});
 	});
 
-	describe("fd @ file suggestions", { skip: !isFdInstalled }, () => {
+	describe("fd @ 文件建议", { skip: !isFdInstalled }, () => {
 		let rootDir = "";
 		let baseDir = "";
 		let outsideDir = "";
@@ -131,7 +131,7 @@ describe("CombinedAutocompleteProvider", () => {
 			rmSync(rootDir, { recursive: true, force: true });
 		});
 
-		test("returns all files and folders for empty @ query", async () => {
+		test("空 @ 查询返回所有文件和文件夹", async () => {
 			setupFolder(baseDir, {
 				dirs: ["src"],
 				files: {
@@ -147,7 +147,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.deepStrictEqual(values, ["@README.md", "@src/"].sort());
 		});
 
-		test("matches file with extension in query", async () => {
+		test("匹配带扩展名的文件查询", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"file.txt": "content",
@@ -162,7 +162,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(values?.includes("@file.txt"));
 		});
 
-		test("filters are case insensitive", async () => {
+		test("筛选不区分大小写", async () => {
 			setupFolder(baseDir, {
 				dirs: ["src"],
 				files: {
@@ -178,7 +178,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.deepStrictEqual(values, ["@README.md"]);
 		});
 
-		test("ranks directories before files", async () => {
+		test("目录排在文件前面", async () => {
 			setupFolder(baseDir, {
 				dirs: ["src"],
 				files: {
@@ -196,7 +196,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(hasSrcFile);
 		});
 
-		test("returns nested file paths", async () => {
+		test("返回嵌套文件路径", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"src/index.ts": "export {};\n",
@@ -211,7 +211,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(values?.includes("@src/index.ts"));
 		});
 
-		test("matches deeply nested paths", async () => {
+		test("匹配深层嵌套路径", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"packages/tui/src/autocomplete.ts": "export {};",
@@ -228,7 +228,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(!values?.includes("@packages/ai/src/autocomplete.ts"));
 		});
 
-		test("matches directory in middle of path with --full-path", async () => {
+		test("使用 --full-path 匹配路径中间的目录", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"src/components/Button.tsx": "export {};",
@@ -245,7 +245,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(!values?.includes("@src/utils/helpers.ts"));
 		});
 
-		test("scopes fuzzy search to relative directories and searches recursively", async () => {
+		test("将模糊搜索限定到相对目录并递归搜索", async () => {
 			setupFolder(outsideDir, {
 				files: {
 					"nested/alpha.ts": "export {};",
@@ -264,7 +264,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(!values?.includes("@../outside/nested/deeper/zzz.ts"));
 		});
 
-		test("quotes paths with spaces for @ suggestions", async () => {
+		test("对带空格的 @ 建议路径加引号", async () => {
 			setupFolder(baseDir, {
 				dirs: ["my folder"],
 				files: {
@@ -280,7 +280,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(values?.includes('@"my folder/"'));
 		});
 
-		test("includes hidden paths but excludes .git", async () => {
+		test("包含隐藏路径但排除 .git", async () => {
 			setupFolder(baseDir, {
 				dirs: [".pi", ".github", ".git"],
 				files: {
@@ -300,7 +300,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(!values.some((value) => value === "@.git" || value.startsWith("@.git/")));
 		});
 
-		test("follows symlinked directories for fuzzy @ search", async () => {
+		test("模糊 @ 搜索跟随符号链接目录", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"dir/some_file.txt": "real",
@@ -322,7 +322,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(values.includes("@symlinked_dir/some_file.txt"));
 		});
 
-		test("returns symlinked directories when matching their name", async () => {
+		test("匹配符号链接目录的名称时返回该目录", async () => {
 			setupFolder(outsideDir, {
 				files: {
 					"nested/file.txt": "symlinked",
@@ -338,7 +338,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(values.includes("@symlinked_dir/"));
 		});
 
-		test("returns symlinked files without requiring type l", async () => {
+		test("返回符号链接文件，无需 type l 参数", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"original.txt": "content",
@@ -355,7 +355,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(values.includes("@link.txt"));
 		});
 
-		test("returns the same @ suggestions when the cwd path contains the query", async () => {
+		test("当 cwd 路径包含查询词时，返回相同的 @ 建议", async () => {
 			const normalBaseDir = join(rootDir, "cwd-normal");
 			const queryInPathBaseDir = join(rootDir, "cwd-plan-repro");
 			mkdirSync(normalBaseDir, { recursive: true });
@@ -388,7 +388,7 @@ describe("CombinedAutocompleteProvider", () => {
 			assert.ok(normalize(normalResult).includes("plan.md :: packages/tui/docs/plan.md"));
 		});
 
-		test("continues autocomplete inside quoted @ paths", async () => {
+		test("在引号 @ 路径内继续自动补全", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"my folder/test.txt": "content",
@@ -400,13 +400,13 @@ describe("CombinedAutocompleteProvider", () => {
 			const line = '@"my folder/"';
 			const result = await getSuggestions(provider, [line], 0, line.length - 1);
 
-			assert.notEqual(result, null, "Should return suggestions for quoted folder path");
+			assert.notEqual(result, null, "应为引号文件夹路径返回建议");
 			const values = result?.items.map((item) => item.value);
 			assert.ok(values?.includes('@"my folder/test.txt"'));
 			assert.ok(values?.includes('@"my folder/other.txt"'));
 		});
 
-		test("applies quoted @ completion without duplicating closing quote", async () => {
+		test("应用引号 @ 补全时不重复结尾引号", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"my folder/test.txt": "content",
@@ -418,16 +418,16 @@ describe("CombinedAutocompleteProvider", () => {
 			const cursorCol = line.length - 1;
 			const result = await getSuggestions(provider, [line], 0, cursorCol);
 
-			assert.notEqual(result, null, "Should return suggestions for quoted @ path");
+			assert.notEqual(result, null, "应为引号 @ 路径返回建议");
 			const item = result?.items.find((entry) => entry.value === '@"my folder/test.txt"');
-			assert.ok(item, "Should find test.txt suggestion");
+			assert.ok(item, "应找到 test.txt 建议");
 
 			const applied = provider.applyCompletion([line], 0, cursorCol, item!, result!.prefix);
 			assert.strictEqual(applied.lines[0], '@"my folder/test.txt" ');
 		});
 	});
 
-	describe("dot-slash path completion", () => {
+	describe("点斜杠路径补全", () => {
 		let baseDir = "";
 
 		beforeEach(() => {
@@ -438,7 +438,7 @@ describe("CombinedAutocompleteProvider", () => {
 			rmSync(baseDir, { recursive: true, force: true });
 		});
 
-		test("preserves ./ prefix when completing paths", async () => {
+		test("补全路径时保留 ./ 前缀", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"update.sh": "#!/bin/bash",
@@ -450,12 +450,12 @@ describe("CombinedAutocompleteProvider", () => {
 			const line = "./up";
 			const result = await getSuggestions(provider, [line], 0, line.length, true);
 
-			assert.notEqual(result, null, "Should return suggestions for ./ path");
+			assert.notEqual(result, null, "应为 ./ 路径返回建议");
 			const values = result?.items.map((item) => item.value);
-			assert.ok(values?.includes("./update.sh"), `Expected ./update.sh in ${JSON.stringify(values)}`);
+			assert.ok(values?.includes("./update.sh"), `期望 ./update.sh 在 ${JSON.stringify(values)} 中`);
 		});
 
-		test("preserves ./ prefix for directory completions", async () => {
+		test("目录补全时保留 ./ 前缀", async () => {
 			setupFolder(baseDir, {
 				dirs: ["src"],
 				files: {
@@ -467,13 +467,13 @@ describe("CombinedAutocompleteProvider", () => {
 			const line = "./sr";
 			const result = await getSuggestions(provider, [line], 0, line.length, true);
 
-			assert.notEqual(result, null, "Should return suggestions for ./ directory path");
+			assert.notEqual(result, null, "应为 ./ 目录路径返回建议");
 			const values = result?.items.map((item) => item.value);
-			assert.ok(values?.includes("./src/"), `Expected ./src/ in ${JSON.stringify(values)}`);
+			assert.ok(values?.includes("./src/"), `期望 ./src/ 在 ${JSON.stringify(values)} 中`);
 		});
 	});
 
-	describe("quoted path completion", () => {
+	describe("引号路径补全", () => {
 		let baseDir = "";
 
 		beforeEach(() => {
@@ -484,7 +484,7 @@ describe("CombinedAutocompleteProvider", () => {
 			rmSync(baseDir, { recursive: true, force: true });
 		});
 
-		test("quotes paths with spaces for direct completion", async () => {
+		test("对带空格的直接补全路径加引号", async () => {
 			setupFolder(baseDir, {
 				dirs: ["my folder"],
 				files: {
@@ -496,12 +496,12 @@ describe("CombinedAutocompleteProvider", () => {
 			const line = "my";
 			const result = await getSuggestions(provider, [line], 0, line.length, true);
 
-			assert.notEqual(result, null, "Should return suggestions for path completion");
+			assert.notEqual(result, null, "应为路径补全返回建议");
 			const values = result?.items.map((item) => item.value);
 			assert.ok(values?.includes('"my folder/"'));
 		});
 
-		test("continues completion inside quoted paths", async () => {
+		test("在引号路径内继续补全", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"my folder/test.txt": "content",
@@ -513,13 +513,13 @@ describe("CombinedAutocompleteProvider", () => {
 			const line = '"my folder/"';
 			const result = await getSuggestions(provider, [line], 0, line.length - 1, true);
 
-			assert.notEqual(result, null, "Should return suggestions for quoted folder path");
+			assert.notEqual(result, null, "应为引号文件夹路径返回建议");
 			const values = result?.items.map((item) => item.value);
 			assert.ok(values?.includes('"my folder/test.txt"'));
 			assert.ok(values?.includes('"my folder/other.txt"'));
 		});
 
-		test("applies quoted completion without duplicating closing quote", async () => {
+		test("应用引号补全时不重复结尾引号", async () => {
 			setupFolder(baseDir, {
 				files: {
 					"my folder/test.txt": "content",
@@ -531,9 +531,9 @@ describe("CombinedAutocompleteProvider", () => {
 			const cursorCol = line.length - 1;
 			const result = await getSuggestions(provider, [line], 0, cursorCol, true);
 
-			assert.notEqual(result, null, "Should return suggestions for quoted path");
+			assert.notEqual(result, null, "应为引号路径返回建议");
 			const item = result?.items.find((entry) => entry.value === '"my folder/test.txt"');
-			assert.ok(item, "Should find test.txt suggestion");
+			assert.ok(item, "应找到 test.txt 建议");
 
 			const applied = provider.applyCompletion([line], 0, cursorCol, item!, result!.prefix);
 			assert.strictEqual(applied.lines[0], '"my folder/test.txt"');

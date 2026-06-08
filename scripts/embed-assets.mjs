@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 生成嵌入式资产文件 scripts/embed-assets.mjs
+ * 生成嵌入式资产文件
  * 
  * 读取所有运行时配套文件，生成 TypeScript 源码，
  * 让 bun build --compile 将其内联到二进制中。
@@ -50,7 +50,7 @@ const binaryAssets = {
 const lines = [
 	"// 自动生成 — 由 scripts/embed-assets.mjs 在构建时生成",
 	"// 不要手动编辑此文件",
-	`// 生成时间: ${new Date().toISOString()}`,
+	`// 生成时间：${new Date().toISOString()}`,
 	"",
 	"// ============================================================",
 	"// 文本资产（JSON / HTML / CSS / JS）",
@@ -74,7 +74,7 @@ lines.push("");
 
 // 二进制资产：导出为 base64 字符串
 lines.push("// ============================================================");
-lines.push("// 二进制资产（图片）— 以 base64 内联");
+lines.push("// 二进制资产（图片等）— 以 base64 内联");
 lines.push("// ============================================================");
 lines.push("");
 

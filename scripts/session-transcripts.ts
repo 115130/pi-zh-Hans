@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
- * Extracts session transcripts for a given cwd, splits into context-sized files,
- * optionally spawns subagents to analyze patterns.
+ * 提取指定 cwd 的会话记录，按上下文大小拆分文件，
+ * 可选地生成子代理来分析模式。
  *
- * Usage: node scripts/session-transcripts.ts [--analyze] [--output <dir>] [cwd]
- *   --analyze      Spawn pi subagents to analyze each transcript file
- *   --output <dir> Output directory for transcript files (defaults to ./session-transcripts)
- *   cwd            Working directory to extract sessions for (defaults to current)
+ * 用法：node scripts/session-transcripts.ts [--analyze] [--output <dir>] [cwd]
+ *   --analyze      生成 pi 子代理来分析每个记录文件
+ *   --output <dir> 记录文件输出目录（默认：./session-transcripts）
+ *   cwd            要提取会话的工作目录（默认：当前目录）
  */
 
 import { readFileSync, readdirSync, writeFileSync, existsSync, mkdirSync } from "fs";
@@ -17,11 +17,11 @@ import { join, resolve } from "path";
 import { parseSessionEntries, type SessionMessageEntry } from "../packages/coding-agent/src/core/session-manager.ts";
 import chalk from "chalk";
 
-const MAX_CHARS_PER_FILE = 100_000; // ~20k tokens, leaving room for prompt + analysis + output
+const MAX_CHARS_PER_FILE = 100_000; // 约 20k token，为提示 + 分析 + 输出留出空间
 
 function cwdToSessionDir(cwd: string): string {
 	const normalized = resolve(cwd).replace(/\//g, "-");
-	return `--${normalized.slice(1)}--`; // Remove leading slash, wrap with --
+	return `--${normalized.slice(1)}--`; // 去掉前导斜杠，用 -- 包裹
 }
 
 function extractTextContent(content: string | Array<{ type: string; text?: string }>): string {
@@ -96,12 +96,12 @@ function runSubagent(prompt: string, cwd: string): Promise<{ success: boolean }>
 						textBuffer += msgEvent.delta;
 					}
 				} else if (event.type === "tool_execution_start" && event.toolName) {
-					// Print accumulated text before tool starts
+					// 在工具开始前打印累积的文本
 					if (textBuffer.trim()) {
 						console.log(chalk.dim("  " + truncateLine(textBuffer, MAX_DISPLAY_WIDTH)));
 						textBuffer = "";
 					}
-					// Format tool call with args
+					// 格式化工具调用及参数
 					let argsStr = "";
 					if (event.args) {
 						if (event.toolName === "read") {
@@ -114,14 +114,14 @@ function runSubagent(prompt: string, cwd: string): Promise<{ success: boolean }>
 					}
 					console.log(chalk.cyan(`  [${event.toolName}] ${argsStr}`));
 				} else if (event.type === "turn_end") {
-					// Print any remaining text at turn end
+					// 在轮次结束时打印剩余文本
 					if (textBuffer.trim()) {
 						console.log(chalk.dim("  " + truncateLine(textBuffer, MAX_DISPLAY_WIDTH)));
 					}
 					textBuffer = "";
 				}
 			} catch {
-				// Ignore malformed JSON
+				// 忽略格式错误的 JSON
 			}
 		});
 
@@ -134,7 +134,7 @@ function runSubagent(prompt: string, cwd: string): Promise<{ success: boolean }>
 		});
 
 		child.on("error", (err) => {
-			console.error(chalk.red(`  Failed to spawn pi: ${err.message}`));
+			console.error(chalk.red(`  生成 pi 失败：${err.message}`));
 			resolve({ success: false });
 		});
 	});
@@ -144,14 +144,14 @@ async function main() {
 	const args = process.argv.slice(2);
 	const analyzeFlag = args.includes("--analyze");
 
-	// Parse --output <dir>
+	// 解析 --output <dir>
 	const outputIdx = args.indexOf("--output");
 	let outputDir = resolve("./session-transcripts");
 	if (outputIdx !== -1 && args[outputIdx + 1]) {
 		outputDir = resolve(args[outputIdx + 1]);
 	}
 
-	// Find cwd (positional arg that's not a flag or flag value)
+	// 查找 cwd（位置参数，不是标志或标志值）
 	const flagIndices = new Set<number>();
 	flagIndices.add(args.indexOf("--analyze"));
 	if (outputIdx !== -1) {
@@ -167,8 +167,8 @@ async function main() {
 	const sessionDir = join(sessionsBase, sessionDirName);
 
 	if (!existsSync(sessionDir)) {
-		console.error(`No sessions found for ${cwd}`);
-		console.error(`Expected: ${sessionDir}`);
+		console.error(`在 ${cwd} 中未找到会话`);
+		console.error(`预期路径：${sessionDir}`);
 		process.exit(1);
 	}
 
@@ -176,55 +176,55 @@ async function main() {
 		.filter((f) => f.endsWith(".jsonl"))
 		.sort();
 
-	console.log(`Found ${sessionFiles.length} session files in ${sessionDir}`);
+	console.log(`在 ${sessionDir} 中找到 ${sessionFiles.length} 个会话文件`);
 
-	// Collect all transcripts
+	// 收集所有记录
 	const allTranscripts: string[] = [];
 	for (const file of sessionFiles) {
 		const filePath = join(sessionDir, file);
 		const messages = parseSession(filePath);
 		if (messages.length > 0) {
-			allTranscripts.push(`=== SESSION: ${file} ===\n${messages.join("\n---\n")}\n=== END SESSION ===`);
+			allTranscripts.push(`=== 会话：${file} ===\n${messages.join("\n---\n")}\n=== 会话结束 ===`);
 		}
 	}
 
 	if (allTranscripts.length === 0) {
-		console.error("No transcripts found");
+		console.error("未找到记录");
 		process.exit(1);
 	}
 
-	// Split into files respecting MAX_CHARS_PER_FILE
+	// 按 MAX_CHARS_PER_FILE 拆分为文件
 	const outputFiles: string[] = [];
 	let currentContent = "";
 	let fileIndex = 0;
 
 	for (const transcript of allTranscripts) {
-		// If adding this transcript would exceed limit, write current and start new
+		// 如果添加此记录会超出限制，写入当前文件并开始新文件
 		if (currentContent.length > 0 && currentContent.length + transcript.length + 2 > MAX_CHARS_PER_FILE) {
 			const filename = `session-transcripts-${String(fileIndex).padStart(3, "0")}.txt`;
 			writeFileSync(join(outputDir, filename), currentContent);
 			outputFiles.push(filename);
-			console.log(`Wrote ${filename} (${currentContent.length} chars)`);
+			console.log(`已写入 ${filename}（${currentContent.length} 字符）`);
 			currentContent = "";
 			fileIndex++;
 		}
 
-		// If this single transcript exceeds limit, write it to its own file
+		// 如果单条记录超出限制，写入单独的文件
 		if (transcript.length > MAX_CHARS_PER_FILE) {
-			// Write any pending content first
+			// 先写入待处理的内容
 			if (currentContent.length > 0) {
 				const filename = `session-transcripts-${String(fileIndex).padStart(3, "0")}.txt`;
 				writeFileSync(join(outputDir, filename), currentContent);
 				outputFiles.push(filename);
-				console.log(`Wrote ${filename} (${currentContent.length} chars)`);
+				console.log(`已写入 ${filename}（${currentContent.length} 字符）`);
 				currentContent = "";
 				fileIndex++;
 			}
-			// Write the large transcript to its own file
+			// 将大记录写入单独的文件
 			const filename = `session-transcripts-${String(fileIndex).padStart(3, "0")}.txt`;
 			writeFileSync(join(outputDir, filename), transcript);
 			outputFiles.push(filename);
-			console.log(chalk.yellow(`Wrote ${filename} (${transcript.length} chars) - oversized`));
+			console.log(chalk.yellow(`已写入 ${filename}（${transcript.length} 字符）- 超大`));
 			fileIndex++;
 			continue;
 		}
@@ -232,72 +232,72 @@ async function main() {
 		currentContent += (currentContent ? "\n\n" : "") + transcript;
 	}
 
-	// Write remaining content
+	// 写入剩余内容
 	if (currentContent.length > 0) {
 		const filename = `session-transcripts-${String(fileIndex).padStart(3, "0")}.txt`;
 		writeFileSync(join(outputDir, filename), currentContent);
 		outputFiles.push(filename);
-		console.log(`Wrote ${filename} (${currentContent.length} chars)`);
+		console.log(`已写入 ${filename}（${currentContent.length} 字符）`);
 	}
 
-	console.log(`\nCreated ${outputFiles.length} transcript file(s) in ${outputDir}`);
+	console.log(`\n已在 ${outputDir} 中创建 ${outputFiles.length} 个记录文件`);
 
 	if (!analyzeFlag) {
-		console.log("\nRun with --analyze to spawn pi subagents for pattern analysis.");
+		console.log("\n使用 --analyze 参数可生成 pi 子代理进行模式分析。");
 		return;
 	}
 
-	// Find AGENTS.md files to compare against
+	// 查找 AGENTS.md 文件以进行对比
 	const globalAgentsMd = join(homedir(), ".pi/agent/AGENTS.md");
 	const localAgentsMd = join(cwd, "AGENTS.md");
 	const agentsMdFiles = [globalAgentsMd, localAgentsMd].filter(existsSync);
 	const agentsMdSection =
 		agentsMdFiles.length > 0
-			? `STEP 1: Read the existing AGENTS.md file(s) to see what's already encoded:\n${agentsMdFiles.join("\n")}\n\nSTEP 2: `
+			? `步骤 1：阅读现有的 AGENTS.md 文件，了解已编码的内容：\n${agentsMdFiles.join("\n")}\n\n步骤 2：`
 			: "";
 
-	// Spawn subagents to analyze each file
-	const analysisPrompt = `You are analyzing session transcripts to identify recurring user instructions that could be automated.
+	// 生成子代理来分析每个文件
+	const analysisPrompt = `你正在分析会话记录，以识别可以自动化的重复用户指令。
 
-${agentsMdSection}READING THE TRANSCRIPT:
-The transcript file is large. Read it in chunks of 1000 lines using offset/limit parameters:
-1. First: read with limit=1000 (lines 1-1000)
-2. Then: read with offset=1001, limit=1000 (lines 1001-2000)
-3. Continue incrementing offset by 1000 until you reach the end
-4. Only after reading the ENTIRE file, perform the analysis and write the summary
+${agentsMdSection}阅读记录：
+记录文件很大。使用 offset/limit 参数以 1000 行为单位分块读取：
+1. 首先：读取 limit=1000（第 1-1000 行）
+2. 然后：读取 offset=1001、limit=1000（第 1001-2000 行）
+3. 继续每次递增 offset 1000，直到读取完毕
+4. 只有在阅读完整个文件后，才能执行分析并写入摘要
 
-ANALYSIS TASK:
-Look for patterns where the user repeatedly gives similar instructions. These could become:
-- AGENTS.md entries: coding style rules, behavior guidelines, project conventions
-- Skills: multi-step workflows with external tools (search, browser, APIs)
-- Prompt templates: reusable prompts for common tasks
+分析任务：
+寻找用户重复给出相似指令的模式。这些可以成为：
+- AGENTS.md 条目：编码风格规则、行为指南、项目约定
+- Skills：带外部工具的多步骤工作流（搜索、浏览器、API）
+- 提示模板：常用任务的复用提示
 
-Compare each pattern against the existing AGENTS.md content to determine if it's NEW or EXISTING.
+将每个模式与现有的 AGENTS.md 内容进行比较，判断是新的还是已有的。
 
-OUTPUT FORMAT (strict):
-Write a file with exactly this structure. Use --- as separator between patterns.
+输出格式（严格）：
+使用如下结构写入文件。模式之间用 --- 分隔。
 
-PATTERN: <short descriptive name>
+PATTERN: <简短描述性名称>
 STATUS: NEW | EXISTING
 TYPE: agents-md | skill | prompt-template
-FREQUENCY: <number of times observed>
+FREQUENCY: <观察次数>
 EVIDENCE:
-- "<exact quote 1>"
-- "<exact quote 2>"
-- "<exact quote 3>"
+- "<精确引用 1>"
+- "<精确引用 2>"
+- "<精确引用 3>"
 DRAFT:
-<proposed content for AGENTS.md entry, SKILL.md, or prompt template>
+<AGENTS.md 条目、SKILL.md 或提示模板的拟议内容>
 ---
 
-Rules:
-- Only include patterns that appear 2+ times
-- STATUS is NEW if not in AGENTS.md, EXISTING if already covered
-- EVIDENCE must contain exact quotes from the transcripts
-- DRAFT must be ready-to-use content
-- If no patterns found, write "NO PATTERNS FOUND"
-- Do not include any other text outside this format`;
+规则：
+- 只包含出现 2+ 次的模式
+- 如果不在 AGENTS.md 中则 STATUS 为 NEW，如果已覆盖则为 EXISTING
+- EVIDENCE 必须包含记录的精确引用
+- DRAFT 必须是可直接使用的内容
+- 如果没有找到模式，写入 "NO PATTERNS FOUND"
+- 不要包含此格式之外的任何其他文本`;
 
-	console.log("\nSpawning subagents for analysis...");
+	console.log("\n生成子代理进行分析...");
 	for (const file of outputFiles) {
 		const summaryFile = file.replace(".txt", ".summary.txt");
 		const filePath = join(outputDir, file);
@@ -306,100 +306,100 @@ Rules:
 		const fileContent = readFileSync(filePath, "utf8");
 		const fileSize = fileContent.length;
 
-		console.log(`Analyzing ${file} (${fileSize} chars)...`);
+		console.log(`分析 ${file}（${fileSize} 字符）...`);
 
 		const lineCount = fileContent.split("\n").length;
-		const fullPrompt = `${analysisPrompt}\n\nThe file ${filePath} has ${lineCount} lines. Read it in full using chunked reads, then write your analysis to ${summaryPath}`;
+		const fullPrompt = `${analysisPrompt}\n\n文件 ${filePath} 有 ${lineCount} 行。使用分块读取完整阅读，然后将分析写入 ${summaryPath}`;
 
 		const result = await runSubagent(fullPrompt, outputDir);
 
 		if (result.success && existsSync(summaryPath)) {
 			console.log(chalk.green(`  -> ${summaryFile}`));
 		} else if (result.success) {
-			console.error(chalk.yellow(`  Agent finished but did not write ${summaryFile}`));
+			console.error(chalk.yellow(`  代理已完成但未写入 ${summaryFile}`));
 		} else {
-			console.error(chalk.red(`  Failed to analyze ${file}`));
+			console.error(chalk.red(`  分析 ${file} 失败`));
 		}
 	}
 
-	// Collect all created summary files
+	// 收集所有创建的摘要文件
 	const summaryFiles = readdirSync(outputDir)
 		.filter((f) => f.endsWith(".summary.txt"))
 		.sort();
 
-	console.log(`\n=== Individual Analysis Complete ===`);
-	console.log(`Created ${summaryFiles.length} summary files`);
+	console.log(`\n=== 单项分析完成 ===`);
+	console.log(`创建了 ${summaryFiles.length} 个摘要文件`);
 
 	if (summaryFiles.length === 0) {
-		console.log(chalk.yellow("No summary files created. Nothing to aggregate."));
+		console.log(chalk.yellow("未创建摘要文件。无需汇总。"));
 		return;
 	}
 
-	// Final aggregation step
-	console.log("\nAggregating findings into final summary...");
+	// 最终汇总步骤
+	console.log("\n汇总各文件的发现结果...");
 
 	const summaryPaths = summaryFiles.map((f) => join(outputDir, f)).join("\n");
 	const finalSummaryPath = join(outputDir, "FINAL-SUMMARY.txt");
 
-	const aggregationPrompt = `You are aggregating pattern analysis results from multiple summary files.
+	const aggregationPrompt = `你正在汇总来自多个摘要文件的模式分析结果。
 
-STEP 1: Read the existing AGENTS.md file(s) to understand what patterns are already encoded:
-${agentsMdFiles.length > 0 ? agentsMdFiles.join("\n") : "(no AGENTS.md files found)"}
+步骤 1：阅读现有的 AGENTS.md 文件，了解已编码的模式：
+${agentsMdFiles.length > 0 ? agentsMdFiles.join("\n") : "（未找到 AGENTS.md 文件）"}
 
-STEP 2: Read ALL of the following summary files:
+步骤 2：阅读所有以下摘要文件：
 ${summaryPaths}
 
-STEP 3: Create a consolidated final summary that:
-1. Merges duplicate patterns (same pattern found in multiple files)
-2. Ranks patterns by total frequency across all files
-3. Groups by status (NEW first, then EXISTING) and type
-4. Provides the best/most complete DRAFT for each unique pattern
-5. Verify STATUS against AGENTS.md content (pattern may be marked NEW in summaries but actually exists)
+步骤 3：创建合并的最终摘要，要求：
+1. 合并重复模式（同一模式在多个文件中出现）
+2. 按所有文件的总频率排序
+3. 按状态（NEW 在前，EXISTING 在后）和类型分组
+4. 为每个唯一模式提供最佳/最完整的草稿
+5. 对照 AGENTS.md 内容验证状态（摘要中标记为 NEW 的模式可能实际已存在）
 
-OUTPUT FORMAT (strict):
-Write the final summary with this structure:
+输出格式（严格）：
+使用如下结构写入最终摘要：
 
-# NEW PATTERNS (not yet in AGENTS.md)
+# 新模式（尚未在 AGENTS.md 中）
 
-## AGENTS.MD: <pattern name>
-Total Frequency: <sum across all files>
-Evidence:
-- "<best quotes>"
-Draft:
-<consolidated draft>
+## AGENTS.MD：<模式名称>
+总频率：<所有文件汇总>
+证据：
+- "<最佳引用>"
+草稿：
+<合并后的草稿>
 
-## SKILL: <pattern name>
+## SKILL：<模式名称>
 ...
 
-## PROMPT-TEMPLATE: <pattern name>
+## PROMPT-TEMPLATE：<模式名称>
 ...
 
 ---
 
-# EXISTING PATTERNS (already in AGENTS.md, for reference)
+# 已有模式（已在 AGENTS.md 中，供参考）
 
-## <pattern name>
-Total Frequency: <N>
-Already covered by: <quote relevant section from AGENTS.md>
+## <模式名称>
+总频率：<N>
+已覆盖于：<引用 AGENTS.md 的相关章节>
 
 ---
 
-# SUMMARY
-- New patterns to add: <N>
-- Already covered: <N>
-- Top 3 new patterns by frequency: <list>
+# 汇总
+- 要添加的新模式：<N>
+- 已覆盖的模式：<N>
+- 按频率排名前三的新模式：<列表>
 
-Write the final summary to ${finalSummaryPath}`;
+将最终摘要写入 ${finalSummaryPath}`;
 
 	const aggregateResult = await runSubagent(aggregationPrompt, outputDir);
 
 	if (aggregateResult.success && existsSync(finalSummaryPath)) {
-		console.log(chalk.green(`\n=== Final Summary Created ===`));
+		console.log(chalk.green(`\n=== 最终摘要已创建 ===`));
 		console.log(chalk.green(`  ${finalSummaryPath}`));
 	} else if (aggregateResult.success) {
-		console.error(chalk.yellow(`Agent finished but did not write final summary`));
+		console.error(chalk.yellow(`代理已完成但未写入最终摘要`));
 	} else {
-		console.error(chalk.red(`Failed to create final summary`));
+		console.error(chalk.red(`创建最终摘要失败`));
 	}
 }
 

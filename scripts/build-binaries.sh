@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 #
-# Build pi binaries for all platforms locally.
-# Mirrors .github/workflows/build-binaries.yml
+# 在本地构建所有平台的 pi 二进制文件。
+# 镜像 .github/workflows/build-binaries.yml
 #
-# Usage:
+# 用法：
 #   ./scripts/build-binaries.sh [--skip-install] [--skip-deps] [--skip-build] [--platform <platform>] [--out <dir>]
 #
-# Options:
-#   --skip-install      Skip npm ci
-#   --skip-deps         Skip installing cross-platform dependencies
-#   --skip-build        Skip npm run build
-#   --platform <name>   Build only for specified platform (darwin-arm64, darwin-x64, linux-x64, linux-arm64, windows-x64, windows-arm64)
-#   --out <dir>         Output directory (default: packages/coding-agent/binaries)
+# 选项：
+#   --skip-install      跳过 npm ci
+#   --skip-deps         跳过安装跨平台依赖
+#   --skip-build        跳过 npm run build
+#   --platform <名称>   仅为指定平台构建（darwin-arm64、darwin-x64、linux-x64、linux-arm64、windows-x64、windows-arm64）
+#   --out <目录>        输出目录（默认：packages/coding-agent/binaries）
 #
-# Output:
+# 输出：
 #   packages/coding-agent/binaries/
 #     pi-darwin-arm64.tar.gz
 #     pi-darwin-x64.tar.gz
@@ -55,20 +55,20 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         *)
-            echo "Unknown option: $1"
+            echo "未知选项：$1"
             exit 1
             ;;
     esac
 done
 
-# Validate platform if specified
+# 验证指定的平台
 if [[ -n "$PLATFORM" ]]; then
     case "$PLATFORM" in
         darwin-arm64|darwin-x64|linux-x64|linux-arm64|windows-x64|windows-arm64)
             ;;
         *)
-            echo "Invalid platform: $PLATFORM"
-            echo "Valid platforms: darwin-arm64, darwin-x64, linux-x64, linux-arm64, windows-x64, windows-arm64"
+            echo "无效平台：$PLATFORM"
+            echo "有效平台：darwin-arm64、darwin-x64、linux-x64、linux-arm64、windows-x64、windows-arm64"
             exit 1
             ;;
     esac
@@ -82,18 +82,18 @@ if [[ "$OUTPUT_DIR" != /* ]]; then
 fi
 
 if [[ "$SKIP_INSTALL" == "false" ]]; then
-    echo "==> Installing dependencies..."
+    echo "==> 安装依赖..."
     npm ci --ignore-scripts
 else
-    echo "==> Skipping npm ci (--skip-install)"
+    echo "==> 跳过 npm ci（--skip-install）"
 fi
 
 if [[ "$SKIP_DEPS" == "false" ]]; then
-    echo "==> Installing cross-platform native bindings..."
-    # npm ci only installs optional deps for the current platform
-    # We need all platform bindings for bun cross-compilation
-    # Use --force to bypass platform checks (os/cpu restrictions in package.json)
-    # Install all in one command to avoid npm removing packages from previous installs
+    echo "==> 安装跨平台原生绑定..."
+    # npm ci 仅为当前平台安装可选依赖
+    # 我们需要所有平台绑定用于 bun 交叉编译
+    # 使用 --force 绕过平台检查（package.json 中的 os/cpu 限制）
+    # 一次安装所有依赖，避免 npm 移除先前安装的包
     npm install --no-save --package-lock=false --force --ignore-scripts \
         @mariozechner/clipboard-darwin-arm64@0.3.6 \
         @mariozechner/clipboard-darwin-x64@0.3.6 \
@@ -102,24 +102,24 @@ if [[ "$SKIP_DEPS" == "false" ]]; then
         @mariozechner/clipboard-win32-x64-msvc@0.3.6 \
         @mariozechner/clipboard-win32-arm64-msvc@0.3.6
 else
-    echo "==> Skipping cross-platform native bindings (--skip-deps)"
+    echo "==> 跳过跨平台原生绑定（--skip-deps）"
 fi
 
 if [[ "$SKIP_BUILD" == "false" ]]; then
-    echo "==> Building all packages..."
+    echo "==> 构建所有包..."
     npm run build
 else
-    echo "==> Skipping package build (--skip-build)"
+    echo "==> 跳过包构建（--skip-build）"
 fi
 
-echo "==> Building binaries..."
+echo "==> 构建二进制文件..."
 cd packages/coding-agent
 
-# Clean previous builds
+# 清理之前的构建
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"/{darwin-arm64,darwin-x64,linux-x64,linux-arm64,windows-x64,windows-arm64}
 
-# Determine which platforms to build
+# 确定要构建的平台
 if [[ -n "$PLATFORM" ]]; then
     PLATFORMS=("$PLATFORM")
 else
@@ -127,10 +127,9 @@ else
 fi
 
 for platform in "${PLATFORMS[@]}"; do
-    echo "Building for $platform..."
-    # Bun compiled executables only embed worker scripts when they are passed as
-    # explicit build entrypoints. The runtime can still use new URL(...), but the
-    # worker must be present in the compiled executable.
+    echo "为 $platform 构建..."
+    # Bun 编译的可执行文件仅在将 worker 脚本作为显式构建入口点传递时嵌入它们。
+    # 运行时仍可使用 new URL(...)，但 worker 必须存在于编译后的可执行文件中。
     if [[ "$platform" == windows-* ]]; then
         bun build --compile --target=bun-$platform ./dist/bun/cli.js ./src/utils/image-resize-worker.ts --outfile "$OUTPUT_DIR/$platform/pi.exe"
     else
@@ -138,9 +137,9 @@ for platform in "${PLATFORMS[@]}"; do
     fi
 done
 
-echo "==> Creating release archives..."
+echo "==> 创建发布归档..."
 
-# Copy shared files to each platform directory
+# 将共享文件复制到每个平台目录
 for platform in "${PLATFORMS[@]}"; do
     cp package.json "$OUTPUT_DIR/$platform/"
     cp README.md "$OUTPUT_DIR/$platform/"
@@ -178,7 +177,7 @@ for platform in "${PLATFORMS[@]}"; do
     cp -r ../../node_modules/@mariozechner/clipboard "$OUTPUT_DIR/$platform/node_modules/@mariozechner/"
     cp -r ../../node_modules/@mariozechner/$clipboard_native_package "$OUTPUT_DIR/$platform/node_modules/@mariozechner/"
 
-    # Copy terminal input native helpers next to compiled binaries.
+    # 将终端输入原生辅助程序复制到编译后的二进制文件旁边。
     if [[ "$platform" == darwin-* ]]; then
         mkdir -p "$OUTPUT_DIR/$platform/native/darwin/prebuilds/$platform"
         cp ../tui/native/darwin/prebuilds/$platform/darwin-modifiers.node "$OUTPUT_DIR/$platform/native/darwin/prebuilds/$platform/"
@@ -194,23 +193,23 @@ for platform in "${PLATFORMS[@]}"; do
     fi
 done
 
-# Create archives
+# 创建归档
 cd "$OUTPUT_DIR"
 
 for platform in "${PLATFORMS[@]}"; do
     if [[ "$platform" == windows-* ]]; then
-        # Windows (zip)
-        echo "Creating pi-$platform.zip..."
+        # Windows（zip）
+        echo "创建 pi-$platform.zip..."
         (cd "$platform" && zip -r ../pi-$platform.zip .)
     else
-        # Unix platforms (tar.gz) - use wrapper directory for mise compatibility
-        echo "Creating pi-$platform.tar.gz..."
+        # Unix 平台（tar.gz）— 使用包装目录以兼容 mise
+        echo "创建 pi-$platform.tar.gz..."
         mv "$platform" pi && tar -czf pi-$platform.tar.gz pi && mv pi "$platform"
     fi
 done
 
-# Extract archives for easy local testing
-echo "==> Extracting archives for testing..."
+# 提取归档以便于本地测试
+echo "==> 提取归档用于测试..."
 for platform in "${PLATFORMS[@]}"; do
     rm -rf "$platform"
     if [[ "$platform" == windows-* ]]; then
@@ -221,11 +220,11 @@ for platform in "${PLATFORMS[@]}"; do
 done
 
 echo ""
-echo "==> Build complete!"
-echo "Archives available in $OUTPUT_DIR/"
+echo "==> 构建完成！"
+echo "归档文件位于 $OUTPUT_DIR/"
 ls -lh *.tar.gz *.zip 2>/dev/null || true
 echo ""
-echo "Extracted directories for testing:"
+echo "已提取的测试目录："
 for platform in "${PLATFORMS[@]}"; do
     if [[ "$platform" == windows-* ]]; then
         echo "  $OUTPUT_DIR/$platform/pi.exe"

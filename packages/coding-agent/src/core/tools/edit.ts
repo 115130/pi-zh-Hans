@@ -33,8 +33,7 @@ type EditRenderState = {
 const replaceEditSchema = Type.Object(
 	{
 		oldText: Type.String({
-			description:
-				"一次替换的精确原始文本。它在原文件中必须唯一，且不能与同一次调用中的其他 edits[].oldText 重叠。",
+			description: "一次替换的精确原始文本。它在原文件中必须唯一，且不能与同一次调用中的其他 edits[].oldText 重叠。",
 		}),
 		newText: Type.String({ description: "此目标编辑的替换文本。" }),
 	},

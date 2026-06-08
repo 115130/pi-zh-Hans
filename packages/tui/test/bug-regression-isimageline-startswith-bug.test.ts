@@ -1,25 +1,25 @@
 /**
- * Bug regression test for isImageLine() crash scenario
+ * isImageLine() 崩溃场景的 Bug 回归测试
  *
- * Bug: When isImageLine() used startsWith() and terminal doesn't support images,
- * it would return false for lines containing image escape sequences, causing TUI to
- * crash with "Rendered line exceeds terminal width" error.
+ * Bug：当 isImageLine() 使用 startsWith() 且终端不支持图片时，
+ * 对于包含图片转义序列的行会返回 false，导致 TUI 崩溃并显示
+ * "Rendered line exceeds terminal width" 错误。
  *
- * Fix: Changed to use includes() to detect escape sequences anywhere in the line.
+ * 修复：改为使用 includes() 检测行中任意位置的转义序列。
  *
- * This test demonstrates:
- * 1. The bug scenario with the old implementation
- * 2. That the fix works correctly
+ * 本测试演示：
+ * 1. 旧实现中的 bug 场景
+ * 2. 修复方案工作正常
  */
 
 import assert from "node:assert";
 import { describe, it } from "node:test";
 
-describe("Bug regression: isImageLine() crash with image escape sequences", () => {
-	describe("Bug scenario: Terminal without image support", () => {
-		it("old implementation would return false, causing crash", () => {
+describe("Bug 回归：isImageLine() 因图片转义序列崩溃", () => {
+	describe("Bug 场景：终端不支持图片", () => {
+		it("旧实现会返回 false，导致崩溃", () => {
 			/**
-			 * OLD IMPLEMENTATION (buggy):
+			 * 旧实现（有 bug）：
 			 * ```typescript
 			 * export function isImageLine(line: string): boolean {
 			 *   const prefix = getImageEscapePrefix();
@@ -27,85 +27,81 @@ describe("Bug regression: isImageLine() crash with image escape sequences", () =
 			 * }
 			 * ```
 			 *
-			 * When terminal doesn't support images:
-			 * - getImageEscapePrefix() returns null
-			 * - isImageLine() returns false even for lines containing image sequences
-			 * - TUI performs width check on line containing 300KB+ of base64 data
-			 * - Crash: "Rendered line exceeds terminal width (304401 > 115)"
+			 * 当终端不支持图片时：
+			 * - getImageEscapePrefix() 返回 null
+			 * - isImageLine() 对包含图片序列的行返回 false
+			 * - TUI 对包含 300KB+ base64 数据的行进行宽度检查
+			 * - 崩溃："Rendered line exceeds terminal width (304401 > 115)"
 			 */
 
-			// Simulate old implementation behavior
+			// 模拟旧实现行为
 			const oldIsImageLine = (line: string, imageEscapePrefix: string | null): boolean => {
 				return imageEscapePrefix !== null && line.startsWith(imageEscapePrefix);
 			};
 
-			// When terminal doesn't support images, prefix is null
+			// 终端不支持图片时，prefix 为 null
 			const terminalWithoutImageSupport = null;
 
-			// Line containing image escape sequence with text before it (common bug scenario)
+			// 包含图片转义序列且前面有文本的行（常见的 bug 场景）
 			const lineWithImageSequence =
 				"Read image file [image/jpeg]\x1b]1337;File=size=800,600;inline=1:base64data...\x07";
 
-			// Old implementation would return false (BUG!)
+			// 旧实现会返回 false（这就是 bug！）
 			const oldResult = oldIsImageLine(lineWithImageSequence, terminalWithoutImageSupport);
-			assert.strictEqual(
-				oldResult,
-				false,
-				"Bug: old implementation returns false for line containing image sequence when terminal has no image support",
-			);
+			assert.strictEqual(oldResult, false, "Bug：在终端不支持图片时，旧实现对于包含图片序列的行返回 false");
 		});
 
-		it("new implementation returns true correctly", async () => {
+		it("新实现正确返回 true", async () => {
 			const { isImageLine } = await import("../src/terminal-image.ts");
 
-			// Line containing image escape sequence with text before it
+			// 包含图片转义序列且前面有文本的行
 			const lineWithImageSequence =
 				"Read image file [image/jpeg]\x1b]1337;File=size=800,600;inline=1:base64data...\x07";
 
-			// New implementation should return true (FIX!)
+			// 新实现应返回 true（修复！）
 			const newResult = isImageLine(lineWithImageSequence);
-			assert.strictEqual(newResult, true, "Fix: new implementation returns true for line containing image sequence");
+			assert.strictEqual(newResult, true, "修复：新实现对于包含图片序列的行返回 true");
 		});
 
-		it("new implementation detects Kitty sequences in any position", async () => {
+		it("新实现能检测任意位置的 Kitty 序列", async () => {
 			const { isImageLine } = await import("../src/terminal-image.ts");
 
 			const scenarios = [
-				"At start: \x1b_Ga=T,f=100,data...\x1b\\",
-				"Prefix \x1b_Ga=T,data...\x1b\\",
-				"Suffix text \x1b_Ga=T,data...\x1b\\ suffix",
-				"Middle \x1b_Ga=T,data...\x1b\\ more text",
-				// Very long line (simulating 300KB+ crash scenario)
-				`Text before \x1b_Ga=T,f=100${"A".repeat(300000)} text after`,
+				"开头位置：\x1b_Ga=T,f=100,data...\x1b\\",
+				"前缀 \x1b_Ga=T,data...\x1b\\",
+				"后缀文本 \x1b_Ga=T,data...\x1b\\ 后缀",
+				"中间位置 \x1b_Ga=T,data...\x1b\\ 更多文本",
+				// 超长行（模拟 300KB+ 崩溃场景）
+				`文本在前 \x1b_Ga=T,f=100${"A".repeat(300000)} 文本在后`,
 			];
 
 			for (const line of scenarios) {
-				assert.strictEqual(isImageLine(line), true, `Should detect Kitty sequence in: ${line.slice(0, 50)}...`);
+				assert.strictEqual(isImageLine(line), true, `应检测到 Kitty 序列：${line.slice(0, 50)}...`);
 			}
 		});
 
-		it("new implementation detects iTerm2 sequences in any position", async () => {
+		it("新实现能检测任意位置的 iTerm2 序列", async () => {
 			const { isImageLine } = await import("../src/terminal-image.ts");
 
 			const scenarios = [
-				"At start: \x1b]1337;File=size=100,100:base64...\x07",
-				"Prefix \x1b]1337;File=inline=1:data==\x07",
-				"Suffix text \x1b]1337;File=inline=1:data==\x07 suffix",
-				"Middle \x1b]1337;File=inline=1:data==\x07 more text",
-				// Very long line (simulating 304KB crash scenario)
-				`Text before \x1b]1337;File=size=800,600;inline=1:${"B".repeat(300000)} text after`,
+				"开头位置：\x1b]1337;File=size=100,100:base64...\x07",
+				"前缀 \x1b]1337;File=inline=1:data==\x07",
+				"后缀文本 \x1b]1337;File=inline=1:data==\x07 后缀",
+				"中间位置 \x1b]1337;File=inline=1:data==\x07 更多文本",
+				// 超长行（模拟 304KB 崩溃场景）
+				`文本在前 \x1b]1337;File=size=800,600;inline=1:${"B".repeat(300000)} 文本在后`,
 			];
 
 			for (const line of scenarios) {
-				assert.strictEqual(isImageLine(line), true, `Should detect iTerm2 sequence in: ${line.slice(0, 50)}...`);
+				assert.strictEqual(isImageLine(line), true, `应检测到 iTerm2 序列：${line.slice(0, 50)}...`);
 			}
 		});
 	});
 
-	describe("Integration: Tool execution scenario", () => {
+	describe("集成：工具执行场景", () => {
 		/**
-		 * This simulates what happens when the `read` tool reads an image file.
-		 * The tool result contains both text and image content:
+		 * 模拟 `read` 工具读取图片文件时发生的情况。
+		 * 工具结果包含文本和图片内容：
 		 *
 		 * ```typescript
 		 * {
@@ -116,33 +112,33 @@ describe("Bug regression: isImageLine() crash with image escape sequences", () =
 		 * }
 		 * ```
 		 *
-		 * When this is rendered, the image component creates escape sequences.
-		 * If isImageLine() doesn't detect them, TUI crashes.
+		 * 渲染时，图片组件会创建转义序列。
+		 * 如果 isImageLine() 检测不到它们，TUI 就会崩溃。
 		 */
 
-		it("detects image sequences in read tool output", async () => {
+		it("检测 read 工具输出中的图片序列", async () => {
 			const { isImageLine } = await import("../src/terminal-image.ts");
 
-			// Simulate output when read tool processes an image
-			// The line might have text from the read result plus the image escape sequence
+			// 模拟 read 工具处理图片时的输出
+			// 行中可能包含 read 结果的文本加上图片转义序列
 			const toolOutputLine = "Read image file [image/jpeg]\x1b]1337;File=size=800,600;inline=1:base64image...\x07";
 
-			assert.strictEqual(isImageLine(toolOutputLine), true, "Should detect image sequence in tool output line");
+			assert.strictEqual(isImageLine(toolOutputLine), true, "应检测到工具输出行中的图片序列");
 		});
 
-		it("detects Kitty sequences from Image component", async () => {
+		it("检测 Image 组件生成的 Kitty 序列", async () => {
 			const { isImageLine } = await import("../src/terminal-image.ts");
 
-			// Kitty image component creates multi-line output with escape sequences
+			// Kitty 图片组件会创建带转义序列的多行输出
 			const kittyLine = "\x1b_Ga=T,f=100,t=f,d=base64data...\x1b\\\x1b_Gm=i=1;\x1b\\";
 
-			assert.strictEqual(isImageLine(kittyLine), true, "Should detect Kitty image component output");
+			assert.strictEqual(isImageLine(kittyLine), true, "应检测到 Kitty 图片组件输出");
 		});
 
-		it("handles ANSI codes before image sequences", async () => {
+		it("处理图片序列前的 ANSI 代码", async () => {
 			const { isImageLine } = await import("../src/terminal-image.ts");
 
-			// Line might have styling (error, warning, etc.) before image data
+			// 行可能在图片数据前含有样式（错误、警告等）
 			const lines = [
 				"\x1b[31mError\x1b[0m: \x1b]1337;File=inline=1:base64==\x07",
 				"\x1b[33mWarning\x1b[0m: \x1b_Ga=T,data...\x1b\\",
@@ -150,76 +146,72 @@ describe("Bug regression: isImageLine() crash with image escape sequences", () =
 			];
 
 			for (const line of lines) {
-				assert.strictEqual(
-					isImageLine(line),
-					true,
-					`Should detect image sequence after ANSI codes: ${line.slice(0, 30)}...`,
-				);
+				assert.strictEqual(isImageLine(line), true, `应检测到 ANSI 代码后的图片序列：${line.slice(0, 30)}...`);
 			}
 		});
 	});
 
-	describe("Crash scenario simulation", () => {
-		it("does NOT crash on very long lines with image sequences", async () => {
+	describe("崩溃场景模拟", () => {
+		it("不会在含有图片序列的超长行上崩溃", async () => {
 			const { isImageLine } = await import("../src/terminal-image.ts");
 
 			/**
-			 * Simulate the exact crash scenario:
-			 * - Line is 304,401 characters (the crash log showed 58649 > 115)
-			 * - Contains image escape sequence somewhere in the middle
-			 * - Old implementation would return false, causing TUI to do width check
-			 * - New implementation returns true, skipping width check (preventing crash)
+			 * 模拟精确的崩溃场景：
+			 * - 行长度为 304,401 字符（崩溃日志显示 58649 > 115）
+			 * - 中间某处包含图片转义序列
+			 * - 旧实现返回 false，导致 TUI 进行宽度检查
+			 * - 新实现返回 true，跳过宽度检查（防止崩溃）
 			 */
 
 			const base64Char = "A".repeat(100);
 			const iterm2Sequence = "\x1b]1337;File=size=800,600;inline=1:";
 
-			// Build a line that would cause the crash
+			// 构造会导致崩溃的行
 			const crashLine =
-				"Output: " +
+				"输出：" +
 				iterm2Sequence +
-				base64Char.repeat(3040) + // ~304,000 chars
-				" end of output";
+				base64Char.repeat(3040) + // ~304,000 字符
+				" 输出结束";
 
-			// Verify line is very long
-			assert(crashLine.length > 300000, "Test line should be > 300KB");
+			// 验证行非常长
+			assert(crashLine.length > 300000, "测试行应大于 300KB");
 
-			// New implementation should detect it (prevents crash)
+			// 新实现应能检测到（防止崩溃）
 			const detected = isImageLine(crashLine);
-			assert.strictEqual(detected, true, "Should detect image sequence in very long line, preventing TUI crash");
+			assert.strictEqual(detected, true, "应在超长行中检测到图片序列，防止 TUI 崩溃");
 		});
 
-		it("handles lines exactly matching crash log dimensions", async () => {
+		it("处理与崩溃日志完全匹配的行尺寸", async () => {
 			const { isImageLine } = await import("../src/terminal-image.ts");
 
 			/**
-			 * Crash log showed: line 58649 chars wide, terminal width 115
-			 * Let's create a line with similar characteristics
+			 * 崩溃日志显示：行宽 58649 字符，终端宽度 115
+			 * 让我们创建具有类似特征的行
 			 */
 
 			const targetWidth = 58649;
-			const prefix = "Text";
+			const prefix = "文本";
 			const sequence = "\x1b_Ga=T,f=100";
-			const suffix = "End";
+			const suffix = "结束";
 			const padding = "A".repeat(targetWidth - prefix.length - sequence.length - suffix.length);
 			const line = `${prefix}${sequence}${padding}${suffix}`;
 
 			assert.strictEqual(line.length, 58649);
-			assert.strictEqual(isImageLine(line), true, "Should detect image sequence in 58649-char line");
+			assert.strictEqual(isImageLine(line), true, "应在 58649 字符的行中检测到图片序列");
 		});
 	});
 
-	describe("Negative cases: Don't false positive", () => {
-		it("does not detect images in regular long text", async () => {
+	describe("负面用例：不要误报", () => {
+		it("不在普通长文本中检测图片", async () => {
 			const { isImageLine } = await import("../src/terminal-image.ts");
 
-			// Very long line WITHOUT image sequences
+			// 不含图片序列的超长行
 			const longText = "A".repeat(100000);
 
-			assert.strictEqual(isImageLine(longText), false, "Should not detect images in plain long text");
+			assert.strictEqual(isImageLine(longText), false, "不应在普通长文本中检测到图片");
 		});
 
-		it("does not detect images in lines with file paths", async () => {
+		it("不在包含文件路径的行中检测图片", async () => {
 			const { isImageLine } = await import("../src/terminal-image.ts");
 
 			const filePaths = [
@@ -230,7 +222,7 @@ describe("Bug regression: isImageLine() crash with image escape sequences", () =
 			];
 
 			for (const path of filePaths) {
-				assert.strictEqual(isImageLine(path), false, `Should not falsely detect image sequence in path: ${path}`);
+				assert.strictEqual(isImageLine(path), false, `不应在路径中误检测图片序列：${path}`);
 			}
 		});
 	});
