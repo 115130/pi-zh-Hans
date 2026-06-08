@@ -1,37 +1,37 @@
 ---
-description: Review PRs from URLs with structured issue and code analysis
+description: 通过 URL 审查 PR，进行结构化问题和代码分析
 argument-hint: "<PR-URL>"
 ---
-You are given one or more GitHub PR URLs: $@
+你将获得一个或多个 GitHub PR URL：$@
 
-For each PR URL, do the following in order:
-1. Add the `inprogress` label to the PR via GitHub CLI before analysis starts. If adding the label fails, report that explicitly and continue.
-2. Read the PR page in full. Include description, all comments, all commits, and all changed files.
-3. Identify any linked issues referenced in the PR body, comments, commit messages, or cross links. Read each issue in full, including all comments.
-4. Analyze the PR diff. Read all relevant code files in full with no truncation and compare against the diff. Do not fetch PR file blobs unless a file is missing on main or the diff context is insufficient. Include related code paths that are not in the diff but are required to validate behavior.
-5. Do not check for a changelog entry. Per CONTRIBUTING.md, contributor PRs must not edit `CHANGELOG.md` — the maintainer adds the entry when merging.
-6. Check if packages/coding-agent/README.md, packages/coding-agent/docs/*.md, packages/coding-agent/examples/**/*.md require modification. This is usually the case when existing features have been changed, or new features have been added.
-7. Provide a structured review with these sections:
-   - What it does: one short paragraph describing the change and its intent.
-   - Good: solid choices or improvements.
-   - Bad: concrete issues, regressions, missing tests, or risks.
-   - Ugly: subtle or high impact problems.
-   - Tests: what is covered, what is missing, and whether existing tests are adequate.
-   - Open questions for you: only things blocking a merge decision that need the user's input. Omit the section entirely if there are none.
+对每个 PR URL，按顺序执行以下操作：
+1. 在分析开始前，通过 GitHub CLI 给 PR 添加 `inprogress` 标签。如果添加标签失败，明确报告该问题后继续。
+2. 完整阅读 PR 页面。包括描述、所有评论、所有提交和所有变更文件。
+3. 识别 PR 正文、评论、提交信息或交叉链接中引用的所有关联 issue。完整阅读每个 issue，包括所有评论。
+4. 分析 PR diff。完整阅读所有相关代码文件（不截断），并与 diff 进行对比。除非文件在 main 上缺失或 diff 上下文不足，否则不要获取 PR 文件 blob。包括不在 diff 中但验证行为所需的关联代码路径。
+5. 不要检查变更日志条目。根据 CONTRIBUTING.md，贡献者的 PR 不得编辑 `CHANGELOG.md` — 维护者在合并时会添加条目。
+6. 检查是否需要对 packages/coding-agent/README.md、packages/coding-agent/docs/*.md、packages/coding-agent/examples/**/*.md 进行修改。通常在现有功能已更改或新功能已添加时需要。
+7. 提供结构化审查，包含以下章节：
+   - 功能描述：一个简短段落描述变更及其意图。
+   - 优点：可靠的选择或改进。
+   - 缺点：具体问题、回归、缺少测试或风险。
+   - 严重问题：微妙或高影响的问题。
+   - 测试：覆盖了哪些内容、缺少哪些内容、以及现有测试是否充分。
+   - 待你确认的问题：仅列出阻止合并决策且需要用户输入的事项。如果没有，则完全省略该章节。
 
-Output format per PR:
-PR: <url>
-What it does:
+每个 PR 的输出格式：
+PR：<url>
+功能描述：
 - ...
-Good:
+优点：
 - ...
-Bad:
+缺点：
 - ...
-Ugly:
+严重问题：
 - ...
-Tests:
+测试：
 - ...
-Open questions for you:
+待你确认的问题：
 - ...
 
-If no issues are found, say so under Bad and Ugly.
+如果未发现任何问题，在"缺点"和"严重问题"中说明。
