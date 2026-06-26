@@ -958,7 +958,9 @@ async function loadModelsDevData(): Promise<Model<any>[]> {
 			for (const [modelId, model] of Object.entries(data[variant.key].models)) {
 				const m = model as ModelsDevModel & { status?: string };
 				if (m.tool_call !== true) continue;
-				if (m.status === "deprecated") continue;
+				// opencode-go models remain available via API even when marked deprecated
+				// in models.dev metadata; keep them so the registry matches the live endpoint.
+				if (variant.provider !== "opencode-go" && m.status === "deprecated") continue;
 
 				const npm = m.provider?.npm;
 				let api: Api;
@@ -1234,6 +1236,27 @@ async function loadModelsDevData(): Promise<Model<any>[]> {
 					});
 				}
 			}
+		}
+
+		// Add hy3-preview for opencode-go (available via API but not yet in models.dev)
+		if (!models.some((m) => m.provider === "opencode-go" && m.id === "hy3-preview")) {
+			models.push({
+				id: "hy3-preview",
+				name: "Hy3 Preview",
+				api: "openai-completions",
+				provider: "opencode-go",
+				baseUrl: "https://opencode.ai/zen/go/v1",
+				reasoning: true,
+				input: ["text"],
+				cost: {
+					input: 0.063,
+					output: 0.21,
+					cacheRead: 0,
+					cacheWrite: 0,
+				},
+				contextWindow: 262144,
+				maxTokens: 262144,
+			});
 		}
 
 		console.log(`Loaded ${models.length} tool-capable models from models.dev`);
